@@ -23,3 +23,4 @@ describe('getAuthErrorMessage', () => {
     expect(getAuthErrorMessage('unknown/code')).toContain('unexpected authentication error');
   });
 });
+

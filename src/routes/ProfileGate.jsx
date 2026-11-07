@@ -35,3 +35,4 @@ export default function ProfileGate({ allowIncomplete = false }) {
 
   return <Outlet />;
 }
+

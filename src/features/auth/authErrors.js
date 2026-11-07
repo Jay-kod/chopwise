@@ -31,3 +31,4 @@ export function getAuthErrorMessage(error) {
         : 'An unexpected authentication error occurred. Please try again.';
   }
 }
+

@@ -9,7 +9,7 @@ Tick a box only when the exit test passes. Prompts are in AGENT_PROMPTS.md (bloc
 - [x] **P3** Auth + guards — exit: register -> users doc created; refresh keeps session; logout; guards redirect
 - [x] **P4** Rules + onboarding — exit: profile persists; second account cannot read it
 ### Block 3 — server foundation (parallel-safe with Block 2)
-- [ ] **P5** Server foundation + Admin API — exit: 401/403 checks; saved Gemini key encrypted (`v1:`); `test gemini` ok; crypto tests pass
+- [x] **P5** Server foundation + Admin API — exit: 401/403 checks; saved Gemini key encrypted (`v1:`); `test gemini` ok; crypto tests pass
 ### Block 4
 - [ ] **P6** Admin page UI — exit: paste Gemini + Edamam keys; Test all green; secrets masked; non-admin NotFound
 ### Block 5

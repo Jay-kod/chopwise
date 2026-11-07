@@ -61,3 +61,4 @@ export default function Step1Demographics({ data, errors = {}, onChange }) {
     </div>
   );
 }
+

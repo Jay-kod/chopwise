@@ -71,3 +71,4 @@ export default function Step3Preferences({ data, errors = {}, onChange }) {
     </div>
   );
 }
+

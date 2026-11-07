@@ -70,3 +70,4 @@ export default function Step4Budget({ data, errors = {}, onChange }) {
     </div>
   );
 }
+

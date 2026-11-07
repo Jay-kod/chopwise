@@ -80,3 +80,4 @@ export const profileSchema = z.object({
   weeklyBudgetNGN: step4Schema.shape.weeklyBudgetNGN,
   updatedAt: z.string().optional(),
 });
+

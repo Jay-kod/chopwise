@@ -56,3 +56,4 @@ describe('onboarding schema validation', () => {
     expect(profileSchema.safeParse(validProfile).success).toBe(true);
   });
 });
+
