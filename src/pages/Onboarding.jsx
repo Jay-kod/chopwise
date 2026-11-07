@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { doc, updateDoc } from 'firebase/firestore';
-import { db } from '../firebase';
+import { supabase } from '../lib/supabase';
 import { useAuth } from '../features/auth/useAuth';
 import Layout from '../components/Layout';
 import Card from '../components/Card';
@@ -106,18 +105,23 @@ export default function Onboarding() {
 
     try {
       setSaving(true);
-      const userRef = doc(db, 'users', user.uid);
       const now = new Date().toISOString();
+      const userId = user.id || user.uid;
 
-      await updateDoc(userRef, {
-        profile: {
-          ...parsed.data,
-          updatedAt: now,
-        },
-        profileComplete: true,
-      });
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          profile: {
+            ...parsed.data,
+            updatedAt: now,
+          },
+          profile_complete: true,
+          updated_at: now,
+        })
+        .eq('id', userId);
 
-      // Per P8 instructions: redirect directly to /dashboard on completion
+      if (error) throw error;
+
       navigate('/dashboard');
     } catch (err) {
       setErrors({ form: err.message || 'Failed to save profile. Please try again.' });

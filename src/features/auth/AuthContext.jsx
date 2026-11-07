@@ -1,12 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react';
-import {
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged,
-} from 'firebase/auth';
-import { doc, setDoc, onSnapshot } from 'firebase/firestore';
-import { auth, db } from '../../firebase';
+import { supabase } from '../../lib/supabase';
 
 const AuthContext = createContext(null);
 
@@ -15,47 +8,87 @@ export function AuthProvider({ children }) {
   const [userDoc, setUserDoc] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  async function loadProfile(userId) {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .maybeSingle();
+
+      if (!error && data) {
+        setUserDoc({
+          ...data,
+          profileComplete: data.profile_complete,
+          createdAt: data.created_at,
+          consentAt: data.consent_at,
+        });
+      } else {
+        setUserDoc(null);
+      }
+    } catch {
+      setUserDoc(null);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   useEffect(() => {
-    const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
+    let channel = null;
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      const currentUser = session?.user ? { ...session.user, uid: session.user.id } : null;
       setUser(currentUser);
 
-      if (!currentUser) {
+      if (currentUser) {
+        loadProfile(currentUser.id);
+        channel = supabase
+          .channel(`profile:${currentUser.id}`)
+          .on(
+            'postgres_changes',
+            {
+              event: '*',
+              schema: 'public',
+              table: 'profiles',
+              filter: `id=eq.${currentUser.id}`,
+            },
+            (payload) => {
+              if (payload.new) {
+                setUserDoc({
+                  ...payload.new,
+                  profileComplete: payload.new.profile_complete,
+                  createdAt: payload.new.created_at,
+                  consentAt: payload.new.consent_at,
+                });
+              }
+            }
+          )
+          .subscribe();
+      } else {
         setUserDoc(null);
         setLoading(false);
-        return;
       }
-
-      // Listen to real-time changes to the user document
-      const userRef = doc(db, 'users', currentUser.uid);
-      const unsubscribeDoc = onSnapshot(
-        userRef,
-        (snap) => {
-          if (snap.exists()) {
-            setUserDoc(snap.data());
-          } else {
-            setUserDoc(null);
-          }
-          setLoading(false);
-        },
-        () => {
-          // In case rules deny read or document does not exist yet
-          setUserDoc(null);
-          setLoading(false);
-        }
-      );
-
-      return () => unsubscribeDoc();
     });
 
-    return () => unsubscribeAuth();
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      const currentUser = session?.user ? { ...session.user, uid: session.user.id } : null;
+      setUser(currentUser);
+      if (currentUser) {
+        loadProfile(currentUser.id);
+      } else {
+        setUserDoc(null);
+        setLoading(false);
+      }
+    });
+
+    return () => {
+      subscription?.unsubscribe();
+      if (channel) supabase.removeChannel(channel);
+    };
   }, []);
 
-  /**
-   * Register a new user and create their Firestore user profile doc.
-   * @param {string} email
-   * @param {string} password
-   * @param {boolean} consent - Medical data storage consent
-   */
   async function register(email, password, consent) {
     if (!consent) {
       throw new Error(
@@ -63,35 +96,43 @@ export function AuthProvider({ children }) {
       );
     }
 
-    const cred = await createUserWithEmailAndPassword(auth, email.trim(), password);
-    const now = new Date().toISOString();
-
-    // Create users/{uid} document exactly as defined in docs/DATABASE.md
-    await setDoc(doc(db, 'users', cred.user.uid), {
-      email: cred.user.email,
-      createdAt: now,
-      consentAt: now,
-      profileComplete: false,
+    const { data, error } = await supabase.auth.signUp({
+      email: email.trim(),
+      password,
     });
 
-    return cred.user;
+    if (error) throw error;
+    const sessionUser = data.user ? { ...data.user, uid: data.user.id } : null;
+
+    if (sessionUser) {
+      const now = new Date().toISOString();
+      await supabase.from('profiles').upsert({
+        id: sessionUser.id,
+        email: sessionUser.email,
+        created_at: now,
+        consent_at: now,
+        profile_complete: false,
+        profile: {},
+      });
+    }
+
+    return sessionUser;
   }
 
-  /**
-   * Sign in an existing user.
-   * @param {string} email
-   * @param {string} password
-   */
   async function login(email, password) {
-    const cred = await signInWithEmailAndPassword(auth, email.trim(), password);
-    return cred.user;
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: email.trim(),
+      password,
+    });
+
+    if (error) throw error;
+    return data.user ? { ...data.user, uid: data.user.id } : null;
   }
 
-  /**
-   * Sign out the active user.
-   */
   async function logout() {
-    await signOut(auth);
+    await supabase.auth.signOut();
+    setUser(null);
+    setUserDoc(null);
   }
 
   const value = {
@@ -102,6 +143,7 @@ export function AuthProvider({ children }) {
     register,
     login,
     logout,
+    refreshProfile: () => user && loadProfile(user.id),
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -114,4 +156,3 @@ export function useAuth() {
   }
   return context;
 }
-

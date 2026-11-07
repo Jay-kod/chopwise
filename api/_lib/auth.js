@@ -1,8 +1,8 @@
-import { getAdminAuth } from './firebaseAdmin.js';
+import { getSupabaseAdmin } from './supabaseAdmin.js';
 import { AppError } from './http.js';
 
 /**
- * Check whether a Firebase UID is present in the ADMIN_UIDS environment list.
+ * Check whether a user UID is present in the ADMIN_UIDS environment list.
  * @param {string} uid
  * @returns {boolean}
  */
@@ -17,7 +17,7 @@ export function checkIsAdmin(uid) {
 }
 
 /**
- * Verify incoming HTTP request's Firebase ID token in Authorization header.
+ * Verify incoming HTTP request's JWT token in Authorization header.
  * @param {import('http').IncomingMessage} req
  * @returns {Promise<{ uid: string, email: string, token: object }>}
  */
@@ -32,17 +32,26 @@ export async function verifyRequest(req) {
     throw AppError.unauthorized('Invalid Authorization format. Expected Bearer <token>.');
   }
 
-  const idToken = match[1];
+  const token = match[1];
   try {
-    const auth = getAdminAuth();
-    const decoded = await auth.verifyIdToken(idToken);
+    const supabase = getSupabaseAdmin();
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser(token);
+
+    if (error || !user) {
+      throw AppError.unauthorized('Invalid or expired authentication token.');
+    }
+
     return {
-      uid: decoded.uid,
-      email: decoded.email || '',
-      token: decoded,
+      uid: user.id,
+      email: user.email || '',
+      token: user,
     };
   } catch (err) {
-    throw AppError.unauthorized('Invalid or expired Firebase ID token.');
+    if (err instanceof AppError) throw err;
+    throw AppError.unauthorized('Invalid or expired authentication token.');
   }
 }
 
@@ -58,4 +67,3 @@ export async function requireAdmin(req) {
   }
   return { uid, email, isAdmin: true };
 }
-

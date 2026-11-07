@@ -1,4 +1,4 @@
-import { getAdminDb } from './firebaseAdmin.js';
+import { getSupabaseAdmin } from './supabaseAdmin.js';
 import { getGeminiConfig, getEdamamConfig, maskSecret } from './configStore.js';
 import { generateJson } from './clients/gemini.js';
 import { analyzeIngredients } from './clients/edamam.js';
@@ -95,19 +95,24 @@ export const INTEGRATIONS_REGISTRY = [
  */
 export async function recordTestResult(target, result) {
   try {
-    const db = getAdminDb();
-    await db
-      .collection('adminConfig')
-      .doc('testResults')
-      .set(
-        {
-          [target]: {
-            ...result,
-            testedAt: new Date().toISOString(),
-          },
+    const supabase = getSupabaseAdmin();
+    const { data } = await supabase
+      .from('admin_config')
+      .select('config')
+      .eq('section', 'testResults')
+      .maybeSingle();
+    const existing = data?.config || {};
+    await supabase.from('admin_config').upsert({
+      section: 'testResults',
+      config: {
+        ...existing,
+        [target]: {
+          ...result,
+          testedAt: new Date().toISOString(),
         },
-        { merge: true }
-      );
+      },
+      updated_at: new Date().toISOString(),
+    });
   } catch (err) {
     // Non-fatal if recording fails
   }
@@ -115,23 +120,21 @@ export async function recordTestResult(target, result) {
 
 /**
  * Execute healthcheck for a registered target.
- * Targets supported in P5: firestore, gemini, edamam.
- * @param {'firestore'|'gemini'|'edamam'|'recommend'|'nutrition'} target
+ * Targets supported: firestore, supabase, gemini, edamam.
+ * @param {'firestore'|'supabase'|'gemini'|'edamam'|'recommend'|'nutrition'} target
  */
 export async function runHealthCheck(target) {
   const start = Date.now();
 
-  if (target === 'firestore') {
+  if (target === 'firestore' || target === 'supabase') {
     try {
-      const db = getAdminDb();
-      await db.collection('adminConfig').doc('settings').get();
-      const testRef = db.collection('adminConfig').doc('_healthcheck');
-      await testRef.set({ ping: true, at: new Date().toISOString() });
-      await testRef.delete();
+      const supabase = getSupabaseAdmin();
+      const { error } = await supabase.from('admin_config').select('section').limit(1);
+      if (error) throw error;
       const latencyMs = Date.now() - start;
       const result = {
         ok: true,
-        message: 'Firestore read/write succeeded',
+        message: 'Supabase database query succeeded',
         latencyMs,
       };
       await recordTestResult(target, result);
@@ -140,7 +143,7 @@ export async function runHealthCheck(target) {
       const latencyMs = Date.now() - start;
       const result = {
         ok: false,
-        message: `Firestore check failed: ${err.message}`,
+        message: `Database check failed: ${err.message}`,
         latencyMs,
       };
       await recordTestResult(target, result);

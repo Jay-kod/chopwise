@@ -1,24 +1,26 @@
-# DATABASE.md (Firestore)
+# DATABASE.md (Supabase PostgreSQL)
 
-## Collections
+## Schema & Tables (`supabase/schema.sql`)
+```sql
+profiles
+  id (uuid, references auth.users), email (text), created_at (timestamptz), consent_at (timestamptz), profile_complete (bool), profile (jsonb), updated_at (timestamptz)
+
+saved_meals
+  id (text primary key), user_id (uuid, references auth.users), meal_id (text), meal (jsonb), saved_at (timestamptz)
+
+latest_recs
+  user_id (uuid, references auth.users primary key), meals (jsonb), profile_hash (text), per_meal_cap_ngn (numeric), generated_at (timestamptz)  (server writes)
+
+nutrition_cache
+  ingredients_hash (text primary key), nutrition (jsonb), source ("edamam"|"ai-estimate"), fetched_at (timestamptz)  (server only)
+
+rate_limits
+  user_id (text primary key), window_start (bigint), count (integer)  (server only)
+
+admin_config
+  section (text primary key), config (jsonb), updated_at (timestamptz)  (server only)
 ```
-users/{uid}
-  email, createdAt, consentAt, profileComplete (bool)
-  profile: { age, gender, weightKg, conditions[], preferences[], avoidText, weeklyBudgetNGN, updatedAt }
-
-users/{uid}/savedMeals/{mealId}     { meal, savedAt }
-users/{uid}/latestRecs/current      { meals[], profileHash, perMealCapNGN, generatedAt }   (server writes)
-
-nutritionCache/{ingredientsHash}    { nutrition, source: "edamam"|"ai-estimate", fetchedAt }  (server only)
-rateLimits/{uid}                    { windowStart, count }                                    (server only)
-
-adminConfig/integrations   { gemini: { apiKeyEnc, model, updatedAt }, edamam: { appIdEnc, appKeyEnc, enabled, updatedAt } }
-adminConfig/settings       { mealsPerType, budgetDivisor, rateLimitPerHour, retryOnOverBudget, updatedAt }
-adminConfig/safety         { hypertensionSodiumMg, diabetesSugarG, diabetesCarbsG, obesityCalories, updatedAt }
-adminConfig/prices         { items: [{ item, unit, priceNGN }], updatedAt }
-adminConfig/testResults    { <target>: { ok, message, latencyMs, testedAt } }
-```
-All `adminConfig/*` is server-only. Encrypted values use the format `v1:<iv>:<tag>:<ciphertext>` (base64 parts).
+All `admin_config` sections (`integrations`, `settings`, `safety`, `prices`, `testResults`) are server-only. Encrypted values use the format `v1:<iv>:<tag>:<ciphertext>` (base64 parts).
 
 ## Profile validation limits (client and server must match)
 - age: integer 10–100
@@ -34,32 +36,9 @@ All `adminConfig/*` is server-only. Encrypted values use the format `v1:<iv>:<ta
 - `profileHash`: SHA-1 of the canonical JSON of the profile (sorted keys, arrays sorted).
 - `ingredientsHash`: SHA-1 of sorted, normalised ingredient lines.
 
-## Indexes
-None required (all reads are by document id).
-
-## Firestore rules (`firestore.rules`, must be published)
-```
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /users/{uid} {
-      allow read: if request.auth != null && request.auth.uid == uid;
-      allow create: if request.auth != null && request.auth.uid == uid
-        && request.resource.data.keys().hasOnly(['email','createdAt','consentAt','profileComplete','profile']);
-      allow update: if request.auth != null && request.auth.uid == uid;
-      allow delete: if false;
-      match /savedMeals/{mealId} {
-        allow read, write: if request.auth != null && request.auth.uid == uid;
-      }
-      match /latestRecs/{docId} {
-        allow read: if request.auth != null && request.auth.uid == uid;
-        allow write: if false;
-      }
-    }
-    match /{document=**} {
-      allow read, write: if false;
-    }
-  }
-}
-```
-How to publish: Firebase console -> Build -> Firestore Database -> Rules tab -> paste -> Publish.
+## Row Level Security (RLS)
+Published via `supabase/schema.sql`:
+- `profiles`: SELECT, INSERT, UPDATE allowed only where `auth.uid() = id`.
+- `saved_meals`: SELECT, INSERT, UPDATE, DELETE allowed only where `auth.uid() = user_id`.
+- `latest_recs`: SELECT allowed only where `auth.uid() = user_id`. Server writes via service role.
+- `nutrition_cache`, `rate_limits`, `admin_config`: RLS enabled, accessed only via Supabase service role key in serverless functions.

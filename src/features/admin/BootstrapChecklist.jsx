@@ -4,16 +4,16 @@ import Badge from '../../components/Badge';
 export default function BootstrapChecklist({ bootstrap = {} }) {
   const items = [
     {
-      key: 'firebaseAdmin',
-      name: 'FIREBASE_SERVICE_ACCOUNT_B64',
-      present: Boolean(bootstrap.firebaseAdmin),
-      desc: 'Base64-encoded Firebase Admin service account key JSON for server operations.',
+      key: 'supabaseAdmin',
+      name: 'SUPABASE_SERVICE_ROLE_KEY',
+      present: Boolean(bootstrap.supabaseAdmin),
+      desc: 'Service role secret key from Supabase Project Settings > API for serverless operations.',
     },
     {
       key: 'adminUidsSet',
       name: 'ADMIN_UIDS',
       present: Boolean(bootstrap.adminUidsSet),
-      desc: 'Comma-separated list of Firebase user UIDs authorized to access this /admin portal.',
+      desc: 'Comma-separated list of user UUIDs authorized to access this /admin portal.',
     },
     {
       key: 'encryptionKeySet',
@@ -40,7 +40,6 @@ export default function BootstrapChecklist({ bootstrap = {} }) {
         </p>
       </div>
 
-      {/* Status items */}
       <div className="space-y-3">
         {items.map((item) => (
           <div
@@ -60,34 +59,16 @@ export default function BootstrapChecklist({ bootstrap = {} }) {
         ))}
       </div>
 
-      {/* Guide & Setup steps */}
       <div className="mt-5 rounded-xl border border-line bg-surface p-4 text-xs text-fg space-y-3">
-        <div className="font-semibold text-fg">Bootstrap Setup Reference & Links:</div>
-
+        <div className="font-semibold text-fg">Bootstrap Setup Reference &amp; Links:</div>
         <div className="flex flex-wrap gap-3">
           <a
-            href="https://console.firebase.google.com/"
+            href="https://supabase.com/dashboard"
             target="_blank"
             rel="noopener noreferrer"
             className="text-primary underline hover:text-primary-hover font-medium"
           >
-            Firebase Console ↗
-          </a>
-          <a
-            href="https://firebase.google.com/docs/web/setup"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-primary underline hover:text-primary-hover font-medium"
-          >
-            Web App Setup ↗
-          </a>
-          <a
-            href="https://firebase.google.com/docs/admin/setup"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-primary underline hover:text-primary-hover font-medium"
-          >
-            Admin SDK Setup ↗
+            Supabase Dashboard ↗
           </a>
           <a
             href="https://vercel.com/docs/environment-variables"
@@ -101,31 +82,22 @@ export default function BootstrapChecklist({ bootstrap = {} }) {
 
         <ol className="list-decimal space-y-2 pl-4 text-muted text-[11px]">
           <li>
-            <strong>Firebase Project:</strong> Create a project, enable Email/Password auth, and deploy
-            Firestore in production mode with the rules in <code>firestore.rules</code>.
+            <strong>Database Schema:</strong> Run the SQL script from <code>supabase/schema.sql</code> in your
+            Supabase Project SQL Editor to create tables and Row Level Security (RLS) policies.
           </li>
           <li>
-            <strong>Service Account:</strong> Go to Project Settings &gt; Service accounts &gt; Generate new
-            private key. Base64-encode it:
-            <pre className="mt-1 rounded bg-surface-muted p-2 font-mono text-[10px] text-fg overflow-x-auto">
-              [Convert]::ToBase64String([IO.File]::ReadAllBytes("key.json"))
-            </pre>
-            Save as <code>FIREBASE_SERVICE_ACCOUNT_B64</code> and delete the raw JSON file.
+            <strong>API Credentials:</strong> In Supabase Dashboard &gt; Project Settings &gt; API, copy the
+            Project URL and <code>anon</code> public key into <code>.env.local</code> as <code>VITE_SUPABASE_URL</code> and <code>VITE_SUPABASE_ANON_KEY</code>.
           </li>
           <li>
-            <strong>Encryption Key:</strong> Generate a 32-byte key:
-            <pre className="mt-1 rounded bg-surface-muted p-2 font-mono text-[10px] text-fg overflow-x-auto">
-              node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
-            </pre>
-            Save as <code>CONFIG_ENCRYPTION_KEY</code> in <code>.env.local</code> and Vercel.
+            <strong>Service Role Key:</strong> Copy the <code>service_role</code> secret into <code>.env.local</code> as <code>SUPABASE_SERVICE_ROLE_KEY</code>.
           </li>
           <li>
-            <strong>Admin UIDs:</strong> Register your user in the app, find their UID in Firebase Auth, and set
-            <code>ADMIN_UIDS=&lt;your-uid&gt;</code>.
+            <strong>Admin Access:</strong> Register in ChopWise, copy your user UUID from Supabase Auth &gt; Users,
+            and set <code>ADMIN_UIDS=&lt;your-uuid&gt;</code> in <code>.env.local</code>.
           </li>
         </ol>
       </div>
     </Card>
   );
 }
-

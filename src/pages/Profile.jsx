@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { doc, updateDoc, collection, onSnapshot, deleteDoc } from 'firebase/firestore';
-import { db } from '../firebase';
+import { supabase } from '../lib/supabase';
 import { useAuth } from '../features/auth/useAuth';
 import { useToast } from '../components/Toast';
 import Layout from '../components/Layout';
@@ -32,14 +31,15 @@ export default function Profile() {
   // Sync profile data from userDoc
   useEffect(() => {
     if (userDoc?.profile) {
+      const p = userDoc.profile;
       setFormData({
-        age: userDoc.profile.age ?? '',
-        gender: userDoc.profile.gender ?? '',
-        weightKg: userDoc.profile.weightKg ?? '',
-        conditions: userDoc.profile.conditions ?? [],
-        preferences: userDoc.profile.preferences ?? [],
-        avoidText: userDoc.profile.avoidText ?? '',
-        weeklyBudgetNGN: userDoc.profile.weeklyBudgetNGN ?? '',
+        age: p.age ?? '',
+        gender: p.gender ?? '',
+        weightKg: p.weightKg ?? '',
+        conditions: p.conditions ?? [],
+        preferences: p.preferences ?? [],
+        avoidText: p.avoidText ?? '',
+        weeklyBudgetNGN: p.weeklyBudgetNGN ?? '',
       });
     }
   }, [userDoc]);
@@ -47,57 +47,51 @@ export default function Profile() {
   // Real-time listener for saved meals
   useEffect(() => {
     if (!user) return;
-    const mealsRef = collection(db, 'users', user.uid, 'savedMeals');
-    const unsub = onSnapshot(
-      mealsRef,
-      (snapshot) => {
-        const list = snapshot.docs.map((d) => ({
-          id: d.id,
-          meal: d.data().meal,
-          savedAt: d.data().savedAt,
-        }));
-        setSavedMeals(list);
-        setLoadingSaved(false);
-      },
-      () => setLoadingSaved(false)
-    );
-    return () => unsub();
+    const userId = user.id || user.uid;
+    const loadSaved = async () => {
+      const { data, error } = await supabase
+        .from('saved_meals')
+        .select('*')
+        .eq('user_id', userId)
+        .order('saved_at', { ascending: false });
+      if (!error && data) {
+        setSavedMeals(data.map((d) => ({ id: d.meal_id || d.id, meal: d.meal, savedAt: d.saved_at })));
+      }
+      setLoadingSaved(false);
+    };
+    loadSaved();
+    const ch = supabase.channel(`saved_meals:${userId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'saved_meals', filter: `user_id=eq.${userId}` }, loadSaved)
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
   }, [user]);
 
   function handleFieldChange(field, value) {
     setFormData((prev) => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: undefined }));
-    }
+    if (errors[field]) setErrors((prev) => ({ ...prev, [field]: undefined }));
   }
 
   async function handleSaveProfile(e) {
     e.preventDefault();
     if (!user || !formData) return;
-
     const result = profileSchema.safeParse(formData);
     if (!result.success) {
       const fieldErrors = {};
-      result.error.issues.forEach((issue) => {
-        const path = issue.path[0];
-        if (path && !fieldErrors[path]) {
-          fieldErrors[path] = issue.message;
-        }
-      });
+      result.error.issues.forEach((i) => { if (i.path[0] && !fieldErrors[i.path[0]]) fieldErrors[i.path[0]] = i.message; });
       setErrors(fieldErrors);
       addToast('Please check the form for errors.', 'error');
       return;
     }
-
     try {
       setSaving(true);
-      await updateDoc(doc(db, 'users', user.uid), {
-        profile: {
-          ...result.data,
-          updatedAt: new Date().toISOString(),
-        },
-        profileComplete: true,
-      });
+      const userId = user.id || user.uid;
+      const now = new Date().toISOString();
+      const { error } = await supabase.from('profiles').update({
+        profile: { ...result.data, updatedAt: now },
+        profile_complete: true,
+        updated_at: now,
+      }).eq('id', userId);
+      if (error) throw error;
       addToast('Profile updated! Your next meal plan will use these settings.', 'ok');
     } catch (err) {
       addToast(err?.message || 'Failed to update profile.', 'error');
@@ -110,7 +104,9 @@ export default function Profile() {
     if (!user || !mealId) return;
     try {
       setRemovingId(mealId);
-      await deleteDoc(doc(db, 'users', user.uid, 'savedMeals', mealId));
+      const userId = user.id || user.uid;
+      const { error } = await supabase.from('saved_meals').delete().eq('user_id', userId).eq('meal_id', mealId);
+      if (error) throw error;
       addToast('Recipe removed from saved list.', 'ok');
     } catch (err) {
       addToast(err?.message || 'Failed to remove saved recipe.', 'error');
@@ -123,9 +119,7 @@ export default function Profile() {
     try {
       await logout();
       navigate('/login');
-    } catch {
-      // Sign-out fallback
-    }
+    } catch {}
   }
 
   return (

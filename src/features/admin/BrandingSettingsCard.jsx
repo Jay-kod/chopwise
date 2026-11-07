@@ -184,3 +184,4 @@ export default function BrandingSettingsCard({ settings, onSave }) {
     </Card>
   );
 }
+

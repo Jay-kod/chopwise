@@ -1,13 +1,8 @@
-import { auth } from '../firebase';
+import { supabase } from './supabase';
 
 /**
- * API error shape parsed from the server error envelope.
- * @typedef {{ code: string, message: string, details?: object }} ApiError
- */
-
-/**
- * Call a JSON API endpoint, attaching the Firebase ID token.
- * Parses the error envelope from docs/API.md into a typed error.
+ * Call a JSON API endpoint, attaching the Supabase JWT token.
+ * Parses the error envelope into a typed error.
  *
  * @param {string} url - The API path (e.g. '/api/recommend').
  * @param {object} [body] - JSON body for POST requests.
@@ -15,12 +10,15 @@ import { auth } from '../firebase';
  * @throws {{ code: string, message: string, details?: object }}
  */
 export async function apiClient(url, body) {
-  const user = auth.currentUser;
-  if (!user) {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (!session?.access_token) {
     throw { code: 'UNAUTHORIZED', message: 'You must be signed in.' };
   }
 
-  const token = await user.getIdToken();
+  const token = session.access_token;
 
   const res = await fetch(url, {
     method: 'POST',
@@ -44,4 +42,3 @@ export async function apiClient(url, body) {
 
   return data;
 }
-

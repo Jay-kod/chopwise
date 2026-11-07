@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { doc, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
-import { db } from '../firebase';
+import { supabase } from '../lib/supabase';
 import { useAuth } from '../features/auth/useAuth';
 import Layout from '../components/Layout';
 import Card from '../components/Card';
@@ -35,25 +34,33 @@ export default function MealDetail() {
       try {
         setLoading(true);
         setError(null);
+        const userId = user.id || user.uid;
 
         let foundMeal = null;
 
-        // 1. Check latestRecs/current
-        const latestRecsRef = doc(db, 'users', user.uid, 'latestRecs', 'current');
-        const latestSnap = await getDoc(latestRecsRef);
-        if (latestSnap.exists()) {
-          const meals = latestSnap.data()?.meals || [];
-          foundMeal = meals.find((m) => m.id === mealId);
+        // 1. Check latest_recs
+        const { data: recData } = await supabase
+          .from('latest_recs')
+          .select('meals')
+          .eq('user_id', userId)
+          .maybeSingle();
+
+        if (recData?.meals) {
+          foundMeal = recData.meals.find((m) => m.id === mealId);
         }
 
-        // 2. Check savedMeals/{mealId}
-        const savedRef = doc(db, 'users', user.uid, 'savedMeals', mealId);
-        const savedSnap = await getDoc(savedRef);
+        // 2. Check saved_meals
+        const { data: savedData } = await supabase
+          .from('saved_meals')
+          .select('meal')
+          .eq('user_id', userId)
+          .eq('meal_id', mealId)
+          .maybeSingle();
 
-        if (savedSnap.exists()) {
+        if (savedData) {
           setIsSaved(true);
           if (!foundMeal) {
-            foundMeal = savedSnap.data()?.meal;
+            foundMeal = savedData.meal;
           }
         } else {
           setIsSaved(false);
@@ -87,17 +94,26 @@ export default function MealDetail() {
 
     try {
       setSavingAction(true);
-      const savedRef = doc(db, 'users', user.uid, 'savedMeals', meal.id);
+      const userId = user.id || user.uid;
 
       if (isSaved) {
-        await deleteDoc(savedRef);
+        const { error } = await supabase
+          .from('saved_meals')
+          .delete()
+          .eq('user_id', userId)
+          .eq('meal_id', meal.id);
+        if (error) throw error;
         setIsSaved(false);
         addToast(`Removed "${meal.name}" from saved recipes.`, 'ok');
       } else {
-        await setDoc(savedRef, {
+        const { error } = await supabase.from('saved_meals').upsert({
+          id: `${userId}_${meal.id}`,
+          user_id: userId,
+          meal_id: meal.id,
           meal,
-          savedAt: new Date().toISOString(),
+          saved_at: new Date().toISOString(),
         });
+        if (error) throw error;
         setIsSaved(true);
         addToast(`Saved "${meal.name}" to your profile!`, 'ok');
       }

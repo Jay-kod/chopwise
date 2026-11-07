@@ -105,3 +105,4 @@ export function ConfigProvider({ children }) {
 export function useAppConfig() {
   return useContext(ConfigContext);
 }
+

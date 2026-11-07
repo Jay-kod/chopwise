@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-import { getAdminDb } from '../firebaseAdmin.js';
+import { getSupabaseAdmin } from '../supabaseAdmin.js';
 import { getEdamamConfig, getSafetyConfig } from '../configStore.js';
 import { analyzeIngredients } from '../clients/edamam.js';
 import { evaluateMealSafety } from './safety.js';
@@ -50,12 +50,9 @@ export function computeIngredientsHash(lines = []) {
  */
 export function formatAiEstimateNutrients(estimate = {}) {
   return {
-    calories: Math.round(Number(estimate.calories) || 0),
-    proteinG: Math.round(Number(estimate.proteinG) || 0),
-    carbsG: Math.round(Number(estimate.carbsG) || 0),
-    fatG: Math.round(Number(estimate.fatG) || 0),
-    sodiumMg: Math.round(Number(estimate.sodiumMg) || 0),
-    sugarG: Math.round(Number(estimate.sugarG) || 0),
+    calories: Math.round(Number(estimate.calories) || 0), proteinG: Math.round(Number(estimate.proteinG) || 0),
+    carbsG: Math.round(Number(estimate.carbsG) || 0), fatG: Math.round(Number(estimate.fatG) || 0),
+    sodiumMg: Math.round(Number(estimate.sodiumMg) || 0), sugarG: Math.round(Number(estimate.sugarG) || 0),
     vitamins: [],
   };
 }
@@ -73,15 +70,10 @@ export function extractNutrientsFromEdamam(edamamData = {}) {
 
   const vitamins = [];
   const vitaminMap = [
-    { key: 'VITA_RAE', name: 'Vitamin A', unit: 'µg' },
-    { key: 'VITC', name: 'Vitamin C', unit: 'mg' },
-    { key: 'VITD', name: 'Vitamin D', unit: 'µg' },
-    { key: 'TOCPHA', name: 'Vitamin E', unit: 'mg' },
-    { key: 'VITB6A', name: 'Vitamin B6', unit: 'mg' },
-    { key: 'VITB12', name: 'Vitamin B12', unit: 'µg' },
-    { key: 'CA', name: 'Calcium', unit: 'mg' },
-    { key: 'FE', name: 'Iron', unit: 'mg' },
-    { key: 'K', name: 'Potassium', unit: 'mg' },
+    { key: 'VITA_RAE', name: 'Vitamin A', unit: 'µg' }, { key: 'VITC', name: 'Vitamin C', unit: 'mg' },
+    { key: 'VITD', name: 'Vitamin D', unit: 'µg' }, { key: 'TOCPHA', name: 'Vitamin E', unit: 'mg' },
+    { key: 'VITB6A', name: 'Vitamin B6', unit: 'mg' }, { key: 'VITB12', name: 'Vitamin B12', unit: 'µg' },
+    { key: 'CA', name: 'Calcium', unit: 'mg' }, { key: 'FE', name: 'Iron', unit: 'mg' }, { key: 'K', name: 'Potassium', unit: 'mg' },
   ];
 
   for (const v of vitaminMap) {
@@ -120,45 +112,45 @@ export async function getMealNutrition(uid, mealId, options = {}) {
 
   let meal = sampleMeal;
   let userConditions = overrideConditions || [];
-  let db = null;
+  let supabase = null;
 
   if (!meal) {
     if (!mealId || typeof mealId !== 'string') {
       throw AppError.validation({ mealId: 'Valid mealId is required.' });
     }
 
-    db = getAdminDb();
+    supabase = getSupabaseAdmin();
 
     // Load user conditions for accurate safety evaluation
-    const userDoc = await db.collection('users').doc(uid).get();
-    if (userDoc.exists) {
-      userConditions = userDoc.data()?.profile?.conditions || [];
+    const { data: profileRow } = await supabase
+      .from('profiles')
+      .select('profile')
+      .eq('id', uid)
+      .maybeSingle();
+    userConditions = profileRow?.profile?.conditions || [];
+
+    // Lookup meal from latest_recs first
+    const { data: recRow } = await supabase
+      .from('latest_recs')
+      .select('meals')
+      .eq('user_id', uid)
+      .maybeSingle();
+
+    if (recRow?.meals) {
+      meal = recRow.meals.find((m) => m.id === mealId);
     }
 
-    // Lookup meal from latestRecs/current first
-    const latestRecsSnap = await db
-      .collection('users')
-      .doc(uid)
-      .collection('latestRecs')
-      .doc('current')
-      .get();
-
-    if (latestRecsSnap.exists) {
-      const meals = latestRecsSnap.data()?.meals || [];
-      meal = meals.find((m) => m.id === mealId);
-    }
-
-    // Fallback lookup in savedMeals/{mealId}
+    // Fallback lookup in saved_meals
     if (!meal) {
-      const savedSnap = await db
-        .collection('users')
-        .doc(uid)
-        .collection('savedMeals')
-        .doc(mealId)
-        .get();
+      const { data: savedRow } = await supabase
+        .from('saved_meals')
+        .select('meal')
+        .eq('user_id', uid)
+        .eq('meal_id', mealId)
+        .maybeSingle();
 
-      if (savedSnap.exists) {
-        meal = savedSnap.data()?.meal;
+      if (savedRow?.meal) {
+        meal = savedRow.meal;
       }
     }
 
@@ -173,12 +165,16 @@ export async function getMealNutrition(uid, mealId, options = {}) {
 
   const safetyThresholds = await getSafetyConfig();
 
-  // 1. Check nutritionCache in Firestore
-  if (db && ingredientsHash) {
+  // 1. Check nutrition_cache in Supabase
+  if (supabase && ingredientsHash) {
     try {
-      const cacheSnap = await db.collection('nutritionCache').doc(ingredientsHash).get();
-      if (cacheSnap.exists) {
-        const cached = cacheSnap.data();
+      const { data: cached } = await supabase
+        .from('nutrition_cache')
+        .select('*')
+        .eq('ingredients_hash', ingredientsHash)
+        .maybeSingle();
+
+      if (cached?.nutrition) {
         const safetyFlags = evaluateMealSafety(
           { ...meal, nutrition: cached.nutrition },
           userConditions,
@@ -223,13 +219,14 @@ export async function getMealNutrition(uid, mealId, options = {}) {
     source = 'ai-estimate';
   }
 
-  // 3. Cache the resolved nutrition in Firestore
-  if (db && ingredientsHash) {
+  // 3. Cache the resolved nutrition in Supabase
+  if (supabase && ingredientsHash) {
     try {
-      await db.collection('nutritionCache').doc(ingredientsHash).set({
+      await supabase.from('nutrition_cache').upsert({
+        ingredients_hash: ingredientsHash,
         nutrition: resolvedNutrition,
         source,
-        fetchedAt: new Date().toISOString(),
+        fetched_at: new Date().toISOString(),
       });
     } catch {
       // Non-fatal if cache write fails

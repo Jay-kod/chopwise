@@ -1,4 +1,4 @@
-import { getAdminDb } from './firebaseAdmin.js';
+import { getSupabaseAdmin } from './supabaseAdmin.js';
 import { encrypt, decrypt } from './crypto.js';
 import { DEFAULT_SETTINGS, DEFAULT_SAFETY } from './data/defaults.js';
 import seedPrices from './data/seedPrices.json' with { type: 'json' };
@@ -32,29 +32,38 @@ export function maskSecret(secret) {
 }
 
 /**
- * Load raw Firestore document from adminConfig/{section}
+ * Load raw record from admin_config table
  * @param {string} section
  * @returns {Promise<object|null>}
  */
 async function loadDoc(section) {
   try {
-    const db = getAdminDb();
-    const snap = await db.collection('adminConfig').doc(section).get();
-    return snap.exists ? snap.data() : null;
-  } catch (err) {
-    // If Firebase Admin is not yet configured or permission denied
+    const supabase = getSupabaseAdmin();
+    const { data, error } = await supabase
+      .from('admin_config')
+      .select('config')
+      .eq('section', section)
+      .maybeSingle();
+    return !error && data ? data.config : null;
+  } catch {
     return null;
   }
 }
 
 /**
- * Save raw document to adminConfig/{section}
+ * Save raw document to admin_config table
  * @param {string} section
  * @param {object} data
  */
 async function saveDoc(section, data) {
-  const db = getAdminDb();
-  await db.collection('adminConfig').doc(section).set(data, { merge: true });
+  const supabase = getSupabaseAdmin();
+  const existing = (await loadDoc(section)) || {};
+  const merged = { ...existing, ...data };
+  await supabase.from('admin_config').upsert({
+    section,
+    config: merged,
+    updated_at: new Date().toISOString(),
+  });
   clearConfigCache(section);
 }
 

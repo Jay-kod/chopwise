@@ -1,6 +1,14 @@
 # CHANGELOG.md
 Add one line per task: date, task id, what changed, doc updates.
 
+## Backend Migration to Supabase (2026-11-07)
+- Migrated Database and Authentication from Firebase/Firestore to Supabase (PostgreSQL + Supabase Auth with Row Level Security).
+- Generated complete SQL database schema with RLS policies and automatic profile creation trigger in `supabase/schema.sql`.
+- Created browser Supabase client `src/lib/supabase.js` and server admin client `api/_lib/supabaseAdmin.js`.
+- Updated AuthContext, login/register flows, apiClient token attachment, profile management, saved meals, and meal detail queries to use Supabase.
+- Migrated serverless functions (`api/_lib/auth.js`, `api/_lib/configStore.js`, `api/_lib/integrations.js`, `api/_lib/services/rateLimit.js`, `api/_lib/services/nutritionService.js`, `api/_lib/services/recommendationService.js`, `api/admin.js`) to read/write PostgreSQL tables (`profiles`, `saved_meals`, `latest_recs`, `nutrition_cache`, `rate_limits`, `admin_config`).
+- Updated BootstrapChecklist, `.env.example`, and `docs/DATABASE.md`.
+
 ## UI & Landing Page Upgrades (2026-11-07)
 - Dynamic Project Identity & Branding: added Admin card (`BrandingSettingsCard.jsx`) and `ConfigContext.jsx` allowing administrators to customize the project name, website icon/emoji (with quick presets `🍲`, `🥘`, `🇳🇬`, `🌿`, `🥗`, `🥑`, or custom image URL), tagline, and hero image. Changes immediately reflect across the site header, logo, footer, mobile drawer, document title, and browser tab favicon via public server configuration (`action: 'publicConfig'`) and reactive state.
 - Codebase compliance: extracted `MealIngredientsAndSteps.jsx`, `evaluationCsv.js`, `validateOnboardingStep`, and `BrandingSettingsCard.jsx` to ensure 100% of files across `src/` adhere strictly to the <= 250 lines rule.

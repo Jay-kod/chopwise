@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-import { getAdminDb } from '../firebaseAdmin.js';
+import { getSupabaseAdmin } from '../supabaseAdmin.js';
 import {
   getSettingsConfig,
   getSafetyConfig,
@@ -46,12 +46,11 @@ export async function getRecommendations(uid, options = {}) {
   const { regenerate = false, isSampleTest = false, customProfile = null } = options;
 
   let profile;
-  let db = null;
+  let supabase = null;
 
   if (customProfile) {
     profile = customProfile;
   } else if (isSampleTest) {
-    // Sample built-in profile used for pipeline health check in /admin
     profile = {
       age: 28,
       gender: 'female',
@@ -65,20 +64,23 @@ export async function getRecommendations(uid, options = {}) {
     // 1. Rate limit check
     await checkRateLimit(uid);
 
-    // 2. Read and validate user profile from Firestore
-    db = getAdminDb();
-    const userSnap = await db.collection('users').doc(uid).get();
+    // 2. Read and validate user profile from Supabase
+    supabase = getSupabaseAdmin();
+    const { data: userRow } = await supabase
+      .from('profiles')
+      .select('profile, profile_complete')
+      .eq('id', uid)
+      .maybeSingle();
 
-    if (!userSnap.exists) {
+    if (!userRow) {
       throw AppError.profileIncomplete('User profile not found. Please complete onboarding.');
     }
 
-    const userData = userSnap.data();
-    if (!userData.profileComplete || !userData.profile) {
+    if (!userRow.profile_complete || !userRow.profile) {
       throw AppError.profileIncomplete('Please complete your dietary onboarding profile first.');
     }
 
-    const parsedProfile = profileSchema.safeParse(userData.profile);
+    const parsedProfile = profileSchema.safeParse(userRow.profile);
     if (!parsedProfile.success) {
       throw AppError.profileIncomplete('Stored profile data is invalid. Please update your profile.');
     }
@@ -89,30 +91,26 @@ export async function getRecommendations(uid, options = {}) {
   const profileHash = computeProfileHash(profile);
 
   // 3. Cache lookup (unless regenerate requested or running sample test / custom profile)
-  if (!regenerate && !isSampleTest && !customProfile && db) {
+  if (!regenerate && !isSampleTest && !customProfile && supabase) {
     try {
-      const recsSnap = await db
-        .collection('users')
-        .doc(uid)
-        .collection('latestRecs')
-        .doc('current')
-        .get();
+      const { data: recsData } = await supabase
+        .from('latest_recs')
+        .select('meals, profile_hash, per_meal_cap_ngn, generated_at')
+        .eq('user_id', uid)
+        .maybeSingle();
 
-      if (recsSnap.exists) {
-        const recsData = recsSnap.data();
-        if (
-          recsData?.profileHash === profileHash &&
-          Array.isArray(recsData.meals) &&
-          recsData.meals.length > 0
-        ) {
-          return {
-            meals: recsData.meals,
-            perMealCapNGN: recsData.perMealCapNGN || 0,
-            generatedAt: recsData.generatedAt || new Date().toISOString(),
-            fromCache: true,
-            warnings: [],
-          };
-        }
+      if (
+        recsData?.profile_hash === profileHash &&
+        Array.isArray(recsData.meals) &&
+        recsData.meals.length > 0
+      ) {
+        return {
+          meals: recsData.meals,
+          perMealCapNGN: Number(recsData.per_meal_cap_ngn) || 0,
+          generatedAt: recsData.generated_at || new Date().toISOString(),
+          fromCache: true,
+          warnings: [],
+        };
       }
     } catch {
       // If cache lookup fails, proceed to fresh generation
@@ -217,20 +215,16 @@ export async function getRecommendations(uid, options = {}) {
 
   const generatedAt = new Date().toISOString();
 
-  // 9. Persist to Firestore (unless running in sample test or custom profile mode)
-  if (!isSampleTest && !customProfile && db) {
+  // 9. Persist to Supabase (unless running in sample test or custom profile mode)
+  if (!isSampleTest && !customProfile && supabase) {
     try {
-      await db
-        .collection('users')
-        .doc(uid)
-        .collection('latestRecs')
-        .doc('current')
-        .set({
-          meals: finalMeals,
-          profileHash,
-          perMealCapNGN,
-          generatedAt,
-        });
+      await supabase.from('latest_recs').upsert({
+        user_id: uid,
+        meals: finalMeals,
+        profile_hash: profileHash,
+        per_meal_cap_ngn: perMealCapNGN,
+        generated_at: generatedAt,
+      });
     } catch (saveErr) {
       // Non-fatal if saving to cache fails
     }
