@@ -3,6 +3,7 @@ import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Onboarding from './pages/Onboarding';
+import Dashboard from './pages/Dashboard';
 import Admin from './pages/Admin';
 import NotFound from './pages/NotFound';
 import ProtectedRoute from './routes/ProtectedRoute';
@@ -20,10 +21,16 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
 
-          {/* Protected Onboarding Flow */}
+          {/* Protected Area */}
           <Route element={<ProtectedRoute />}>
+            {/* Onboarding flow allows incomplete profiles */}
             <Route element={<ProfileGate allowIncomplete={true} />}>
               <Route path="/onboarding" element={<Onboarding />} />
+            </Route>
+
+            {/* Dashboard requires completed profile */}
+            <Route element={<ProfileGate allowIncomplete={false} />}>
+              <Route path="/dashboard" element={<Dashboard />} />
             </Route>
 
             {/* Admin Management Portal */}

@@ -31,6 +31,7 @@ Add one line per task: date, task id, what changed, doc updates.
 
 ## Block 5 (2026-11-07)
 - P7: Built recommendation service and endpoint (api/recommend.js, _lib/services/prompt.js with prompt injection sanitization, _lib/services/budget.js with deterministic unit conversion, _lib/services/safety.js with medical condition rules, _lib/services/rateLimit.js with Firestore atomic transactions, _lib/services/recommendationService.js with SHA-1 profile caching, Gemini JSON structured outputs, budget recalculation, and over-budget retry). Added recommend pipeline test to Admin registry.
+- P8: Built Dashboard UI (pages/Dashboard.jsx, features/meals/useRecommendations.js, features/meals/MealCard.jsx, features/meals/SafetyBadge.jsx) with skeleton loading, NOT_CONFIGURED and RATE_LIMITED error states, meal-type filtering, rate limit confirmation dialog on regenerate, and updated onboarding completion to redirect to /dashboard.
 
 ## Branding and theme (2026-11-07)
 - Product named ChopWise; green and white palette with light/dark/system modes.

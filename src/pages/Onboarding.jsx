@@ -18,7 +18,6 @@ import {
   step4Schema,
   profileSchema,
 } from '../features/onboarding/schema';
-import { formatNaira } from '../lib/format';
 
 const TOTAL_STEPS = 4;
 
@@ -38,7 +37,6 @@ export default function Onboarding() {
   });
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
-  const [isSaved, setIsSaved] = useState(false);
 
   // Pre-fill if profile already exists in Firestore
   useEffect(() => {
@@ -162,71 +160,13 @@ export default function Onboarding() {
         profileComplete: true,
       });
 
-      setIsSaved(true);
+      // Per P8 instructions: redirect directly to /dashboard on completion
+      navigate('/dashboard');
     } catch (err) {
       setErrors({ form: err.message || 'Failed to save profile. Please try again.' });
     } finally {
       setSaving(false);
     }
-  }
-
-  // Profile Saved state (real part of the flow when /dashboard doesn't exist yet)
-  if (isSaved) {
-    return (
-      <Layout>
-        <div className="mx-auto max-w-lg py-8">
-          <Card className="p-6 text-center sm:p-8">
-            <span className="text-4xl" aria-hidden="true">
-              ✅
-            </span>
-            <h1 className="mt-3 text-2xl font-bold text-fg">Profile Saved!</h1>
-            <p className="mt-2 text-sm text-muted">
-              Your dietary preferences, medical constraints, and budget have been safely
-              stored. ChopWise will use them to tailor Nigerian recipe recommendations.
-            </p>
-
-            <div className="mt-6 rounded-xl border border-line bg-surface-muted p-4 text-left text-xs text-fg space-y-2">
-              <div className="flex justify-between">
-                <span className="text-muted">Weekly Food Budget:</span>
-                <span className="font-semibold text-primary">
-                  {formatNaira(formData.weeklyBudgetNGN)}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted">Estimated per-meal cap:</span>
-                <span className="font-medium">
-                  {formatNaira(Math.round(formData.weeklyBudgetNGN / 21))}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted">Conditions:</span>
-                <span className="font-medium">
-                  {formData.conditions.length > 0 ? formData.conditions.join(', ') : 'None'}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted">Preferences:</span>
-                <span className="font-medium">
-                  {formData.preferences.length > 0 ? formData.preferences.join(', ') : 'None'}
-                </span>
-              </div>
-            </div>
-
-            <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center">
-              <Button
-                variant="secondary"
-                onClick={() => {
-                  setIsSaved(false);
-                  setStep(1);
-                }}
-              >
-                Edit Profile
-              </Button>
-            </div>
-          </Card>
-        </div>
-      </Layout>
-    );
   }
 
   const progressPercent = Math.round((step / TOTAL_STEPS) * 100);
@@ -324,4 +264,3 @@ export default function Onboarding() {
     </Layout>
   );
 }
-
