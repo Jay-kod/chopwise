@@ -1,7 +1,9 @@
+import { Link } from 'react-router-dom';
 import Layout from '../components/Layout';
 import Spinner from '../components/Spinner';
 import ErrorState from '../components/ErrorState';
 import Button from '../components/Button';
+import ThemeToggle from '../components/ThemeToggle';
 import FunctionsTable from '../features/admin/FunctionsTable';
 import IntegrationCard from '../features/admin/IntegrationCard';
 import SettingsForm from '../features/admin/SettingsForm';
@@ -10,6 +12,24 @@ import PriceTableEditor from '../features/admin/PriceTableEditor';
 import BootstrapChecklist from '../features/admin/BootstrapChecklist';
 import EvaluationRunner from '../features/admin/EvaluationRunner';
 import { useAdminApi } from '../features/admin/useAdminApi';
+
+function ArrowLeftIcon({ className = 'h-4 w-4' }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
+      <line x1="19" y1="12" x2="5" y2="12" />
+      <polyline points="12 19 5 12 12 5" />
+    </svg>
+  );
+}
 
 export default function Admin() {
   const {
@@ -26,7 +46,7 @@ export default function Admin() {
 
   if (loading && !status) {
     return (
-      <Layout>
+      <Layout hideHeader={true} hideFooter={true}>
         <div className="flex min-h-[60vh] items-center justify-center">
           <Spinner label="Loading admin configurations…" />
         </div>
@@ -36,7 +56,7 @@ export default function Admin() {
 
   if (error && !status) {
     return (
-      <Layout>
+      <Layout hideHeader={true} hideFooter={true}>
         <div className="mx-auto max-w-lg py-12">
           <ErrorState message={error} onRetry={fetchStatus} />
         </div>
@@ -47,11 +67,24 @@ export default function Admin() {
   const integrations = status?.integrations || [];
 
   return (
-    <Layout>
+    <Layout hideHeader={true} hideFooter={true}>
       <div className="space-y-8 py-4 sm:py-6">
-        {/* Header */}
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-line pb-4">
-          <div>
+        {/* Admin Navigation Bar (Replaces global site header) */}
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-line pb-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 text-xs">
+              <Link
+                to="/dashboard"
+                className="inline-flex items-center gap-1 font-medium text-muted hover:text-primary transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded px-1 py-0.5"
+              >
+                <ArrowLeftIcon />
+                <span>Dashboard</span>
+              </Link>
+              <span className="text-muted">/</span>
+              <span className="font-semibold text-primary uppercase tracking-wider text-[11px]">
+                Admin Portal
+              </span>
+            </div>
             <h1 className="text-2xl font-bold tracking-tight text-fg">
               ChopWise Administration
             </h1>
@@ -59,6 +92,7 @@ export default function Admin() {
               Centralized management for API credentials, runtime settings, safety parameters, and price tables.
             </p>
           </div>
+
           <div className="flex items-center gap-2">
             <Button
               variant="secondary"
@@ -68,6 +102,7 @@ export default function Admin() {
             >
               {loading ? <Spinner label="Refreshing…" /> : '↻ Refresh Status'}
             </Button>
+            <ThemeToggle />
           </div>
         </div>
 
@@ -134,4 +169,3 @@ export default function Admin() {
     </Layout>
   );
 }
-

@@ -3,22 +3,28 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import Logo from './Logo';
 import ThemeToggle from './ThemeToggle';
 import Button from './Button';
-import { APP_NAME, APP_TAGLINE } from '../lib/constants';
+import Footer from './Footer';
+import { APP_NAME } from '../lib/constants';
 import { useAuth } from '../features/auth/useAuth';
 import { apiClient } from '../lib/apiClient';
 
 /**
- * Standard application layout with sticky header, responsive navigation, mobile hamburger drawer, and comprehensive footer.
+ * Standard application layout with sticky header, responsive navigation, mobile drawer, and footer.
  * Follows AGENTS.md and docs/UI_GUIDELINES.md.
  */
-export default function Layout({ children, navActions }) {
+export default function Layout({
+  children,
+  navActions,
+  hideHeader = false,
+  hideFooter = false,
+  fullWidth = false,
+}) {
   const { user, logout } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Close mobile drawer on route transition
   useEffect(() => {
     setMobileMenuOpen(false);
   }, [location.pathname]);
@@ -50,7 +56,6 @@ export default function Layout({ children, navActions }) {
     }
   }
 
-  // Desktop navigation items
   const desktopNavActions = user ? (
     <div className="hidden sm:flex items-center gap-3">
       <Link
@@ -103,174 +108,106 @@ export default function Layout({ children, navActions }) {
   return (
     <div className="flex min-h-screen flex-col bg-page text-fg">
       {/* Sticky Top Header */}
-      <header className="sticky top-0 z-40 border-b border-line bg-surface/95 backdrop-blur-sm">
-        <nav className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
-          <Link to="/" aria-label={`${APP_NAME} home`} className="flex items-center gap-2">
-            <Logo />
-          </Link>
+      {!hideHeader && (
+        <header className="sticky top-0 z-40 border-b border-line bg-surface/95 backdrop-blur-sm">
+          <nav className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
+            <Link to="/" aria-label={`${APP_NAME} home`} className="flex items-center gap-2">
+              <Logo />
+            </Link>
 
-          {/* Desktop Right Group */}
-          <div className="flex items-center gap-2 sm:gap-3">
-            {navActions !== undefined ? navActions : desktopNavActions}
+            <div className="flex items-center gap-2 sm:gap-3">
+              {navActions !== undefined ? navActions : desktopNavActions}
 
-            <div className="border-l border-line pl-2">
-              <ThemeToggle />
-            </div>
+              <div className="border-l border-line pl-2">
+                <ThemeToggle />
+              </div>
 
-            {/* Mobile Hamburger Button */}
-            <button
-              type="button"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-line bg-surface text-fg hover:bg-surface-muted focus:outline-none sm:hidden"
-              aria-label="Toggle navigation menu"
-              aria-expanded={mobileMenuOpen}
-            >
-              {mobileMenuOpen ? (
-                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              ) : (
-                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              )}
-            </button>
-          </div>
-        </nav>
-
-        {/* Mobile Dropdown Drawer */}
-        {mobileMenuOpen && (
-          <div className="border-t border-line bg-surface px-4 py-4 sm:hidden space-y-3 shadow-lg">
-            {user ? (
-              <div className="space-y-3">
-                <div className="text-xs text-muted border-b border-line pb-2">
-                  Signed in as <span className="font-semibold text-fg">{user.email}</span>
-                </div>
-                <Link
-                  to="/dashboard"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="block text-sm font-semibold text-fg hover:text-primary"
-                >
-                  Dashboard
-                </Link>
-                <Link
-                  to="/profile"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="block text-sm font-semibold text-fg hover:text-primary"
-                >
-                  Profile &amp; Saved Meals
-                </Link>
-                {isAdmin && (
-                  <Link
-                    to="/admin"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="block text-sm font-semibold text-primary"
-                  >
-                    Admin Portal
-                  </Link>
+              {/* Mobile Hamburger Button */}
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-line bg-surface text-fg hover:bg-surface-muted focus:outline-none sm:hidden"
+                aria-label="Toggle navigation menu"
+                aria-expanded={mobileMenuOpen}
+              >
+                {mobileMenuOpen ? (
+                  <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                ) : (
+                  <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
                 )}
-                <div className="pt-2 border-t border-line">
-                  <Button
-                    variant="secondary"
-                    onClick={() => {
-                      setMobileMenuOpen(false);
-                      handleLogout();
-                    }}
-                    className="w-full text-xs min-h-9"
+              </button>
+            </div>
+          </nav>
+
+          {/* Mobile Dropdown Drawer */}
+          {mobileMenuOpen && (
+            <div className="border-t border-line bg-surface px-4 py-4 sm:hidden space-y-3 shadow-lg">
+              {user ? (
+                <div className="space-y-3">
+                  <div className="text-xs text-muted border-b border-line pb-2">
+                    Signed in as <span className="font-semibold text-fg">{user.email}</span>
+                  </div>
+                  <Link
+                    to="/dashboard"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="block text-sm font-semibold text-fg hover:text-primary"
                   >
-                    Log out
-                  </Button>
+                    Dashboard
+                  </Link>
+                  <Link
+                    to="/profile"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="block text-sm font-semibold text-fg hover:text-primary"
+                  >
+                    Profile &amp; Saved Meals
+                  </Link>
+                  {isAdmin && (
+                    <Link
+                      to="/admin"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="block text-sm font-semibold text-primary"
+                    >
+                      Admin Portal
+                    </Link>
+                  )}
+                  <div className="pt-2 border-t border-line">
+                    <Button
+                      variant="secondary"
+                      onClick={() => {
+                        setMobileMenuOpen(false);
+                        handleLogout();
+                      }}
+                      className="w-full text-xs min-h-9"
+                    >
+                      Log out
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="block">
-                  <Button variant="secondary" className="w-full text-xs min-h-10 font-semibold">
-                    Log in
-                  </Button>
-                </Link>
-              </div>
-            )}
-          </div>
-        )}
-      </header>
+              ) : (
+                <div className="space-y-2">
+                  <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="block">
+                    <Button variant="secondary" className="w-full text-xs min-h-10 font-semibold">
+                      Log in
+                    </Button>
+                  </Link>
+                </div>
+              )}
+            </div>
+          )}
+        </header>
+      )}
 
       {/* Main Page Body */}
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6 sm:py-8">
+      <main className={fullWidth ? 'w-full flex-1' : 'mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6 sm:py-8'}>
         {children}
       </main>
 
-      {/* Standard Comprehensive Footer */}
-      <footer className="border-t border-line bg-surface">
-        <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
-          <div className="grid gap-8 sm:grid-cols-2 md:grid-cols-4">
-            <div className="space-y-3 sm:col-span-2 md:col-span-1">
-              <Link to="/" className="inline-block">
-                <Logo />
-              </Link>
-              <p className="text-xs text-muted leading-relaxed">
-                {APP_TAGLINE}
-              </p>
-              <div className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface-muted px-2.5 py-1 text-[11px] text-muted">
-                <span>🇳🇬</span> Tailored for Nigerian households
-              </div>
-            </div>
-
-            <div className="space-y-2.5 text-xs">
-              <h4 className="font-semibold text-fg">Explore ChopWise</h4>
-              <ul className="space-y-1.5 text-muted">
-                <li>
-                  <Link to="/" className="hover:text-primary transition-colors">
-                    Home
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/dashboard" className="hover:text-primary transition-colors">
-                    Meal Recommendations
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/profile" className="hover:text-primary transition-colors">
-                    Health &amp; Budget Profile
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/login" className="hover:text-primary transition-colors">
-                    Account Login
-                  </Link>
-                </li>
-              </ul>
-            </div>
-
-            <div className="space-y-2.5 text-xs">
-              <h4 className="font-semibold text-fg">Clinical Focus</h4>
-              <ul className="space-y-1.5 text-muted">
-                <li>Hypertension &amp; Low Sodium</li>
-                <li>Diabetes &amp; Glycemic Control</li>
-                <li>Peptic Ulcer Soothing Diets</li>
-                <li>Portion &amp; Calorie Management</li>
-              </ul>
-            </div>
-
-            <div className="space-y-2.5 text-xs">
-              <h4 className="font-semibold text-fg">Clinical Guidance</h4>
-              <p className="text-[11px] text-muted leading-relaxed">
-                General dietary guidance only, not clinical medical advice. Consult a doctor or registered dietitian for medical diagnosis.
-              </p>
-              <p className="text-[11px] text-muted leading-relaxed">
-                Health information is encrypted and processed strictly in compliance with data privacy standards.
-              </p>
-            </div>
-          </div>
-
-          <div className="mt-8 flex flex-col gap-3 border-t border-line pt-6 text-center text-xs text-muted sm:flex-row sm:items-center sm:justify-between sm:text-left">
-            <p>© {new Date().getFullYear()} {APP_NAME}. All rights reserved.</p>
-            <p className="text-[11px]">
-              AI nutrition powered by Gemini &amp; Edamam where supported by standard food taxonomies.
-            </p>
-          </div>
-        </div>
-      </footer>
+      {/* Standard Footer */}
+      {!hideFooter && <Footer />}
     </div>
   );
 }

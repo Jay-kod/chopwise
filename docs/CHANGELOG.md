@@ -1,6 +1,12 @@
 # CHANGELOG.md
 Add one line per task: date, task id, what changed, doc updates.
 
+## UI & Landing Page Upgrades (2026-11-07)
+- Landing page overhaul: set Hero section to 98%vh (`min-h-[98vh]`), standard content sections to 60%vh (`min-h-[60vh]`), and detailed sample recipes section to natural height; applied subtle alternating background gradients across all landing page sections using semantic theme tokens (`from-page`, `via-surface-muted`, `to-surface`).
+- Extracted `landingData.js` and `Footer.jsx` to adhere to the <= 250 line limit per file.
+- Header refinements: removed Sign Up button before login, displaying only "Log in" and upgraded tactile pill `ThemeToggle`; implemented responsive mobile hamburger drawer menu.
+- Auth & Admin styling: single-page headerless and footerless views for `/login`, `/register`, and `/admin`; segmented auth toggle for seamless tab switching between Log in and Sign up; password visibility toggles; floating theme toggle; and streamlined admin header with back navigation.
+
 ## Unreleased — planning decisions (2026-11-07)
 - Stack locked to Chapter 3: React, Firebase, Gemini, Edamam, Vercel.
 - Added server-side proxy (3 Vercel functions) so keys never reach the browser.
