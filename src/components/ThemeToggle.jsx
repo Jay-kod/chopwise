@@ -3,7 +3,17 @@ import { useTheme } from '../lib/useTheme';
 const LABELS = { system: 'System', light: 'Light', dark: 'Dark' };
 
 function ThemeIcon({ theme }) {
-  const common = { width: 20, height: 20, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true };
+  const common = {
+    width: 16,
+    height: 16,
+    viewBox: '0 0 24 24',
+    fill: 'none',
+    stroke: 'currentColor',
+    strokeWidth: 2,
+    strokeLinecap: 'round',
+    strokeLinejoin: 'round',
+    'aria-hidden': true,
+  };
   if (theme === 'light') {
     return (
       <svg {...common}>
@@ -27,19 +37,30 @@ function ThemeIcon({ theme }) {
   );
 }
 
-/** Cycles System -> Light -> Dark. Shown in the navbar on every page. */
-export default function ThemeToggle() {
+/**
+ * Cycles System -> Light -> Dark.
+ * Stylized pill button with theme icon and label.
+ * Follows AGENTS.md and docs/UI_GUIDELINES.md.
+ */
+export default function ThemeToggle({ className = '', showLabel = true }) {
   const { theme, cycle } = useTheme();
+
   return (
     <button
       type="button"
       onClick={cycle}
-      className="inline-flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-lg border border-field-line bg-surface px-3 text-sm text-fg hover:bg-surface-muted"
+      className={`inline-flex min-h-9 items-center justify-center gap-1.5 rounded-full border border-line bg-surface px-3 text-xs font-semibold text-fg shadow-sm transition-all hover:border-field-line hover:bg-surface-muted active:scale-95 ${className}`}
       aria-label={`Theme: ${LABELS[theme]}. Press to change.`}
-      title={`Theme: ${LABELS[theme]}`}
+      title={`Theme: ${LABELS[theme]} (Click to cycle)`}
     >
-      <ThemeIcon theme={theme} />
-      <span className="hidden sm:inline">{LABELS[theme]}</span>
+      <span className="text-primary flex items-center">
+        <ThemeIcon theme={theme} />
+      </span>
+      {showLabel && (
+        <span className="text-[11px] font-medium text-fg capitalize">
+          {LABELS[theme]}
+        </span>
+      )}
     </button>
   );
 }

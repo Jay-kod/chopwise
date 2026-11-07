@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import Logo from './Logo';
 import ThemeToggle from './ThemeToggle';
 import Button from './Button';
@@ -8,13 +8,20 @@ import { useAuth } from '../features/auth/useAuth';
 import { apiClient } from '../lib/apiClient';
 
 /**
- * Standard application layout with sticky header, responsive navigation, and comprehensive footer.
+ * Standard application layout with sticky header, responsive navigation, mobile hamburger drawer, and comprehensive footer.
  * Follows AGENTS.md and docs/UI_GUIDELINES.md.
  */
 export default function Layout({ children, navActions }) {
   const { user, logout } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Close mobile drawer on route transition
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [location.pathname]);
 
   useEffect(() => {
     let active = true;
@@ -43,8 +50,9 @@ export default function Layout({ children, navActions }) {
     }
   }
 
-  const defaultNavActions = user ? (
-    <div className="flex items-center gap-2 sm:gap-3">
+  // Desktop navigation items
+  const desktopNavActions = user ? (
+    <div className="hidden sm:flex items-center gap-3">
       <Link
         to="/dashboard"
         className="text-xs font-semibold text-fg hover:text-primary transition-colors"
@@ -83,15 +91,10 @@ export default function Layout({ children, navActions }) {
       </Button>
     </div>
   ) : (
-    <div className="flex items-center gap-2">
+    <div className="hidden sm:flex items-center gap-2">
       <Link to="/login">
-        <Button variant="secondary" className="min-h-9 px-3.5 text-xs font-medium">
+        <Button variant="secondary" className="min-h-9 px-4 text-xs font-semibold">
           Log in
-        </Button>
-      </Link>
-      <Link to="/register">
-        <Button className="min-h-9 px-3.5 text-xs font-medium">
-          Sign up
         </Button>
       </Link>
     </div>
@@ -99,19 +102,97 @@ export default function Layout({ children, navActions }) {
 
   return (
     <div className="flex min-h-screen flex-col bg-page text-fg">
-      {/* Sticky Header */}
+      {/* Sticky Top Header */}
       <header className="sticky top-0 z-40 border-b border-line bg-surface/95 backdrop-blur-sm">
         <nav className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
           <Link to="/" aria-label={`${APP_NAME} home`} className="flex items-center gap-2">
             <Logo />
           </Link>
+
+          {/* Desktop Right Group */}
           <div className="flex items-center gap-2 sm:gap-3">
-            {navActions !== undefined ? navActions : defaultNavActions}
+            {navActions !== undefined ? navActions : desktopNavActions}
+
             <div className="border-l border-line pl-2">
               <ThemeToggle />
             </div>
+
+            {/* Mobile Hamburger Button */}
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-line bg-surface text-fg hover:bg-surface-muted focus:outline-none sm:hidden"
+              aria-label="Toggle navigation menu"
+              aria-expanded={mobileMenuOpen}
+            >
+              {mobileMenuOpen ? (
+                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              ) : (
+                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              )}
+            </button>
           </div>
         </nav>
+
+        {/* Mobile Dropdown Drawer */}
+        {mobileMenuOpen && (
+          <div className="border-t border-line bg-surface px-4 py-4 sm:hidden space-y-3 shadow-lg">
+            {user ? (
+              <div className="space-y-3">
+                <div className="text-xs text-muted border-b border-line pb-2">
+                  Signed in as <span className="font-semibold text-fg">{user.email}</span>
+                </div>
+                <Link
+                  to="/dashboard"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block text-sm font-semibold text-fg hover:text-primary"
+                >
+                  Dashboard
+                </Link>
+                <Link
+                  to="/profile"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block text-sm font-semibold text-fg hover:text-primary"
+                >
+                  Profile &amp; Saved Meals
+                </Link>
+                {isAdmin && (
+                  <Link
+                    to="/admin"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="block text-sm font-semibold text-primary"
+                  >
+                    Admin Portal
+                  </Link>
+                )}
+                <div className="pt-2 border-t border-line">
+                  <Button
+                    variant="secondary"
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      handleLogout();
+                    }}
+                    className="w-full text-xs min-h-9"
+                  >
+                    Log out
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="block">
+                  <Button variant="secondary" className="w-full text-xs min-h-10 font-semibold">
+                    Log in
+                  </Button>
+                </Link>
+              </div>
+            )}
+          </div>
+        )}
       </header>
 
       {/* Main Page Body */}
@@ -123,7 +204,6 @@ export default function Layout({ children, navActions }) {
       <footer className="border-t border-line bg-surface">
         <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
           <div className="grid gap-8 sm:grid-cols-2 md:grid-cols-4">
-            {/* Col 1: Brand & Tagline */}
             <div className="space-y-3 sm:col-span-2 md:col-span-1">
               <Link to="/" className="inline-block">
                 <Logo />
@@ -136,7 +216,6 @@ export default function Layout({ children, navActions }) {
               </div>
             </div>
 
-            {/* Col 2: Quick Links */}
             <div className="space-y-2.5 text-xs">
               <h4 className="font-semibold text-fg">Explore ChopWise</h4>
               <ul className="space-y-1.5 text-muted">
@@ -156,14 +235,13 @@ export default function Layout({ children, navActions }) {
                   </Link>
                 </li>
                 <li>
-                  <Link to="/register" className="hover:text-primary transition-colors">
-                    Create Free Account
+                  <Link to="/login" className="hover:text-primary transition-colors">
+                    Account Login
                   </Link>
                 </li>
               </ul>
             </div>
 
-            {/* Col 3: Clinical Health Focus */}
             <div className="space-y-2.5 text-xs">
               <h4 className="font-semibold text-fg">Clinical Focus</h4>
               <ul className="space-y-1.5 text-muted">
@@ -174,7 +252,6 @@ export default function Layout({ children, navActions }) {
               </ul>
             </div>
 
-            {/* Col 4: Medical & Privacy Disclaimer */}
             <div className="space-y-2.5 text-xs">
               <h4 className="font-semibold text-fg">Clinical Guidance</h4>
               <p className="text-[11px] text-muted leading-relaxed">
@@ -186,7 +263,6 @@ export default function Layout({ children, navActions }) {
             </div>
           </div>
 
-          {/* Sub-footer Bar */}
           <div className="mt-8 flex flex-col gap-3 border-t border-line pt-6 text-center text-xs text-muted sm:flex-row sm:items-center sm:justify-between sm:text-left">
             <p>© {new Date().getFullYear()} {APP_NAME}. All rights reserved.</p>
             <p className="text-[11px]">
