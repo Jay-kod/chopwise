@@ -1,13 +1,15 @@
 import { Link } from 'react-router-dom';
 import Logo from './Logo';
-import { APP_NAME, APP_TAGLINE } from '../lib/constants';
+import { useAppConfig } from '../context/ConfigContext';
 
 /**
  * Standard comprehensive footer for ChopWise.
  * Follows AGENTS.md and docs/UI_GUIDELINES.md.
  */
 export default function Footer() {
+  const { appName, appTagline } = useAppConfig();
   const currentYear = new Date().getFullYear();
+  const name = appName || 'ChopWise';
 
   return (
     <footer className="border-t border-line bg-surface">
@@ -19,7 +21,7 @@ export default function Footer() {
               <Logo />
             </Link>
             <p className="text-xs text-muted leading-relaxed">
-              {APP_TAGLINE}
+              {appTagline}
             </p>
             <div className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface-muted px-2.5 py-1 text-[11px] text-muted">
               <span>🇳🇬</span> Tailored for Nigerian households
@@ -28,7 +30,7 @@ export default function Footer() {
 
           {/* Navigation Links */}
           <div className="space-y-2.5 text-xs">
-            <h4 className="font-semibold text-fg">Explore ChopWise</h4>
+            <h4 className="font-semibold text-fg">Explore {name}</h4>
             <ul className="space-y-1.5 text-muted">
               <li>
                 <Link to="/" className="hover:text-primary transition-colors">
@@ -78,7 +80,7 @@ export default function Footer() {
 
         {/* Sub-footer Bar */}
         <div className="mt-8 flex flex-col gap-3 border-t border-line pt-6 text-center text-xs text-muted sm:flex-row sm:items-center sm:justify-between sm:text-left">
-          <p>© {currentYear} {APP_NAME}. All rights reserved.</p>
+          <p>© {currentYear} {name}. All rights reserved.</p>
           <p className="text-[11px]">
             AI nutrition powered by Gemini &amp; Edamam where supported by standard food taxonomies.
           </p>

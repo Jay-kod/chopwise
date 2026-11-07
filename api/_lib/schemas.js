@@ -27,6 +27,10 @@ export const settingsSchema = z.object({
   budgetDivisor: z.number().int().min(7).max(42),
   rateLimitPerHour: z.number().int().min(1).max(100),
   retryOnOverBudget: z.boolean(),
+  heroImageUrl: z.string().url().or(z.literal('')).optional(),
+  appName: z.string().min(1).max(50).optional(),
+  appTagline: z.string().max(200).optional(),
+  appIcon: z.string().max(50).optional(),
   updatedAt: z.string().optional(),
 });
 

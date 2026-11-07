@@ -12,11 +12,8 @@ import Step2Conditions from '../features/onboarding/steps/Step2Conditions';
 import Step3Preferences from '../features/onboarding/steps/Step3Preferences';
 import Step4Budget from '../features/onboarding/steps/Step4Budget';
 import {
-  step1Schema,
-  step2Schema,
-  step3Schema,
-  step4Schema,
   profileSchema,
+  validateOnboardingStep,
 } from '../features/onboarding/schema';
 
 const TOTAL_STEPS = 4;
@@ -66,50 +63,10 @@ export default function Onboarding() {
 
   function validateCurrentStep() {
     setErrors({});
-    if (step === 1) {
-      const result = step1Schema.safeParse({
-        age: Number(formData.age),
-        gender: formData.gender,
-        weightKg: Number(formData.weightKg),
-      });
-      if (!result.success) {
-        const fieldErrors = {};
-        for (const issue of result.error.issues) {
-          fieldErrors[issue.path[0]] = issue.message;
-        }
-        setErrors(fieldErrors);
-        return false;
-      }
-    } else if (step === 2) {
-      const result = step2Schema.safeParse({
-        conditions: formData.conditions,
-      });
-      if (!result.success) return false;
-    } else if (step === 3) {
-      const result = step3Schema.safeParse({
-        preferences: formData.preferences,
-        avoidText: formData.avoidText,
-      });
-      if (!result.success) {
-        const fieldErrors = {};
-        for (const issue of result.error.issues) {
-          fieldErrors[issue.path[0]] = issue.message;
-        }
-        setErrors(fieldErrors);
-        return false;
-      }
-    } else if (step === 4) {
-      const result = step4Schema.safeParse({
-        weeklyBudgetNGN: Number(formData.weeklyBudgetNGN),
-      });
-      if (!result.success) {
-        const fieldErrors = {};
-        for (const issue of result.error.issues) {
-          fieldErrors[issue.path[0]] = issue.message;
-        }
-        setErrors(fieldErrors);
-        return false;
-      }
+    const result = validateOnboardingStep(step, formData);
+    if (!result.success) {
+      setErrors(result.errors || {});
+      return false;
     }
     return true;
   }

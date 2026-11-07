@@ -5,6 +5,10 @@ import Input from '../../components/Input';
 import Spinner from '../../components/Spinner';
 import { formatNaira } from '../../lib/format';
 
+/**
+ * Admin card for recommendation engine parameters and quota controls.
+ * Follows AGENTS.md and docs/ADMIN_PAGE_SPEC.md.
+ */
 export default function SettingsForm({ settings, onSave, onReset }) {
   const [formData, setFormData] = useState({
     mealsPerType: 2,
@@ -34,6 +38,7 @@ export default function SettingsForm({ settings, onSave, onReset }) {
     e.preventDefault();
     setSaving(true);
     await onSave('settings', {
+      ...(settings || {}),
       mealsPerType: Number(formData.mealsPerType),
       budgetDivisor: Number(formData.budgetDivisor),
       rateLimitPerHour: Number(formData.rateLimitPerHour),
@@ -55,7 +60,7 @@ export default function SettingsForm({ settings, onSave, onReset }) {
   return (
     <Card className="p-6">
       <div className="mb-4">
-        <h2 className="text-lg font-bold text-fg">Recommendation Settings</h2>
+        <h2 className="text-lg font-bold text-fg">Recommendation Engine Settings</h2>
         <p className="text-xs text-muted">
           Configure recommendation engine behavior, quota limits, and budget calculation rules.
         </p>
@@ -86,12 +91,9 @@ export default function SettingsForm({ settings, onSave, onReset }) {
           />
         </div>
 
-        {/* Live helper text for per-meal cap preview */}
         <div className="rounded-lg border border-line bg-surface-muted p-3 text-xs text-fg">
           <span className="font-semibold text-primary">Live per-meal cap preview:</span> For a
-          ₦10,000/week budget, each meal cap is{' '}
-          <strong className="text-fg">{sampleCap10k}</strong>. For ₦20,000/week, each cap is{' '}
-          <strong className="text-fg">{sampleCap20k}</strong>.
+          ₦10,000/week budget, each meal cap is <strong className="text-fg">{sampleCap10k}</strong>. For ₦20,000/week, each cap is <strong className="text-fg">{sampleCap20k}</strong>.
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
@@ -145,4 +147,3 @@ export default function SettingsForm({ settings, onSave, onReset }) {
     </Card>
   );
 }
-

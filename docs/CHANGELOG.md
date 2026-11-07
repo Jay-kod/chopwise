@@ -2,6 +2,9 @@
 Add one line per task: date, task id, what changed, doc updates.
 
 ## UI & Landing Page Upgrades (2026-11-07)
+- Dynamic Project Identity & Branding: added Admin card (`BrandingSettingsCard.jsx`) and `ConfigContext.jsx` allowing administrators to customize the project name, website icon/emoji (with quick presets `🍲`, `🥘`, `🇳🇬`, `🌿`, `🥗`, `🥑`, or custom image URL), tagline, and hero image. Changes immediately reflect across the site header, logo, footer, mobile drawer, document title, and browser tab favicon via public server configuration (`action: 'publicConfig'`) and reactive state.
+- Codebase compliance: extracted `MealIngredientsAndSteps.jsx`, `evaluationCsv.js`, `validateOnboardingStep`, and `BrandingSettingsCard.jsx` to ensure 100% of files across `src/` adhere strictly to the <= 250 lines rule.
+- Hero section and recipe imagery: added configurable `heroImageUrl` setting in Admin portal (`/admin`) and server config store (`api/_lib/configStore.js`, `settingsSchema`) with quick Nigerian culinary presets and live preview; upgraded Landing page hero into a 2-column responsive layout showcasing the configured meal image with nutritional badge overlay; added images to sample recipes.
 - Header styling: changed top site header from semi-transparent blur to a solid, opaque darker green (`--color-header-bg: #034430` light, `#05261B` dark) with high-contrast text (`--color-header-fg`), soft mint secondary accents (`--color-header-muted`), and inverted ChopWise logo mark.
 - Dashboard optimization: extracted `DashboardError.jsx` to keep `Dashboard.jsx` under 250 lines (now 240 lines).
 - Mobile sidebar navigation: updated the hamburger menu into an off-canvas drawer (`MobileDrawer.jsx`) that smoothly flows in from the right (`translate-x-full` to `translate-x-0` with `duration-300 ease-out`), accompanied by a semi-transparent `bg-overlay/60` backdrop blur scrim, explicit close button, user profile info, navigation links, and theme toggle.

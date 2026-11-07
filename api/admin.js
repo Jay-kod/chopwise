@@ -33,6 +33,17 @@ export default withHandler(async (req, res) => {
     return res.status(200).json({ isAdmin });
   }
 
+  // 1b. Action: public-settings / publicConfig (Public query for website presentation settings)
+  if (action === 'public-settings' || action === 'publicConfig') {
+    const settings = await getSettingsConfig();
+    return res.status(200).json({
+      appName: settings.appName || 'ChopWise',
+      appTagline: settings.appTagline || 'Nigerian meals that fit your health and your wallet.',
+      appIcon: settings.appIcon || '🍲',
+      heroImageUrl: settings.heroImageUrl || null,
+    });
+  }
+
   // All subsequent actions require verified admin access
   await requireAdmin(req);
 

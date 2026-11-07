@@ -8,6 +8,10 @@ export const DEFAULT_SETTINGS = {
   budgetDivisor: 21, // 7 to 42
   rateLimitPerHour: 10, // 1 to 100
   retryOnOverBudget: true,
+  heroImageUrl: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=1200&q=80',
+  appName: 'ChopWise',
+  appTagline: 'Nigerian meals that fit your health and your wallet.',
+  appIcon: '🍲',
 };
 
 export const DEFAULT_SAFETY = {

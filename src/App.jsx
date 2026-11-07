@@ -13,11 +13,13 @@ import ProfileGate from './routes/ProfileGate';
 import AdminRoute from './routes/AdminRoute';
 import { AuthProvider } from './features/auth/AuthContext';
 import { ToastProvider } from './components/Toast';
+import { ConfigProvider } from './context/ConfigContext';
 
 export default function App() {
   return (
-    <AuthProvider>
-      <ToastProvider>
+    <ConfigProvider>
+      <AuthProvider>
+        <ToastProvider>
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
@@ -48,5 +50,6 @@ export default function App() {
         </Routes>
       </ToastProvider>
     </AuthProvider>
+  </ConfigProvider>
   );
 }

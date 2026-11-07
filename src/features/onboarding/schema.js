@@ -81,3 +81,41 @@ export const profileSchema = z.object({
   updatedAt: z.string().optional(),
 });
 
+export function validateOnboardingStep(step, formData) {
+  if (step === 1) {
+    const res = step1Schema.safeParse({
+      age: Number(formData.age),
+      gender: formData.gender,
+      weightKg: Number(formData.weightKg),
+    });
+    if (!res.success) {
+      const errors = {};
+      for (const issue of res.error.issues) errors[issue.path[0]] = issue.message;
+      return { success: false, errors };
+    }
+  } else if (step === 2) {
+    const res = step2Schema.safeParse({ conditions: formData.conditions });
+    if (!res.success) return { success: false, errors: {} };
+  } else if (step === 3) {
+    const res = step3Schema.safeParse({
+      preferences: formData.preferences,
+      avoidText: formData.avoidText,
+    });
+    if (!res.success) {
+      const errors = {};
+      for (const issue of res.error.issues) errors[issue.path[0]] = issue.message;
+      return { success: false, errors };
+    }
+  } else if (step === 4) {
+    const res = step4Schema.safeParse({
+      weeklyBudgetNGN: Number(formData.weeklyBudgetNGN),
+    });
+    if (!res.success) {
+      const errors = {};
+      for (const issue of res.error.issues) errors[issue.path[0]] = issue.message;
+      return { success: false, errors };
+    }
+  }
+  return { success: true, errors: {} };
+}
+

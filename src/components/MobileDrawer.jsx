@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import ThemeToggle from './ThemeToggle';
 import Button from './Button';
-import { APP_NAME } from '../lib/constants';
+import { useAppConfig } from '../context/ConfigContext';
 
 /**
  * Off-canvas mobile navigation sidebar that flows in from the right.
@@ -14,6 +14,8 @@ export default function MobileDrawer({
   isAdmin,
   onLogout,
 }) {
+  const { appName } = useAppConfig();
+  const name = appName || 'ChopWise';
   return (
     <div
       className={`fixed inset-0 z-50 sm:hidden transition-all duration-300 ${
@@ -126,7 +128,7 @@ export default function MobileDrawer({
             <ThemeToggle />
           </div>
           <p className="text-[11px] text-muted text-center">
-            © {new Date().getFullYear()} {APP_NAME}
+            © {new Date().getFullYear()} {name}
           </p>
         </div>
       </aside>

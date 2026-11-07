@@ -5,7 +5,7 @@ import ThemeToggle from './ThemeToggle';
 import Button from './Button';
 import Footer from './Footer';
 import MobileDrawer from './MobileDrawer';
-import { APP_NAME } from '../lib/constants';
+import { useAppConfig } from '../context/ConfigContext';
 import { useAuth } from '../features/auth/useAuth';
 import { apiClient } from '../lib/apiClient';
 
@@ -21,10 +21,13 @@ export default function Layout({
   fullWidth = false,
 }) {
   const { user, logout } = useAuth();
+  const { appName } = useAppConfig();
   const [isAdmin, setIsAdmin] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+
+  const name = appName || 'ChopWise';
 
   useEffect(() => {
     setMobileMenuOpen(false);
@@ -115,7 +118,7 @@ export default function Layout({
       {!hideHeader && (
         <header className="sticky top-0 z-40 border-b border-header-line bg-header-bg shadow-sm">
           <nav className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
-            <Link to="/" aria-label={`${APP_NAME} home`} className="flex items-center gap-2">
+            <Link to="/" aria-label={`${name} home`} className="flex items-center gap-2">
               <Logo inverted={true} />
             </Link>
 

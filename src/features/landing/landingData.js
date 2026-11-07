@@ -1,3 +1,6 @@
+export const DEFAULT_HERO_IMAGE =
+  'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=1200&q=80';
+
 export const CONDITIONS = [
   {
     icon: '🫀',
@@ -54,6 +57,7 @@ export const SAMPLE_MEALS = [
     desc: 'Rich spinach stew cooked with locust beans (iru), smoked fish, and boiled green plantain.',
     cost: '₦1,250',
     tags: ['Hypertension Safe', 'Diabetes Friendly'],
+    image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80',
   },
   {
     type: 'Dinner',
@@ -62,6 +66,7 @@ export const SAMPLE_MEALS = [
     desc: 'High-fiber oat swallow served with lightly stewed okro and tender skinless chicken breast.',
     cost: '₦950',
     tags: ['Ulcer Friendly', 'Weight Conscious'],
+    image: 'https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=600&q=80',
   },
   {
     type: 'Breakfast',
@@ -70,6 +75,6 @@ export const SAMPLE_MEALS = [
     desc: 'Protein-packed pureed brown beans steamed with boiled egg and garden greens.',
     cost: '₦800',
     tags: ['High Protein', 'Low Carb'],
+    image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=600&q=80',
   },
 ];
-

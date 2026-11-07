@@ -5,6 +5,7 @@ import Spinner from '../../components/Spinner';
 import ErrorState from '../../components/ErrorState';
 import { apiClient } from '../../lib/apiClient';
 import { formatNaira } from '../../lib/format';
+import { downloadEvaluationCsv } from './evaluationCsv';
 
 /**
  * Section G: Evaluation Runner (Task P14, AR9).
@@ -41,48 +42,8 @@ export default function EvaluationRunner() {
     }
   }
 
-  function downloadCsv() {
-    if (results.length === 0) return;
-
-    const headers = [
-      'Case Index',
-      'Name',
-      'Persona',
-      'Weekly Budget (NGN)',
-      'Per Meal Cap (NGN)',
-      'Meals Count',
-      'Within Budget Count',
-      'Safety Flag Count',
-      'Edamam Count',
-      'AI Estimate Count',
-      'Latency (ms)',
-    ];
-
-    const rows = results.map((r) => [
-      r.caseIndex,
-      `"${r.name}"`,
-      `"${r.persona}"`,
-      r.weeklyBudgetNGN,
-      r.perMealCapNGN,
-      r.mealsCount,
-      r.withinBudgetCount,
-      r.safetyFlagCounts,
-      r.edamamCount,
-      r.aiEstimateCount,
-      r.latencyMs,
-    ]);
-
-    const csvContent =
-      'data:text/csv;charset=utf-8,' +
-      [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');
-
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', 'chopwise_chapter4_evaluation.csv');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  function handleDownloadCsv() {
+    downloadEvaluationCsv(results);
   }
 
   // Summary Metrics
@@ -130,7 +91,7 @@ export default function EvaluationRunner() {
           {results.length > 0 && (
             <Button
               variant="secondary"
-              onClick={downloadCsv}
+              onClick={handleDownloadCsv}
               className="text-xs min-h-9 px-3"
             >
               📥 Download CSV

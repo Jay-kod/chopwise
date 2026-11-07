@@ -9,7 +9,7 @@ import Logo from '../components/Logo';
 import ThemeToggle from '../components/ThemeToggle';
 import { useAuth } from '../features/auth/useAuth';
 import { getAuthErrorMessage } from '../features/auth/authErrors';
-import { APP_NAME, APP_TAGLINE } from '../lib/constants';
+import { useAppConfig } from '../context/ConfigContext';
 import {
   EyeIcon,
   EyeOffIcon,
@@ -20,6 +20,7 @@ import {
 
 export default function Register() {
   const { register } = useAuth();
+  const { appName, appTagline } = useAppConfig();
   const navigate = useNavigate();
 
   const [email, setEmail] = useState('');
@@ -80,13 +81,13 @@ export default function Register() {
           <div className="text-center space-y-1">
             <Link
               to="/"
-              aria-label={`${APP_NAME} home`}
+              aria-label={`${appName || 'ChopWise'} home`}
               className="inline-flex items-center gap-2 transition-transform hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-lg p-1"
             >
               <Logo className="text-2xl" />
             </Link>
             <p className="text-xs text-muted max-w-xs mx-auto leading-relaxed">
-              {APP_TAGLINE}
+              {appTagline}
             </p>
           </div>
 

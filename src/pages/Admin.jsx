@@ -6,6 +6,7 @@ import Button from '../components/Button';
 import ThemeToggle from '../components/ThemeToggle';
 import FunctionsTable from '../features/admin/FunctionsTable';
 import IntegrationCard from '../features/admin/IntegrationCard';
+import BrandingSettingsCard from '../features/admin/BrandingSettingsCard';
 import SettingsForm from '../features/admin/SettingsForm';
 import SafetyForm from '../features/admin/SafetyForm';
 import PriceTableEditor from '../features/admin/PriceTableEditor';
@@ -132,7 +133,15 @@ export default function Admin() {
           </div>
         </section>
 
-        {/* Sections C & D: Recommendation Settings & Safety Thresholds */}
+        {/* Section C: Project Identity & Branding */}
+        <section>
+          <BrandingSettingsCard
+            settings={status?.settings}
+            onSave={saveSection}
+          />
+        </section>
+
+        {/* Sections D & E: Recommendation Settings & Safety Thresholds */}
         <section className="grid gap-6 lg:grid-cols-2">
           <SettingsForm
             settings={status?.settings}

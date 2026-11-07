@@ -60,3 +60,4 @@ export default function DashboardError({ error, isAdmin, onRetry }) {
     />
   );
 }
+

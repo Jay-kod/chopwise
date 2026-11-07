@@ -3,10 +3,19 @@ import Layout from '../components/Layout';
 import Button from '../components/Button';
 import Card from '../components/Card';
 import { useAuth } from '../features/auth/useAuth';
-import { CONDITIONS, STEPS, SAMPLE_MEALS } from '../features/landing/landingData';
+import { useAppConfig } from '../context/ConfigContext';
+import {
+  CONDITIONS,
+  STEPS,
+  SAMPLE_MEALS,
+  DEFAULT_HERO_IMAGE,
+} from '../features/landing/landingData';
 
 export default function Landing() {
   const { user, profileComplete } = useAuth();
+  const { appName, heroImageUrl } = useAppConfig();
+  const name = appName || 'ChopWise';
+  const heroImage = heroImageUrl || DEFAULT_HERO_IMAGE;
 
   const ctaDestination = !user ? '/register' : profileComplete ? '/dashboard' : '/onboarding';
   const ctaLabel = !user
@@ -18,40 +27,75 @@ export default function Landing() {
   return (
     <Layout fullWidth={true}>
       <div className="w-full">
-        {/* 1. Hero Section: 98% viewport height with smooth gradient */}
-        <section className="min-h-[98vh] flex flex-col justify-center items-center bg-gradient-to-b from-page via-surface-muted/40 to-surface-muted px-4 sm:px-6 py-12 text-center">
-          <div className="max-w-4xl mx-auto space-y-6">
-            <div className="inline-flex items-center gap-2 rounded-full border border-line bg-surface px-4 py-1.5 text-xs font-semibold text-fg shadow-sm">
-              <span className="text-primary font-bold">✨ AI Nutrition</span>
-              <span className="text-line">|</span>
-              <span>Tailored for Nigerian Health &amp; Wallets</span>
+        {/* 1. Hero Section: Two-column layout with high-impact Nigerian culinary image */}
+        <section className="min-h-[92vh] flex flex-col justify-center bg-gradient-to-b from-page via-surface-muted/40 to-surface-muted px-4 sm:px-6 py-12 sm:py-16">
+          <div className="max-w-6xl mx-auto w-full grid gap-10 lg:grid-cols-12 items-center">
+            {/* Left Column: Headlines & Call to Actions */}
+            <div className="lg:col-span-7 space-y-6 text-center lg:text-left">
+              <div className="inline-flex items-center gap-2 rounded-full border border-line bg-surface px-4 py-1.5 text-xs font-semibold text-fg shadow-sm">
+                <span className="text-primary font-bold">✨ AI Nutrition</span>
+                <span className="text-line">|</span>
+                <span>Tailored for Nigerian Health &amp; Wallets</span>
+              </div>
+
+              <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-fg leading-tight sm:leading-tight">
+                Delicious Nigerian Meals That Fit Your Health and Your Wallet
+              </h1>
+
+              <p className="max-w-2xl mx-auto lg:mx-0 text-sm sm:text-lg text-muted leading-relaxed">
+                {name} takes the guesswork out of healthy Nigerian eating. Get customized weekly meal recommendations built around local ingredients, your medical conditions, and your exact Naira budget.
+              </p>
+
+              <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3 pt-2">
+                <Link to={ctaDestination} className="w-full sm:w-auto">
+                  <Button className="w-full sm:w-auto px-8 min-h-12 text-sm font-semibold shadow-md">
+                    {ctaLabel} →
+                  </Button>
+                </Link>
+                <a href="#how-it-works" className="w-full sm:w-auto">
+                  <Button variant="secondary" className="w-full sm:w-auto px-6 min-h-12 text-sm font-medium">
+                    How It Works
+                  </Button>
+                </a>
+              </div>
+
+              <div className="pt-4 flex flex-wrap items-center justify-center lg:justify-start gap-x-6 gap-y-2 text-xs font-medium text-muted">
+                <span>✓ Real Nigerian Market Prices</span>
+                <span>✓ Hypertension, Diabetes &amp; Ulcer Safe</span>
+                <span>✓ Verified Nutritional Estimates</span>
+              </div>
             </div>
 
-            <h1 className="text-3xl sm:text-6xl font-extrabold tracking-tight text-fg leading-tight sm:leading-tight">
-              Delicious Nigerian Meals That Fit Your Health and Your Wallet
-            </h1>
+            {/* Right Column: Hero Showcase Visual Card */}
+            <div className="lg:col-span-5 max-w-md mx-auto w-full">
+              <div className="rounded-3xl border border-line bg-surface p-3 shadow-xl relative transition-transform hover:scale-[1.01]">
+                <div className="relative aspect-4/3 sm:aspect-square w-full rounded-2xl overflow-hidden bg-surface-muted">
+                  <img
+                    src={heroImage}
+                    alt="Authentic healthy Nigerian meal platter"
+                    className="h-full w-full object-cover transition-transform duration-700 hover:scale-105"
+                  />
+                  {/* Overlay brand badge */}
+                  <div className="absolute top-3 left-3 inline-flex items-center gap-1.5 rounded-full bg-surface/90 backdrop-blur-md px-3 py-1 text-xs font-semibold text-fg shadow-sm border border-line">
+                    <span>🇳🇬</span> Authentic Nigerian Cuisine
+                  </div>
 
-            <p className="mx-auto max-w-2xl text-sm sm:text-lg text-muted leading-relaxed">
-              ChopWise takes the guesswork out of healthy Nigerian eating. Get customized weekly meal recommendations built around local ingredients, your medical conditions, and your exact Naira budget.
-            </p>
-
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-3">
-              <Link to={ctaDestination} className="w-full sm:w-auto">
-                <Button className="w-full sm:w-auto px-8 min-h-12 text-sm font-semibold shadow-md">
-                  {ctaLabel} →
-                </Button>
-              </Link>
-              <a href="#how-it-works" className="w-full sm:w-auto">
-                <Button variant="secondary" className="w-full sm:w-auto px-6 min-h-12 text-sm font-medium">
-                  How It Works
-                </Button>
-              </a>
-            </div>
-
-            <div className="pt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs font-medium text-muted">
-              <span>✓ Real Nigerian Market Prices</span>
-              <span>✓ Hypertension, Diabetes &amp; Ulcer Safe</span>
-              <span>✓ Verified Nutritional Estimates</span>
+                  {/* Floating Meal Nutrition preview */}
+                  <div className="absolute bottom-3 inset-x-3 rounded-xl border border-line bg-surface/95 backdrop-blur-md p-3.5 shadow-md space-y-1">
+                    <div className="flex items-center justify-between text-xs font-bold text-fg">
+                      <span>Efo Riro &amp; Plantain</span>
+                      <span className="text-primary font-extrabold">₦1,250</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-[11px] text-muted">
+                      <span>540 kcal</span>
+                      <span>•</span>
+                      <span>Sodium Conscious</span>
+                      <span>•</span>
+                      <span className="text-primary font-medium">Low Glycemic</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </section>
@@ -92,7 +136,7 @@ export default function Landing() {
           <div className="max-w-6xl mx-auto w-full space-y-8">
             <div className="text-center space-y-2 max-w-2xl mx-auto">
               <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-fg">
-                How ChopWise Works
+                How {name} Works
               </h2>
               <p className="text-xs sm:text-sm text-muted">
                 Three simple steps to personalized, budget-friendly Nigerian meal plans.
@@ -114,7 +158,7 @@ export default function Landing() {
           </div>
         </section>
 
-        {/* 4. Sample Recipe Showcase: Expansive section with natural height for detailed cards */}
+        {/* 4. Sample Recipe Showcase: Rich cards featuring appetizing food images */}
         <section className="bg-gradient-to-b from-surface-muted via-page to-page border-t border-line/40 px-4 sm:px-6 py-20 sm:py-24">
           <div className="max-w-6xl mx-auto w-full space-y-8">
             <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 border-b border-line pb-4">
@@ -133,12 +177,26 @@ export default function Landing() {
 
             <div className="grid gap-6 sm:grid-cols-3">
               {SAMPLE_MEALS.map((m, i) => (
-                <Card key={i} className="p-5 flex flex-col justify-between space-y-4 hover:border-field-line transition-all">
-                  <div className="space-y-2.5">
-                    <div className="flex items-center justify-between text-xs text-muted">
-                      <span className="font-semibold text-fg uppercase tracking-wider text-[11px]">{m.type}</span>
-                      <span>⏱ {m.time}</span>
-                    </div>
+                <Card key={i} className="p-4 sm:p-5 flex flex-col justify-between space-y-4 hover:border-field-line transition-all">
+                  <div className="space-y-3">
+                    {/* Meal Image */}
+                    {m.image && (
+                      <div className="relative aspect-video w-full rounded-lg overflow-hidden bg-surface-muted border border-line">
+                        <img
+                          src={m.image}
+                          alt={m.name}
+                          className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
+                          loading="lazy"
+                        />
+                        <span className="absolute top-2 left-2 rounded bg-surface/90 px-2 py-0.5 text-[10px] font-bold text-fg backdrop-blur-xs">
+                          {m.type}
+                        </span>
+                        <span className="absolute top-2 right-2 rounded bg-surface/90 px-2 py-0.5 text-[10px] text-muted backdrop-blur-xs">
+                          ⏱ {m.time}
+                        </span>
+                      </div>
+                    )}
+
                     <h3 className="text-base font-bold text-fg leading-snug">{m.name}</h3>
                     <p className="text-xs text-muted leading-relaxed line-clamp-3">{m.desc}</p>
                   </div>
