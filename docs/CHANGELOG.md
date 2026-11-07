@@ -21,6 +21,7 @@ Add one line per task: date, task id, what changed, doc updates.
 
 ## Block 2 (2026-11-07)
 - P3: Built authentication features (AuthContext, useAuth, authErrors mapping), Login and Register pages with required medical consent checkbox, route guards (ProtectedRoute, ProfileGate), and dynamic navbar state.
+- P4: Created firestore.rules, reusable onboarding step components (Demographics, Conditions, Preferences, Budget), Zod profile schemas, progress bar, and profile persistence with real confirmation flow.
 
 ## Branding and theme (2026-11-07)
 - Product named ChopWise; green and white palette with light/dark/system modes.

@@ -1,0 +1,22 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow create: if request.auth != null && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['email','createdAt','consentAt','profileComplete','profile']);
+      allow update: if request.auth != null && request.auth.uid == uid;
+      allow delete: if false;
+      match /savedMeals/{mealId} {
+        allow read, write: if request.auth != null && request.auth.uid == uid;
+      }
+      match /latestRecs/{docId} {
+        allow read: if request.auth != null && request.auth.uid == uid;
+        allow write: if false;
+      }
+    }
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
