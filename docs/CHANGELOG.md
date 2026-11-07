@@ -37,6 +37,9 @@ Add one line per task: date, task id, what changed, doc updates.
 - P9: Built nutrition service and endpoint (api/nutrition.js, _lib/services/nutritionService.js with buildIngredientLines, SHA-1 ingredients hashing, Firestore nutritionCache, Edamam analysis with seamless AI-estimate fallback, and real-value safety screening). Added nutrition pipeline test to Admin registry.
 - P10: Built MealDetail page (/meal/:id) and NutritionPanel component with full ingredient cost breakdown, cooking steps, safety badges, caution notes, Edamam attribution, AI estimate explanation, and Firestore users/{uid}/savedMeals/{mealId} toggle persistence.
 - P11: Built FilterBar (client-side meal-type, health condition, and budget range filtering with empty-state regenerate prompt), Profile page (/profile) reusing onboarding steps to update Firestore profile and invalidate cached recommendations, SavedMealsList with quick recipe navigation and deletion, and 3-click navigation navbar links.
+## Day 3 — Final Audit & Architecture Documentation (2026-11-07)
+- P15: Completed full repository audit against all specification docs, verified all FR1–FR10 and AR1–AR9 acceptance criteria, verified security controls and Firestore rules, authored docs/CHAPTER_3_DEVIATIONS.md documenting the 8 architectural enhancements made to Chapter 3 methodology, and created release tag mvp-final.
+
 ## Day 2 — Deploy, evaluation, and evidence (2026-11-07)
 - P14: Built automated 10-profile evaluation runner for Chapter 4 research evidence (api/_lib/data/evaluationProfiles.js, api/admin.js runEvaluationCase action, and src/features/admin/EvaluationRunner.jsx with progress bar, summary metrics, and CSV export).
 

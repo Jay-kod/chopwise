@@ -39,3 +39,4 @@ describe('api/_lib/data/evaluationProfiles', () => {
     expect(Math.max(...budgets)).toBe(50000);
   });
 });
+

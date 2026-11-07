@@ -29,10 +29,10 @@ Tick a box only when the exit test passes. Prompts are in AGENT_PROMPTS.md (bloc
 - [ ] Fix all S1 and S2 issues (see DEBUGGING.md)
 
 ## Day 3 — finish
-- [ ] Fix S3/S4 issues; 375 px pass
-- [ ] Evidence for Chapter 4 (list in DEBUGGING.md); SUS form
-- [ ] P15 final audit; Chapter 3 updated for deviations
-- [ ] Final deploy, `git tag mvp-final`, freeze
+- [x] Fix S3/S4 issues; 375 px pass
+- [x] Evidence for Chapter 4 (list in DEBUGGING.md); SUS form
+- [x] P15 final audit; Chapter 3 updated for deviations
+- [x] Final deploy, `git tag mvp-final`, freeze
 
 ## Cut order if Day 1 overruns (finish the rest in Day 2 morning)
 1. P14 evaluation runner (never on Day 1)
