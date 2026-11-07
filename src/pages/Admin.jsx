@@ -8,6 +8,7 @@ import SettingsForm from '../features/admin/SettingsForm';
 import SafetyForm from '../features/admin/SafetyForm';
 import PriceTableEditor from '../features/admin/PriceTableEditor';
 import BootstrapChecklist from '../features/admin/BootstrapChecklist';
+import EvaluationRunner from '../features/admin/EvaluationRunner';
 import { useAdminApi } from '../features/admin/useAdminApi';
 
 export default function Admin() {
@@ -123,6 +124,11 @@ export default function Admin() {
         {/* Section F: Bootstrap Checklist */}
         <section>
           <BootstrapChecklist bootstrap={status?.bootstrap} />
+        </section>
+
+        {/* Section G: Evaluation Runner (Chapter 4 Evidence) */}
+        <section>
+          <EvaluationRunner />
         </section>
       </div>
     </Layout>

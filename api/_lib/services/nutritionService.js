@@ -116,10 +116,10 @@ export function extractNutrientsFromEdamam(edamamData = {}) {
  * @returns {Promise<{ nutrition: object, source: 'edamam'|'ai-estimate', safetyFlags: string[], cached: boolean }>}
  */
 export async function getMealNutrition(uid, mealId, options = {}) {
-  const { sampleMeal = null } = options;
+  const { sampleMeal = null, userConditions: overrideConditions = null } = options;
 
   let meal = sampleMeal;
-  let userConditions = [];
+  let userConditions = overrideConditions || [];
   let db = null;
 
   if (!meal) {

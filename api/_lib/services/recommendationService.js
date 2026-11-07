@@ -43,12 +43,14 @@ export function generateMealId(name) {
  * @returns {Promise<{ meals: Array<object>, perMealCapNGN: number, generatedAt: string, fromCache: boolean, warnings: string[] }>}
  */
 export async function getRecommendations(uid, options = {}) {
-  const { regenerate = false, isSampleTest = false } = options;
+  const { regenerate = false, isSampleTest = false, customProfile = null } = options;
 
   let profile;
   let db = null;
 
-  if (isSampleTest) {
+  if (customProfile) {
+    profile = customProfile;
+  } else if (isSampleTest) {
     // Sample built-in profile used for pipeline health check in /admin
     profile = {
       age: 28,
@@ -86,8 +88,8 @@ export async function getRecommendations(uid, options = {}) {
 
   const profileHash = computeProfileHash(profile);
 
-  // 3. Cache lookup (unless regenerate requested or running sample test)
-  if (!regenerate && !isSampleTest && db) {
+  // 3. Cache lookup (unless regenerate requested or running sample test / custom profile)
+  if (!regenerate && !isSampleTest && !customProfile && db) {
     try {
       const recsSnap = await db
         .collection('users')
@@ -215,8 +217,8 @@ export async function getRecommendations(uid, options = {}) {
 
   const generatedAt = new Date().toISOString();
 
-  // 9. Persist to Firestore (unless running in sample test mode)
-  if (!isSampleTest && db) {
+  // 9. Persist to Firestore (unless running in sample test or custom profile mode)
+  if (!isSampleTest && !customProfile && db) {
     try {
       await db
         .collection('users')

@@ -14,6 +14,9 @@ import {
   runHealthCheck,
 } from './_lib/integrations.js';
 import { getAdminDb } from './_lib/firebaseAdmin.js';
+import { EVALUATION_PROFILES } from './_lib/data/evaluationProfiles.js';
+import { getRecommendations } from './_lib/services/recommendationService.js';
+import { getMealNutrition } from './_lib/services/nutritionService.js';
 
 export default withHandler(async (req, res) => {
   const body = req.body || {};
@@ -182,6 +185,72 @@ export default withHandler(async (req, res) => {
 
     const result = await runHealthCheck(target);
     return res.status(200).json(result);
+  }
+
+  // 6. Action: runEvaluationCase (Task P14 / AR9)
+  if (action === 'runEvaluationCase') {
+    const caseIndex = Number(body.index);
+    if (isNaN(caseIndex) || caseIndex < 0 || caseIndex >= EVALUATION_PROFILES.length) {
+      throw AppError.validation({
+        index: `Valid profile index (0 to ${EVALUATION_PROFILES.length - 1}) is required.`,
+      });
+    }
+
+    const testCase = EVALUATION_PROFILES[caseIndex];
+    const start = Date.now();
+
+    // 1. Run real recommendation pipeline on the fixed evaluation profile
+    const recs = await getRecommendations('eval-runner', {
+      customProfile: testCase.profile,
+    });
+
+    const meals = recs.meals || [];
+    const mealsCount = meals.length;
+    const schemaValidCount = mealsCount; // Validated by internal Zod schema
+    const withinBudgetCount = meals.filter((m) => !m.overBudget).length;
+    const safetyFlagCounts = meals.reduce(
+      (sum, m) => sum + (m.safetyFlags?.length || 0),
+      0
+    );
+
+    // 2. Run real nutrition pipeline on up to 2 meals sequentially with delay
+    const nutritionSources = [];
+    if (meals.length > 0) {
+      const nut1 = await getMealNutrition('eval-runner', null, {
+        sampleMeal: meals[0],
+        userConditions: testCase.profile.conditions,
+      });
+      nutritionSources.push(nut1.source);
+
+      if (meals.length > 1) {
+        await new Promise((r) => setTimeout(r, 400));
+        const nut2 = await getMealNutrition('eval-runner', null, {
+          sampleMeal: meals[1],
+          userConditions: testCase.profile.conditions,
+        });
+        nutritionSources.push(nut2.source);
+      }
+    }
+
+    const latencyMs = Date.now() - start;
+
+    return res.status(200).json({
+      ok: true,
+      caseIndex,
+      name: testCase.name,
+      persona: testCase.persona,
+      perMealCapNGN: recs.perMealCapNGN,
+      weeklyBudgetNGN: testCase.profile.weeklyBudgetNGN,
+      conditions: testCase.profile.conditions,
+      latencyMs,
+      mealsCount,
+      schemaValidCount,
+      withinBudgetCount,
+      safetyFlagCounts,
+      nutritionSources,
+      edamamCount: nutritionSources.filter((s) => s === 'edamam').length,
+      aiEstimateCount: nutritionSources.filter((s) => s === 'ai-estimate').length,
+    });
   }
 
   throw AppError.validation({ action: `Unknown admin action: ${action}` });

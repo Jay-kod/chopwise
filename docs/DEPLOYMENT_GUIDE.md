@@ -118,3 +118,4 @@ The project `vercel.json` defines `"maxDuration": 30` for `api/*.js` to permit G
    - Enter your **Edamam Application ID** and **Application Key**.
    - Click **Test all** in Section A (Functions Table) and verify all rows turn green.
 5. Return to `/dashboard` and click **⚡ Regenerate Plan** to generate personalized Nigerian meal recommendations!
+
