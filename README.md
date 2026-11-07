@@ -53,3 +53,4 @@ ChopWise is an AI-based Nigerian recipe recommendation web app. It generates per
 - Color audit: `npm run check:colors`
 - Full check (colors + tests + build): `npm run verify`
 - Production build: `npm run build`
+

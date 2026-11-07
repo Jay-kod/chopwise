@@ -19,3 +19,4 @@ describe('formatNaira', () => {
     expect(formatNaira(1234.4)).toBe('₦1,234');
   });
 });
+

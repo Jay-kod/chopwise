@@ -19,6 +19,9 @@ Add one line per task: date, task id, what changed, doc updates.
 - P1: Scaffolded ChopWise app with React, Vite, Tailwind v4, Router, Firebase SDK, starter brand tokens, base components, and Landing page.
 - P2: Implemented scripts/edamam-probe.mjs and documented Edamam API findings and fallback necessity in docs/AI_AND_NUTRITION_SPEC.md.
 
+## Block 2 (2026-11-07)
+- P3: Built authentication features (AuthContext, useAuth, authErrors mapping), Login and Register pages with required medical consent checkbox, route guards (ProtectedRoute, ProfileGate), and dynamic navbar state.
+
 ## Branding and theme (2026-11-07)
 - Product named ChopWise; green and white palette with light/dark/system modes.
 - Colours defined as semantic tokens in one file (`src/styles/theme.css`); starter/ holds ready-made theme, toggle, logo, favicon and `check-colors.mjs`.

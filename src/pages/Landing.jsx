@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import Layout from '../components/Layout';
 import Button from '../components/Button';
 import { APP_NAME, APP_TAGLINE } from '../lib/constants';
+import { useAuth } from '../features/auth/useAuth';
 
 const STEPS = [
   {
@@ -22,19 +23,17 @@ const STEPS = [
 ];
 
 export default function Landing() {
+  const { user, profileComplete } = useAuth();
+
+  const ctaDestination = !user ? '/register' : profileComplete ? '/dashboard' : '/onboarding';
+  const ctaLabel = !user
+    ? "Get started — it's free"
+    : profileComplete
+    ? 'Go to Dashboard'
+    : 'Complete your profile';
+
   return (
-    <Layout
-      navActions={
-        <>
-          <Link to="/login">
-            <Button variant="secondary">Log in</Button>
-          </Link>
-          <Link to="/register">
-            <Button>Sign up</Button>
-          </Link>
-        </>
-      }
-    >
+    <Layout>
       {/* Hero */}
       <section className="py-12 text-center sm:py-20">
         <h1 className="text-3xl font-bold tracking-tight sm:text-5xl">
@@ -44,8 +43,8 @@ export default function Landing() {
           {APP_TAGLINE}
         </p>
         <div className="mt-8">
-          <Link to="/register">
-            <Button className="px-8 text-base">Get started — it's free</Button>
+          <Link to={ctaDestination}>
+            <Button className="px-8 text-base">{ctaLabel}</Button>
           </Link>
         </div>
       </section>
@@ -75,4 +74,3 @@ export default function Landing() {
     </Layout>
   );
 }
-

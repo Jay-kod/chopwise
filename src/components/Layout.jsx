@@ -1,14 +1,58 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Logo from './Logo';
 import ThemeToggle from './ThemeToggle';
+import Button from './Button';
 import { APP_NAME } from '../lib/constants';
+import { useAuth } from '../features/auth/useAuth';
 
 /**
- * Shared layout: navbar (Logo + ThemeToggle) + content + footer.
+ * Shared layout: navbar (Logo + ThemeToggle + Auth state) + content + footer.
  * Used on every page (landing, auth, app, admin).
  * @param {{ children, navActions? }} props
  */
 export default function Layout({ children, navActions }) {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  async function handleLogout() {
+    try {
+      await logout();
+      navigate('/login');
+    } catch {
+      // Sign-out error fallback
+    }
+  }
+
+  const defaultNavActions = user ? (
+    <div className="flex items-center gap-2">
+      <span
+        className="hidden max-w-[140px] truncate text-xs text-muted sm:inline sm:max-w-[200px]"
+        title={user.email}
+      >
+        {user.email}
+      </span>
+      <Button
+        variant="secondary"
+        onClick={handleLogout}
+        className="min-h-9 px-3 text-xs"
+        aria-label="Log out of ChopWise"
+      >
+        Log out
+      </Button>
+    </div>
+  ) : (
+    <div className="flex items-center gap-2">
+      <Link to="/login">
+        <Button variant="secondary" className="min-h-9 px-3 text-xs">
+          Log in
+        </Button>
+      </Link>
+      <Link to="/register">
+        <Button className="min-h-9 px-3 text-xs">Sign up</Button>
+      </Link>
+    </div>
+  );
+
   return (
     <div className="flex min-h-screen flex-col bg-page text-fg">
       <header className="border-b border-line bg-surface">
@@ -17,7 +61,7 @@ export default function Layout({ children, navActions }) {
             <Logo />
           </Link>
           <div className="flex items-center gap-2">
-            {navActions}
+            {navActions !== undefined ? navActions : defaultNavActions}
             <ThemeToggle />
           </div>
         </nav>
@@ -38,4 +82,3 @@ export default function Layout({ children, navActions }) {
     </div>
   );
 }
-
