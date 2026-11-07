@@ -53,3 +53,10 @@ piece: plantain, bread, eggs, scotch bonnet (rodo), seasoning cubes.
 
 ## Edamam probe ingredient lines (scripts/edamam-probe.mjs)
 200 g egusi (melon seeds) | 50 g ogbono | 100 g ugu leaves | 100 g water leaf | 150 g garri | 200 g yam | 1 cup ofada rice | 1 cup brown beans | 1 ripe plantain | 2 tbsp palm oil | 30 g crayfish | 150 g stockfish | 1 cup ogi (pap) | 1 egg
+
+## Edamam findings
+- **Endpoint & Payload**: `POST https://api.edamam.com/api/nutrition-details?app_id=...&app_key=...` with JSON `{ title, ingr: [...], yield: 1 }`.
+- **Parsing behavior**: Commonly imported or global ingredients (yam, brown beans, ripe plantain, palm oil, egg, beef, long grain rice, tomatoes, melon seeds) parse reliably when expressed with clear metric or culinary units (`g`, `cup`, `tbsp`).
+- **Indigenous ingredient limitations**: Highly localized terms (`ogbono`, `ugu leaves`, `garri`, `ogi`, `crayfish`) frequently produce HTTP 555 ("Recipe with insufficient quality to parse") or are omitted from nutrient totals by Edamam's NLP parser.
+- **System Impact**: Confirms the necessity of our two-tier architecture in `nutritionService.js`—the pipeline attempts Edamam first, and on any 555/non-2xx or unparseable payload, seamlessly falls back to the meal's `aiNutritionEstimate` (`source: "ai-estimate"`) with empty vitamins.
+

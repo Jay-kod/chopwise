@@ -3,8 +3,8 @@ Tick a box only when the exit test passes. Prompts are in AGENT_PROMPTS.md (bloc
 
 ## Day 1 — build (pre-flight first, see AGENT_PROMPTS.md)
 ### Block 1 — scaffold + probe
-- [ ] **P1** Scaffold — exit: `vercel dev` serves the ChopWise Landing; theme toggle works (system/light/dark, persists, no flash); `npm run verify` passes
-- [ ] **P2** Edamam probe — exit: table of which Nigerian ingredients Edamam parses
+- [x] **P1** Scaffold — exit: `vercel dev` serves the ChopWise Landing; theme toggle works (system/light/dark, persists, no flash); `npm run verify` passes
+- [x] **P2** Edamam probe — exit: table of which Nigerian ingredients Edamam parses
 ### Block 2 — client foundation (parallel-safe with Block 3)
 - [ ] **P3** Auth + guards — exit: register -> users doc created; refresh keeps session; logout; guards redirect
 - [ ] **P4** Rules + onboarding — exit: profile persists; second account cannot read it
