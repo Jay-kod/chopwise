@@ -5,6 +5,7 @@ import Register from './pages/Register';
 import Onboarding from './pages/Onboarding';
 import Dashboard from './pages/Dashboard';
 import MealDetail from './pages/MealDetail';
+import Profile from './pages/Profile';
 import Admin from './pages/Admin';
 import NotFound from './pages/NotFound';
 import ProtectedRoute from './routes/ProtectedRoute';
@@ -29,10 +30,11 @@ export default function App() {
               <Route path="/onboarding" element={<Onboarding />} />
             </Route>
 
-            {/* Dashboard and Meal Details require completed profile */}
+            {/* Dashboard, Meal Details, and Profile require completed profile */}
             <Route element={<ProfileGate allowIncomplete={false} />}>
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/meal/:id" element={<MealDetail />} />
+              <Route path="/profile" element={<Profile />} />
             </Route>
 
             {/* Admin Management Portal */}

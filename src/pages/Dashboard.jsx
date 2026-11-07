@@ -7,12 +7,11 @@ import Spinner from '../components/Spinner';
 import ErrorState from '../components/ErrorState';
 import Disclaimer from '../components/Disclaimer';
 import MealCard from '../features/meals/MealCard';
+import FilterBar from '../features/meals/FilterBar';
 import { useRecommendations } from '../features/meals/useRecommendations';
 import { useAuth } from '../features/auth/useAuth';
 import { formatNaira } from '../lib/format';
 import { apiClient } from '../lib/apiClient';
-
-const MEAL_TYPES = ['all', 'breakfast', 'lunch', 'dinner'];
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -27,7 +26,11 @@ export default function Dashboard() {
     regenerate,
   } = useRecommendations();
 
-  const [activeFilter, setActiveFilter] = useState('all');
+  const [filters, setFilters] = useState({
+    mealType: 'all',
+    condition: 'all',
+    budget: 'all',
+  });
   const [showRegenerateConfirm, setShowRegenerateConfirm] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -55,10 +58,21 @@ export default function Dashboard() {
     setRegenerating(false);
   }
 
-  const filteredMeals =
-    activeFilter === 'all'
-      ? meals
-      : meals.filter((m) => m.mealType === activeFilter);
+  const filteredMeals = meals.filter((m) => {
+    if (filters.mealType !== 'all' && m.mealType !== filters.mealType) {
+      return false;
+    }
+    if (filters.condition !== 'all' && !m.suitableFor?.includes(filters.condition)) {
+      return false;
+    }
+    if (filters.budget === 'under-cap' && m.costNGN > perMealCapNGN) {
+      return false;
+    }
+    if (filters.budget === 'over-cap' && m.costNGN <= perMealCapNGN) {
+      return false;
+    }
+    return true;
+  });
 
   return (
     <Layout>
@@ -191,61 +205,71 @@ export default function Dashboard() {
         {/* Loaded Content */}
         {!loading && !error && meals.length > 0 && (
           <div className="space-y-6">
-            {/* Filter Tabs & Cache Status */}
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex flex-wrap gap-1.5">
-                {MEAL_TYPES.map((type) => {
-                  const isActive = activeFilter === type;
-                  return (
-                    <button
-                      type="button"
-                      key={type}
-                      onClick={() => setActiveFilter(type)}
-                      className={`rounded-full px-3 py-1 text-xs font-medium capitalize transition-colors min-h-8 border ${
-                        isActive
-                          ? 'border-field-line bg-primary text-on-primary'
-                          : 'border-line bg-surface text-fg hover:bg-surface-muted'
-                      }`}
-                    >
-                      {type}
-                    </button>
-                  );
-                })}
-              </div>
+            {/* Filter Bar & Cache Status */}
+            <div className="space-y-2">
+              <FilterBar
+                filters={filters}
+                onChange={setFilters}
+                perMealCapNGN={perMealCapNGN}
+                totalCount={meals.length}
+                filteredCount={filteredMeals.length}
+              />
 
               {fromCache && (
-                <span className="text-[11px] text-muted">
+                <div className="text-right text-[11px] text-muted">
                   ✓ Saved plan from your profile
-                </span>
+                </div>
               )}
             </div>
 
             {/* Meals Grid */}
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {filteredMeals.map((meal) => (
-                <MealCard
-                  key={meal.id}
-                  meal={meal}
-                  perMealCapNGN={perMealCapNGN}
-                  isClickable={false}
-                />
-              ))}
-            </div>
+            {filteredMeals.length > 0 ? (
+              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                {filteredMeals.map((meal) => (
+                  <MealCard
+                    key={meal.id}
+                    meal={meal}
+                    perMealCapNGN={perMealCapNGN}
+                    isClickable={true}
+                  />
+                ))}
+              </div>
+            ) : (
+              /* Empty Filter State (FR8: empty state offers Regenerate) */
+              <Card className="p-8 text-center space-y-3">
+                <span className="text-3xl" aria-hidden="true">
+                  🔍
+                </span>
+                <h3 className="text-base font-bold text-fg">
+                  No meals match your active filters
+                </h3>
+                <p className="mx-auto max-w-md text-xs text-muted">
+                  Try clearing some filter criteria, or generate a fresh meal plan.
+                </p>
+                <div className="flex flex-wrap justify-center gap-2 pt-2">
+                  <Button
+                    variant="secondary"
+                    onClick={() =>
+                      setFilters({
+                        mealType: 'all',
+                        condition: 'all',
+                        budget: 'all',
+                      })
+                    }
+                    className="text-xs min-h-9 px-3"
+                  >
+                    Clear all filters
+                  </Button>
+                  <Button
+                    onClick={() => setShowRegenerateConfirm(true)}
+                    className="text-xs min-h-9 px-3"
+                  >
+                    Regenerate Plan
+                  </Button>
+                </div>
+              </Card>
+            )}
           </div>
-        )}
-
-        {/* Empty Filter State */}
-        {!loading && !error && meals.length > 0 && filteredMeals.length === 0 && (
-          <Card className="p-8 text-center">
-            <p className="text-sm text-muted">No meals found for the selected type.</p>
-            <Button
-              variant="secondary"
-              onClick={() => setActiveFilter('all')}
-              className="mt-3 text-xs"
-            >
-              Show all meals
-            </Button>
-          </Card>
         )}
 
         {/* Persistent Medical Disclaimer */}

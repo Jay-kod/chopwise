@@ -46,6 +46,18 @@ export default function Layout({ children, navActions }) {
 
   const defaultNavActions = user ? (
     <div className="flex items-center gap-2">
+      <Link
+        to="/dashboard"
+        className="text-xs font-medium text-fg hover:text-primary transition-colors mr-1"
+      >
+        Dashboard
+      </Link>
+      <Link
+        to="/profile"
+        className="text-xs font-medium text-fg hover:text-primary transition-colors mr-1"
+      >
+        Profile
+      </Link>
       {isAdmin && (
         <Link to="/admin">
           <Button
