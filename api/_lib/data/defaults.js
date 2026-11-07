@@ -16,3 +16,4 @@ export const DEFAULT_SAFETY = {
   diabetesCarbsG: 90,
   obesityCalories: 700,
 };
+

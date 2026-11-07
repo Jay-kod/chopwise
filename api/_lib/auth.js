@@ -58,3 +58,4 @@ export async function requireAdmin(req) {
   }
   return { uid, email, isAdmin: true };
 }
+

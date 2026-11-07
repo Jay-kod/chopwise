@@ -66,3 +66,4 @@ export function getAdminDb() {
 export function isFirebaseAdminConfigured() {
   return Boolean(process.env.FIREBASE_SERVICE_ACCOUNT_B64);
 }
+

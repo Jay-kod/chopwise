@@ -61,3 +61,4 @@ export async function generateJson(
     throw AppError.aiFailed(`Gemini generation error: ${err.message || 'unknown'}`);
   }
 }
+

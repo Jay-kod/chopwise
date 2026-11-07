@@ -90,3 +90,4 @@ export const enrichedMealSchema = geminiMealItemSchema.extend({
   overBudget: z.boolean(),
   safetyFlags: z.array(z.string()).default([]),
 });
+

@@ -41,3 +41,4 @@ describe('api/_lib/crypto', () => {
     expect(() => decrypt('v2:a:b:c', TEST_KEY)).toThrow(/Invalid encrypted format/);
   });
 });
+

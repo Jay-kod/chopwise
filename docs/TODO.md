@@ -11,7 +11,7 @@ Tick a box only when the exit test passes. Prompts are in AGENT_PROMPTS.md (bloc
 ### Block 3 — server foundation (parallel-safe with Block 2)
 - [x] **P5** Server foundation + Admin API — exit: 401/403 checks; saved Gemini key encrypted (`v1:`); `test gemini` ok; crypto tests pass
 ### Block 4
-- [ ] **P6** Admin page UI — exit: paste Gemini + Edamam keys; Test all green; secrets masked; non-admin NotFound
+- [x] **P6** Admin page UI — exit: paste Gemini + Edamam keys; Test all green; secrets masked; non-admin NotFound
 ### Block 5
 - [ ] **P7** Recommendation service + endpoint — exit: 6 valid meals; cache; 11th call RATE_LIMITED; missing key NOT_CONFIGURED; Admin `recommend` test green
 - [ ] **P8** Dashboard — exit: sign up -> onboard -> real meals

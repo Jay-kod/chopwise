@@ -1,30 +1,61 @@
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Logo from './Logo';
 import ThemeToggle from './ThemeToggle';
 import Button from './Button';
 import { APP_NAME } from '../lib/constants';
 import { useAuth } from '../features/auth/useAuth';
+import { apiClient } from '../lib/apiClient';
 
 /**
- * Shared layout: navbar (Logo + ThemeToggle + Auth state) + content + footer.
+ * Shared layout: navbar (Logo + ThemeToggle + Auth state + Admin link) + content + footer.
  * Used on every page (landing, auth, app, admin).
  * @param {{ children, navActions? }} props
  */
 export default function Layout({ children, navActions }) {
   const { user, logout } = useAuth();
+  const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    let active = true;
+    if (!user) {
+      setIsAdmin(false);
+      return;
+    }
+    apiClient('/api/admin', { action: 'me' })
+      .then((res) => {
+        if (active) setIsAdmin(Boolean(res?.isAdmin));
+      })
+      .catch(() => {
+        if (active) setIsAdmin(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [user]);
 
   async function handleLogout() {
     try {
       await logout();
       navigate('/login');
     } catch {
-      // Sign-out error fallback
+      // Sign-out fallback
     }
   }
 
   const defaultNavActions = user ? (
     <div className="flex items-center gap-2">
+      {isAdmin && (
+        <Link to="/admin">
+          <Button
+            variant="secondary"
+            className="min-h-9 px-3 text-xs border-primary text-primary hover:bg-primary-soft"
+          >
+            Admin
+          </Button>
+        </Link>
+      )}
       <span
         className="hidden max-w-[140px] truncate text-xs text-muted sm:inline sm:max-w-[200px]"
         title={user.email}

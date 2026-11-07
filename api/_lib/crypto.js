@@ -82,3 +82,4 @@ export function decrypt(encryptedStr, keyB64) {
     throw new Error('Decryption failed: authentication tag verification failed (tampered or wrong key).');
   }
 }
+

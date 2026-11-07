@@ -26,6 +26,9 @@ Add one line per task: date, task id, what changed, doc updates.
 ## Block 3 (2026-11-07)
 - P5: Implemented server foundation and Admin API (api/admin.js, _lib/http.js, _lib/auth.js, _lib/crypto.js AES-256-GCM, _lib/configStore.js with 60s cache and secret masking, _lib/integrations.js registry with healthchecks, and clients for Gemini and Edamam).
 
+## Block 4 (2026-11-07)
+- P6: Built the single Admin page (/admin) with AdminRoute guard (non-admins see NotFound), dynamic navbar Admin link, FunctionsTable, generic IntegrationCards (Gemini, Edamam with masked write-only secrets and help links), SettingsForm, SafetyForm, PriceTableEditor, and BootstrapChecklist.
+
 ## Branding and theme (2026-11-07)
 - Product named ChopWise; green and white palette with light/dark/system modes.
 - Colours defined as semantic tokens in one file (`src/styles/theme.css`); starter/ holds ready-made theme, toggle, logo, favicon and `check-colors.mjs`.
