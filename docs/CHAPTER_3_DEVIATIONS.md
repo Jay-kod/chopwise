@@ -64,3 +64,4 @@ This document catalogs all architectural enhancements and design adjustments mad
 ## 8. Automated Evidence Suite: Evaluation Runner (P14 / AR9)
 * **Chapter 3 Proposal**: Manual data collection for Chapter 4 results.
 * **Enhancement**: Integrated an automated batch test runner in `/admin` (Section G) that runs 10 clinical profiles sequentially through the live AI pipelines, generating budget adherence percentages, safety flag totals, Edamam vs. AI fallback ratios, and downloadable CSV evidence (`chopwise_chapter4_evaluation.csv`).
+
