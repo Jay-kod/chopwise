@@ -1,0 +1,71 @@
+/* ChopWise theme — THE ONLY file that contains colour values.
+   Change a colour here and the whole app (light + dark) updates.
+   Components use semantic utilities only: bg-page, bg-surface, text-fg, text-muted,
+   bg-primary, text-on-primary, border-line, etc. Never raw palette classes, hex, rgb(), or dark: variants. */
+@import "tailwindcss";
+
+/* Class-based dark mode: <html class="dark"> (set by src/lib/theme.js) */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* LIGHT values. `static` makes Tailwind always emit these variables so the .dark overrides below can replace them. */
+@theme static {
+  --color-page: #FFFFFF;             /* app background */
+  --color-surface: #FFFFFF;          /* cards, inputs, popovers */
+  --color-surface-muted: #F0FAF4;    /* subtle green-tinted areas, table stripes, hovers */
+  --color-line: #BFD8C9;             /* decorative borders and dividers */
+  --color-field-line: #6B8A78;       /* borders of inputs/buttons (>= 3:1 contrast) */
+  --color-fg: #0F2A1D;               /* main text */
+  --color-muted: #41584B;            /* secondary text */
+  --color-primary: #047857;          /* brand green: buttons, links, active states */
+  --color-primary-hover: #065F46;
+  --color-on-primary: #FFFFFF;       /* text/icons on primary */
+  --color-primary-soft: #D1FAE5;     /* success / configured / selected chips */
+  --color-on-primary-soft: #065F46;
+  --color-warn-bg: #FEF3C7;          /* over budget, safety flags, untested */
+  --color-warn-fg: #78350F;
+  --color-warn-line: #B45309;
+  --color-danger-bg: #FEE2E2;        /* errors, failing tests */
+  --color-danger-fg: #7F1D1D;
+  --color-danger-line: #B91C1C;
+  --color-ring: #047857;             /* keyboard focus ring */
+  --color-chip: #FFFFFF;             /* theme-constant white chip (e.g. Edamam attribution badge) */
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* DARK overrides */
+.dark {
+  --color-page: #0B1410;
+  --color-surface: #12201A;
+  --color-surface-muted: #182B22;
+  --color-line: #2E4B3C;
+  --color-field-line: #5E8571;
+  --color-fg: #E8F5EE;
+  --color-muted: #A3BBAE;
+  --color-primary: #34D399;
+  --color-primary-hover: #6EE7B7;
+  --color-on-primary: #052E1F;
+  --color-primary-soft: #0F3D2B;
+  --color-on-primary-soft: #A7F3D0;
+  --color-warn-bg: #3B2A0B;
+  --color-warn-fg: #FCD34D;
+  --color-warn-line: #D97706;
+  --color-danger-bg: #3F1414;
+  --color-danger-fg: #FCA5A5;
+  --color-danger-line: #EF4444;
+  --color-ring: #6EE7B7;
+}
+
+:root { color-scheme: light; }
+.dark { color-scheme: dark; }
+
+@layer base {
+  html { font-family: var(--font-sans); }
+  body { background-color: var(--color-page); color: var(--color-fg); }
+  /* Tailwind v4 borders default to currentColor; make them the theme line colour */
+  *, ::before, ::after { border-color: var(--color-line); }
+  :focus-visible { outline: 2px solid var(--color-ring); outline-offset: 2px; }
+  ::placeholder { color: var(--color-muted); opacity: 1; }
+  @media (prefers-reduced-motion: reduce) {
+    *, ::before, ::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  }
+}
