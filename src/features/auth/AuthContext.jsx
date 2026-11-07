@@ -102,6 +102,12 @@ export function AuthProvider({ children }) {
     });
 
     if (error) throw error;
+
+    // Supabase returns a user with empty identities if email already exists
+    if (data.user && (!data.user.identities || data.user.identities.length === 0)) {
+      throw new Error('An account with this email already exists. Please log in.');
+    }
+
     const sessionUser = data.user ? { ...data.user, uid: data.user.id } : null;
 
     if (sessionUser) {
