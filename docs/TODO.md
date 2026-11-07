@@ -24,9 +24,9 @@ Tick a box only when the exit test passes. Prompts are in AGENT_PROMPTS.md (bloc
 - [x] **P13** Deploy prep — exit: env/rules checklist ready
 
 ## Day 2 — deploy and fix
-- [ ] Deploy to Vercel; production smoke test (log failures in KNOWN_ISSUES.md)
+- [x] Deploy to Vercel; production smoke test (log failures in KNOWN_ISSUES.md)
 - [x] 10-profile evidence run (P14: Evaluation runner in /admin section G)
-- [ ] Fix all S1 and S2 issues (see DEBUGGING.md)
+- [x] Fix all S1 and S2 issues (see DEBUGGING.md)
 
 ## Day 3 — finish
 - [x] Fix S3/S4 issues; 375 px pass
