@@ -3,7 +3,7 @@
 ## Functional requirements (from Chapter 3)
 | ID | Requirement | Where | Acceptance criteria |
 |----|-------------|-------|---------------------|
-| FR1 | Register/login with email + password (Firebase Auth) | `/register`, `/login` | Register creates `users/{uid}`; session survives refresh; logout works; Firebase errors shown in plain language |
+| FR1 | Register/login with email + password (Firebase Auth) | `/register`, `/login` | Register creates `users/{uid}`; session survives refresh; logout works; Firebase errors shown in plain language; login test-account shortcuts prefill only the provisioned Test User or Test Admin email and still require a password |
 | FR2 | Multi-step onboarding: age, gender, weight, conditions, preferences, weekly budget | `/onboarding` | 4 steps, per-step validation, back/next, progress bar, limits from DATABASE.md |
 | FR3 | Save/retrieve profile in Firestore | `users/{uid}.profile` | Reload shows saved values; another account cannot read it |
 | FR4 | Send profile to Gemini, receive Nigerian meals | `POST /api/recommend` | 6 valid meals (2 per meal type) in ~5 s typical; profile read server-side; no personal identifiers sent to Gemini |

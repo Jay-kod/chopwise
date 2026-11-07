@@ -108,3 +108,4 @@ export function LockIcon({ className = 'h-3.5 w-3.5' }) {
     </svg>
   );
 }
+

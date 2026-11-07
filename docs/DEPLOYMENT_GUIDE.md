@@ -119,3 +119,5 @@ The project `vercel.json` defines `"maxDuration": 30` for `api/*.js` to permit G
    - Click **Test all** in Section A (Functions Table) and verify all rows turn green.
 5. Return to `/dashboard` and click **⚡ Regenerate Plan** to generate personalized Nigerian meal recommendations!
 
+### Login test-account shortcuts
+The login page includes email-only shortcuts for `chop1@test.com` (Test User) and `adminchop@test.com` (Test Admin). Create both accounts through the app's registration flow and set their passwords in Firebase Auth; the shortcuts do not create accounts or bypass password authentication. Add the Test Admin's Firebase UID to `ADMIN_UIDS` to grant admin access. Use dedicated test accounts without sensitive health data.

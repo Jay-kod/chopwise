@@ -118,7 +118,8 @@ export default function Layout({
             <div className="flex items-center gap-2 sm:gap-3">
               {navActions !== undefined ? navActions : desktopNavActions}
 
-              <div className="border-l border-line pl-2">
+              {/* Desktop Theme Toggle: hidden on mobile */}
+              <div className="hidden sm:block border-l border-line pl-2 sm:pl-3">
                 <ThemeToggle />
               </div>
 
@@ -145,7 +146,7 @@ export default function Layout({
 
           {/* Mobile Dropdown Drawer */}
           {mobileMenuOpen && (
-            <div className="border-t border-line bg-surface px-4 py-4 sm:hidden space-y-3 shadow-lg">
+            <div className="border-t border-line bg-surface px-4 py-4 sm:hidden space-y-4 shadow-lg animate-in fade-in slide-in-from-top-2 duration-150">
               {user ? (
                 <div className="space-y-3">
                   <div className="text-xs text-muted border-b border-line pb-2">
@@ -154,14 +155,14 @@ export default function Layout({
                   <Link
                     to="/dashboard"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="block text-sm font-semibold text-fg hover:text-primary"
+                    className="block text-sm font-semibold text-fg hover:text-primary transition-colors"
                   >
                     Dashboard
                   </Link>
                   <Link
                     to="/profile"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="block text-sm font-semibold text-fg hover:text-primary"
+                    className="block text-sm font-semibold text-fg hover:text-primary transition-colors"
                   >
                     Profile &amp; Saved Meals
                   </Link>
@@ -169,12 +170,12 @@ export default function Layout({
                     <Link
                       to="/admin"
                       onClick={() => setMobileMenuOpen(false)}
-                      className="block text-sm font-semibold text-primary"
+                      className="block text-sm font-semibold text-primary transition-colors"
                     >
                       Admin Portal
                     </Link>
                   )}
-                  <div className="pt-2 border-t border-line">
+                  <div className="pt-2">
                     <Button
                       variant="secondary"
                       onClick={() => {
@@ -196,6 +197,12 @@ export default function Layout({
                   </Link>
                 </div>
               )}
+
+              {/* Theme Toggle row in Mobile Drawer */}
+              <div className="flex items-center justify-between border-t border-line pt-3">
+                <span className="text-xs font-medium text-muted">Theme appearance</span>
+                <ThemeToggle />
+              </div>
             </div>
           )}
         </header>
