@@ -68,7 +68,7 @@ export default function Login() {
   return (
     <Layout hideHeader={true} hideFooter={true}>
       <div className="relative flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center py-4 px-4 sm:px-6">
-        {/* Floating Theme Toggle (top-right corner, no header needed) */}
+        {/* Floating Theme Toggle (top-right corner) */}
         <div className="absolute top-0 right-0 sm:top-2 sm:right-2">
           <ThemeToggle />
         </div>
@@ -89,25 +89,12 @@ export default function Login() {
             </p>
           </div>
 
-          <Card className="rounded-2xl border-line p-6 sm:p-7 shadow-sm">
-            {/* Log in / Sign up Segmented Toggle */}
-            <div className="grid grid-cols-2 p-1 bg-surface-muted rounded-xl mb-5 border border-line">
-              <div className="py-2 text-center text-xs font-semibold rounded-lg bg-surface text-fg shadow-xs border border-field-line">
-                Log in
-              </div>
-              <Link
-                to="/register"
-                className="py-2 text-center text-xs font-semibold rounded-lg text-muted hover:text-fg hover:bg-surface/50 transition-colors"
-              >
-                Sign up
-              </Link>
-            </div>
-
-            <div className="mb-5 space-y-0.5">
-              <h1 className="text-xl font-bold tracking-tight text-fg">
+          <Card className="rounded-2xl border-line p-6 sm:p-8 shadow-sm">
+            <div className="mb-6 space-y-1">
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-fg">
                 Welcome back
               </h1>
-              <p className="text-xs text-muted">
+              <p className="text-xs sm:text-sm text-muted">
                 Log in to view and generate your personalized Nigerian meals.
               </p>
             </div>
@@ -193,7 +180,16 @@ export default function Login() {
               </div>
             </section>
 
-            <div className="mt-5 pt-4 border-t border-line text-center">
+            <div className="mt-6 pt-5 border-t border-line text-center space-y-3">
+              <p className="text-xs sm:text-sm text-muted">
+                Don't have an account?{' '}
+                <Link
+                  to="/register"
+                  className="font-semibold text-primary underline hover:text-primary-hover focus-visible:ring-2 focus-visible:ring-ring rounded"
+                >
+                  Sign up
+                </Link>
+              </p>
               <div className="inline-flex items-center gap-1.5 text-[11px] text-muted">
                 <LockIcon />
                 <span>Encrypted session • Nigerian dietary guidance</span>

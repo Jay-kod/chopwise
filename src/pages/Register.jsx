@@ -69,7 +69,7 @@ export default function Register() {
   return (
     <Layout hideHeader={true} hideFooter={true}>
       <div className="relative flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center py-4 px-4 sm:px-6">
-        {/* Floating Theme Toggle (top-right corner, no header needed) */}
+        {/* Floating Theme Toggle (top-right corner) */}
         <div className="absolute top-0 right-0 sm:top-2 sm:right-2">
           <ThemeToggle />
         </div>
@@ -90,25 +90,12 @@ export default function Register() {
             </p>
           </div>
 
-          <Card className="rounded-2xl border-line p-6 sm:p-7 shadow-sm">
-            {/* Log in / Sign up Segmented Toggle */}
-            <div className="grid grid-cols-2 p-1 bg-surface-muted rounded-xl mb-5 border border-line">
-              <Link
-                to="/login"
-                className="py-2 text-center text-xs font-semibold rounded-lg text-muted hover:text-fg hover:bg-surface/50 transition-colors"
-              >
-                Log in
-              </Link>
-              <div className="py-2 text-center text-xs font-semibold rounded-lg bg-surface text-fg shadow-xs border border-field-line">
-                Sign up
-              </div>
-            </div>
-
-            <div className="mb-5 space-y-0.5">
-              <h1 className="text-xl font-bold tracking-tight text-fg">
+          <Card className="rounded-2xl border-line p-6 sm:p-8 shadow-sm">
+            <div className="mb-6 space-y-1">
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-fg">
                 Create your account
               </h1>
-              <p className="text-xs text-muted">
+              <p className="text-xs sm:text-sm text-muted">
                 Start getting Nigerian recipes tailored to your health and wallet.
               </p>
             </div>
@@ -209,7 +196,16 @@ export default function Register() {
               </Button>
             </form>
 
-            <div className="mt-4 pt-3 border-t border-line text-center">
+            <div className="mt-5 pt-4 border-t border-line text-center space-y-3">
+              <p className="text-xs sm:text-sm text-muted">
+                Already have an account?{' '}
+                <Link
+                  to="/login"
+                  className="font-semibold text-primary underline hover:text-primary-hover focus-visible:ring-2 focus-visible:ring-ring rounded"
+                >
+                  Log in
+                </Link>
+              </p>
               <div className="inline-flex items-center gap-1.5 text-[11px] text-muted">
                 <LockIcon />
                 <span>Encrypted health profile • General guidance only</span>

@@ -29,6 +29,7 @@
   --color-danger-line: #B91C1C;
   --color-ring: #047857;             /* keyboard focus ring */
   --color-chip: #FFFFFF;             /* theme-constant white chip (e.g. Edamam attribution badge) */
+  --color-overlay: #000000;          /* modal & drawer backdrop overlay */
   --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
@@ -53,6 +54,7 @@
   --color-danger-fg: #FCA5A5;
   --color-danger-line: #EF4444;
   --color-ring: #6EE7B7;
+  --color-overlay: #000000;
 }
 
 :root { color-scheme: light; }

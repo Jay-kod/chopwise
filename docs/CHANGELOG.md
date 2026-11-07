@@ -2,12 +2,13 @@
 Add one line per task: date, task id, what changed, doc updates.
 
 ## UI & Landing Page Upgrades (2026-11-07)
-- Mobile navigation: moved the Light/Dark mode theme toggle into the mobile dropdown drawer so that it displays neatly when clicking the hamburger button on mobile screens (`hidden sm:block` on the header bar; displayed in the mobile drawer with label).
+- Mobile sidebar navigation: updated the hamburger menu into an off-canvas drawer (`MobileDrawer.jsx`) that smoothly flows in from the right (`translate-x-full` to `translate-x-0` with `duration-300 ease-out`), accompanied by a semi-transparent `bg-overlay/60` backdrop blur scrim, explicit close button, user profile info, navigation links, and theme toggle.
+- Added `--color-overlay` theme token to `src/styles/theme.css` for consistent modal and drawer backdrop styling across light and dark modes.
 - Login page now has Test User and Test Admin email-only shortcuts for deployed testing; docs clarify that Firebase passwords and UID-based admin authorization remain required.
 - Landing page overhaul: set Hero section to 98%vh (`min-h-[98vh]`), standard content sections to 60%vh (`min-h-[60vh]`), and detailed sample recipes section to natural height; applied subtle alternating background gradients across all landing page sections using semantic theme tokens (`from-page`, `via-surface-muted`, `to-surface`).
 - Extracted `landingData.js` and `Footer.jsx` to adhere to the <= 250 line limit per file.
 - Header refinements: removed Sign Up button before login, displaying only "Log in" and upgraded tactile pill `ThemeToggle`; implemented responsive mobile hamburger drawer menu.
-- Auth & Admin styling: single-page headerless and footerless views for `/login`, `/register`, and `/admin`; segmented auth toggle for seamless tab switching between Log in and Sign up; password visibility toggles; floating theme toggle; and streamlined admin header with back navigation.
+- Auth & Admin styling: single-page headerless and footerless views for `/login`, `/register`, and `/admin`; direct text links between login and sign-up (no tabs); password visibility toggles; floating theme toggle; and streamlined admin header with back navigation.
 
 ## Unreleased — planning decisions (2026-11-07)
 - Stack locked to Chapter 3: React, Firebase, Gemini, Edamam, Vercel.

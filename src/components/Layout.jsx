@@ -4,6 +4,7 @@ import Logo from './Logo';
 import ThemeToggle from './ThemeToggle';
 import Button from './Button';
 import Footer from './Footer';
+import MobileDrawer from './MobileDrawer';
 import { APP_NAME } from '../lib/constants';
 import { useAuth } from '../features/auth/useAuth';
 import { apiClient } from '../lib/apiClient';
@@ -144,67 +145,14 @@ export default function Layout({
             </div>
           </nav>
 
-          {/* Mobile Dropdown Drawer */}
-          {mobileMenuOpen && (
-            <div className="border-t border-line bg-surface px-4 py-4 sm:hidden space-y-4 shadow-lg animate-in fade-in slide-in-from-top-2 duration-150">
-              {user ? (
-                <div className="space-y-3">
-                  <div className="text-xs text-muted border-b border-line pb-2">
-                    Signed in as <span className="font-semibold text-fg">{user.email}</span>
-                  </div>
-                  <Link
-                    to="/dashboard"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="block text-sm font-semibold text-fg hover:text-primary transition-colors"
-                  >
-                    Dashboard
-                  </Link>
-                  <Link
-                    to="/profile"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="block text-sm font-semibold text-fg hover:text-primary transition-colors"
-                  >
-                    Profile &amp; Saved Meals
-                  </Link>
-                  {isAdmin && (
-                    <Link
-                      to="/admin"
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="block text-sm font-semibold text-primary transition-colors"
-                    >
-                      Admin Portal
-                    </Link>
-                  )}
-                  <div className="pt-2">
-                    <Button
-                      variant="secondary"
-                      onClick={() => {
-                        setMobileMenuOpen(false);
-                        handleLogout();
-                      }}
-                      className="w-full text-xs min-h-9"
-                    >
-                      Log out
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="block">
-                    <Button variant="secondary" className="w-full text-xs min-h-10 font-semibold">
-                      Log in
-                    </Button>
-                  </Link>
-                </div>
-              )}
-
-              {/* Theme Toggle row in Mobile Drawer */}
-              <div className="flex items-center justify-between border-t border-line pt-3">
-                <span className="text-xs font-medium text-muted">Theme appearance</span>
-                <ThemeToggle />
-              </div>
-            </div>
-          )}
+          {/* Mobile Right Drawer Sidebar & Backdrop */}
+          <MobileDrawer
+            isOpen={mobileMenuOpen}
+            onClose={() => setMobileMenuOpen(false)}
+            user={user}
+            isAdmin={isAdmin}
+            onLogout={handleLogout}
+          />
         </header>
       )}
 
