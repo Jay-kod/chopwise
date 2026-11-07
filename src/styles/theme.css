@@ -30,6 +30,10 @@
   --color-ring: #047857;             /* keyboard focus ring */
   --color-chip: #FFFFFF;             /* theme-constant white chip (e.g. Edamam attribution badge) */
   --color-overlay: #000000;          /* modal & drawer backdrop overlay */
+  --color-header-bg: #034430;        /* solid dark green header (darker than brand green) */
+  --color-header-fg: #FFFFFF;        /* header text */
+  --color-header-muted: #A7F3D0;     /* header secondary text */
+  --color-header-line: #065F46;      /* header border */
   --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
@@ -55,6 +59,10 @@
   --color-danger-line: #EF4444;
   --color-ring: #6EE7B7;
   --color-overlay: #000000;
+  --color-header-bg: #05261B;
+  --color-header-fg: #E8F5EE;
+  --color-header-muted: #6EE7B7;
+  --color-header-line: #0D3E2C;
 }
 
 :root { color-scheme: light; }

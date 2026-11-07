@@ -8,6 +8,7 @@ import ErrorState from '../components/ErrorState';
 import Disclaimer from '../components/Disclaimer';
 import MealCard from '../features/meals/MealCard';
 import FilterBar from '../features/meals/FilterBar';
+import DashboardError from '../features/meals/DashboardError';
 import { useRecommendations } from '../features/meals/useRecommendations';
 import { useAuth } from '../features/auth/useAuth';
 import { formatNaira } from '../lib/format';
@@ -139,51 +140,7 @@ export default function Dashboard() {
         )}
 
         {/* Error Handling States */}
-        {error && (
-          <div>
-            {error.code === 'NOT_CONFIGURED' ? (
-              <Card className="p-6 text-center">
-                <span className="text-3xl" aria-hidden="true">
-                  ⚙️
-                </span>
-                <h3 className="mt-2 text-base font-bold text-fg">
-                  Recommendation Service Not Configured
-                </h3>
-                <p className="mx-auto mt-1 max-w-md text-xs text-muted">
-                  The AI meal recommendation engine is currently being set up with its Google Gemini credentials.
-                </p>
-                {isAdmin && (
-                  <div className="mt-4">
-                    <Link to="/admin">
-                      <Button className="text-xs min-h-9">
-                        Open Admin Portal to add API key
-                      </Button>
-                    </Link>
-                  </div>
-                )}
-              </Card>
-            ) : error.code === 'RATE_LIMITED' ? (
-              <div
-                className="rounded-xl border border-warn-line bg-warn-bg p-6 text-center text-warn-fg"
-                role="alert"
-              >
-                <span className="text-3xl" aria-hidden="true">
-                  ⏳
-                </span>
-                <h3 className="mt-2 text-base font-bold">Hourly Request Limit Reached</h3>
-                <p className="mt-1 text-xs">
-                  {error.message ||
-                    'You have reached your hourly meal recommendation limit. Please try again later.'}
-                </p>
-              </div>
-            ) : (
-              <ErrorState
-                message={error.message || 'Failed to load recommendations.'}
-                onRetry={refresh}
-              />
-            )}
-          </div>
-        )}
+        <DashboardError error={error} isAdmin={isAdmin} onRetry={refresh} />
 
         {/* Loading Skeletons */}
         {loading && (

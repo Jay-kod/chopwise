@@ -2,9 +2,11 @@
 Add one line per task: date, task id, what changed, doc updates.
 
 ## UI & Landing Page Upgrades (2026-11-07)
+- Header styling: changed top site header from semi-transparent blur to a solid, opaque darker green (`--color-header-bg: #034430` light, `#05261B` dark) with high-contrast text (`--color-header-fg`), soft mint secondary accents (`--color-header-muted`), and inverted ChopWise logo mark.
+- Dashboard optimization: extracted `DashboardError.jsx` to keep `Dashboard.jsx` under 250 lines (now 240 lines).
 - Mobile sidebar navigation: updated the hamburger menu into an off-canvas drawer (`MobileDrawer.jsx`) that smoothly flows in from the right (`translate-x-full` to `translate-x-0` with `duration-300 ease-out`), accompanied by a semi-transparent `bg-overlay/60` backdrop blur scrim, explicit close button, user profile info, navigation links, and theme toggle.
 - Added `--color-overlay` theme token to `src/styles/theme.css` for consistent modal and drawer backdrop styling across light and dark modes.
-- Login page now has Test User and Test Admin email-only shortcuts for deployed testing; docs clarify that Firebase passwords and UID-based admin authorization remain required.
+- Login page now has Test User and Test Admin shortcuts that prefill the shared `password1` test credential for deployed testing; docs warn to use disposable accounts and clarify that Firebase authentication and UID-based admin authorization remain required.
 - Landing page overhaul: set Hero section to 98%vh (`min-h-[98vh]`), standard content sections to 60%vh (`min-h-[60vh]`), and detailed sample recipes section to natural height; applied subtle alternating background gradients across all landing page sections using semantic theme tokens (`from-page`, `via-surface-muted`, `to-surface`).
 - Extracted `landingData.js` and `Footer.jsx` to adhere to the <= 250 line limit per file.
 - Header refinements: removed Sign Up button before login, displaying only "Log in" and upgraded tactile pill `ThemeToggle`; implemented responsive mobile hamburger drawer menu.

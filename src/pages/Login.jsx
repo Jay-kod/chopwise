@@ -21,6 +21,7 @@ const TEST_ACCOUNTS = [
   { label: 'Test User', email: 'chop1@test.com' },
   { label: 'Test Admin', email: 'adminchop@test.com' },
 ];
+const TEST_PASSWORD = 'password1';
 
 export default function Login() {
   const { login } = useAuth();
@@ -61,7 +62,7 @@ export default function Login() {
 
   function selectTestAccount(email) {
     setEmail(email);
-    setPassword('');
+    setPassword(TEST_PASSWORD);
     setError('');
   }
 
@@ -156,14 +157,11 @@ export default function Login() {
               className="mt-5 border-t border-line pt-4"
               aria-labelledby="test-login-heading"
             >
-              <h2
-                id="test-login-heading"
-                className="text-sm font-semibold text-fg"
-              >
+              <h2 id="test-login-heading" className="text-sm font-semibold text-fg">
                 Testing accounts
               </h2>
               <p className="mt-1 text-xs text-muted">
-                Choose an account to fill its email. Enter its password to log in.
+                Choose an account to fill its email and test password.
               </p>
               <div className="mt-3 grid gap-2">
                 {TEST_ACCOUNTS.map((account) => (

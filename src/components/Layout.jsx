@@ -61,13 +61,13 @@ export default function Layout({
     <div className="hidden sm:flex items-center gap-3">
       <Link
         to="/dashboard"
-        className="text-xs font-semibold text-fg hover:text-primary transition-colors"
+        className="text-xs font-semibold text-header-fg hover:text-header-muted transition-colors"
       >
         Dashboard
       </Link>
       <Link
         to="/profile"
-        className="text-xs font-semibold text-fg hover:text-primary transition-colors"
+        className="text-xs font-semibold text-header-fg hover:text-header-muted transition-colors"
       >
         Profile
       </Link>
@@ -75,14 +75,14 @@ export default function Layout({
         <Link to="/admin">
           <Button
             variant="secondary"
-            className="min-h-9 px-2.5 py-1 text-xs border-primary text-primary hover:bg-primary-soft"
+            className="min-h-9 px-2.5 py-1 text-xs border-header-line bg-surface/10 text-header-fg hover:bg-surface/20"
           >
             Admin
           </Button>
         </Link>
       )}
       <span
-        className="hidden max-w-[120px] truncate text-xs text-muted lg:inline"
+        className="hidden max-w-[120px] truncate text-xs text-header-muted lg:inline"
         title={user.email}
       >
         {user.email}
@@ -90,7 +90,7 @@ export default function Layout({
       <Button
         variant="secondary"
         onClick={handleLogout}
-        className="min-h-9 px-3 text-xs"
+        className="min-h-9 px-3 text-xs border-header-line bg-surface/10 text-header-fg hover:bg-surface/20"
         aria-label="Log out of ChopWise"
       >
         Log out
@@ -99,7 +99,10 @@ export default function Layout({
   ) : (
     <div className="hidden sm:flex items-center gap-2">
       <Link to="/login">
-        <Button variant="secondary" className="min-h-9 px-4 text-xs font-semibold">
+        <Button
+          variant="secondary"
+          className="min-h-9 px-4 text-xs font-semibold border-header-line bg-surface/10 text-header-fg hover:bg-surface/20"
+        >
           Log in
         </Button>
       </Link>
@@ -108,19 +111,19 @@ export default function Layout({
 
   return (
     <div className="flex min-h-screen flex-col bg-page text-fg">
-      {/* Sticky Top Header */}
+      {/* Sticky Top Header: Solid Darker Green (Non-transparent) */}
       {!hideHeader && (
-        <header className="sticky top-0 z-40 border-b border-line bg-surface/95 backdrop-blur-sm">
+        <header className="sticky top-0 z-40 border-b border-header-line bg-header-bg shadow-sm">
           <nav className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
             <Link to="/" aria-label={`${APP_NAME} home`} className="flex items-center gap-2">
-              <Logo />
+              <Logo inverted={true} />
             </Link>
 
             <div className="flex items-center gap-2 sm:gap-3">
               {navActions !== undefined ? navActions : desktopNavActions}
 
               {/* Desktop Theme Toggle: hidden on mobile */}
-              <div className="hidden sm:block border-l border-line pl-2 sm:pl-3">
+              <div className="hidden sm:block border-l border-header-line pl-2 sm:pl-3">
                 <ThemeToggle />
               </div>
 
@@ -128,7 +131,7 @@ export default function Layout({
               <button
                 type="button"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-line bg-surface text-fg hover:bg-surface-muted focus:outline-none sm:hidden"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-header-line bg-surface/10 text-header-fg hover:bg-surface/20 focus:outline-none sm:hidden"
                 aria-label="Toggle navigation menu"
                 aria-expanded={mobileMenuOpen}
               >
