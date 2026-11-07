@@ -201,6 +201,35 @@ export async function runHealthCheck(target) {
     }
   }
 
+  if (target === 'recommend') {
+    try {
+      const { getRecommendations } = await import('./services/recommendationService.js');
+      const res = await getRecommendations(null, { isSampleTest: true });
+      const latencyMs = Date.now() - start;
+      const count = res?.meals?.length || 0;
+      const overBudgetCount = (res?.meals || []).filter((m) => m.overBudget).length;
+      const ok = count > 0;
+      const result = {
+        ok,
+        message: ok
+          ? `Pipeline generated ${count} valid meals (${overBudgetCount} over-budget)`
+          : 'Pipeline returned 0 meals',
+        latencyMs,
+      };
+      await recordTestResult(target, result);
+      return result;
+    } catch (err) {
+      const latencyMs = Date.now() - start;
+      const result = {
+        ok: false,
+        message: `Recommendation pipeline test failed: ${err.message}`,
+        latencyMs,
+      };
+      await recordTestResult(target, result);
+      return result;
+    }
+  }
+
   throw new Error(`Target "${target}" is not supported or not implemented yet.`);
 }
 

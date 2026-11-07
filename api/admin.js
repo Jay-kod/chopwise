@@ -103,6 +103,20 @@ export default withHandler(async (req, res) => {
         lastTest: testResults.edamam || null,
         testTarget: 'edamam',
       },
+      {
+        id: 'recommend',
+        title: 'Recommendation Pipeline',
+        kind: 'function',
+        status: !geminiConf.apiKey
+          ? 'not_configured'
+          : testResults.recommend
+          ? testResults.recommend.ok
+            ? 'ok'
+            : 'failing'
+          : 'untested',
+        lastTest: testResults.recommend || null,
+        testTarget: 'recommend',
+      },
     ];
 
     const items = pricesData.items || [];

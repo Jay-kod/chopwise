@@ -13,7 +13,7 @@ Tick a box only when the exit test passes. Prompts are in AGENT_PROMPTS.md (bloc
 ### Block 4
 - [x] **P6** Admin page UI — exit: paste Gemini + Edamam keys; Test all green; secrets masked; non-admin NotFound
 ### Block 5
-- [ ] **P7** Recommendation service + endpoint — exit: 6 valid meals; cache; 11th call RATE_LIMITED; missing key NOT_CONFIGURED; Admin `recommend` test green
+- [x] **P7** Recommendation service + endpoint — exit: 6 valid meals; cache; 11th call RATE_LIMITED; missing key NOT_CONFIGURED; Admin `recommend` test green
 - [ ] **P8** Dashboard — exit: sign up -> onboard -> real meals
 ### Block 6
 - [ ] **P9** Nutrition service + endpoint — exit: edamam result, AI-estimate fallback, cache, NOT_FOUND; Admin `nutrition` test green
