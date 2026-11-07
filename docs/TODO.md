@@ -16,7 +16,7 @@ Tick a box only when the exit test passes. Prompts are in AGENT_PROMPTS.md (bloc
 - [x] **P7** Recommendation service + endpoint — exit: 6 valid meals; cache; 11th call RATE_LIMITED; missing key NOT_CONFIGURED; Admin `recommend` test green
 - [x] **P8** Dashboard — exit: sign up -> onboard -> real meals
 ### Block 6
-- [ ] **P9** Nutrition service + endpoint — exit: edamam result, AI-estimate fallback, cache, NOT_FOUND; Admin `nutrition` test green
+- [x] **P9** Nutrition service + endpoint — exit: edamam result, AI-estimate fallback, cache, NOT_FOUND; Admin `nutrition` test green
 - [ ] **P10** Meal detail + Save — exit: detail survives reload; save/unsave persists
 - [ ] **P11** Filters + Profile — exit: FR1–FR10 demonstrable
 ### Block 7

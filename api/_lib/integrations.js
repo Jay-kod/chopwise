@@ -230,6 +230,52 @@ export async function runHealthCheck(target) {
     }
   }
 
+  if (target === 'nutrition') {
+    try {
+      const { getMealNutrition } = await import('./services/nutritionService.js');
+      const sampleMeal = {
+        id: 'sample-jollof-test',
+        name: 'Nigerian Jollof Rice with Chicken',
+        ingredients: [
+          { item: 'long grain rice', quantity: 1, unit: 'cup' },
+          { item: 'chicken breast', quantity: 150, unit: 'g' },
+          { item: 'vegetable oil', quantity: 1, unit: 'tbsp' },
+          { item: 'tomatoes', quantity: 2, unit: 'piece' },
+        ],
+        aiNutritionEstimate: {
+          calories: 520,
+          proteinG: 32,
+          carbsG: 65,
+          fatG: 14,
+          sodiumMg: 450,
+          sugarG: 4,
+        },
+      };
+
+      const res = await getMealNutrition(null, null, { sampleMeal });
+      const latencyMs = Date.now() - start;
+      const ok = Boolean(res?.nutrition?.calories > 0);
+      const result = {
+        ok,
+        message: ok
+          ? `Nutrition pipeline resolved ${res.nutrition.calories} kcal (Source: ${res.source})`
+          : 'Nutrition pipeline returned 0 calories',
+        latencyMs,
+      };
+      await recordTestResult(target, result);
+      return result;
+    } catch (err) {
+      const latencyMs = Date.now() - start;
+      const result = {
+        ok: false,
+        message: `Nutrition pipeline test failed: ${err.message}`,
+        latencyMs,
+      };
+      await recordTestResult(target, result);
+      return result;
+    }
+  }
+
   throw new Error(`Target "${target}" is not supported or not implemented yet.`);
 }
 

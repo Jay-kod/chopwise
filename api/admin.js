@@ -117,6 +117,18 @@ export default withHandler(async (req, res) => {
         lastTest: testResults.recommend || null,
         testTarget: 'recommend',
       },
+      {
+        id: 'nutrition',
+        title: 'Nutrition Pipeline',
+        kind: 'function',
+        status: testResults.nutrition
+          ? testResults.nutrition.ok
+            ? 'ok'
+            : 'failing'
+          : 'untested',
+        lastTest: testResults.nutrition || null,
+        testTarget: 'nutrition',
+      },
     ];
 
     const items = pricesData.items || [];
