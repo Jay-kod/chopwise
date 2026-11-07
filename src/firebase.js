@@ -2,26 +2,20 @@ import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
-const REQUIRED_VARS = [
-  'VITE_FIREBASE_API_KEY',
-  'VITE_FIREBASE_AUTH_DOMAIN',
-  'VITE_FIREBASE_PROJECT_ID',
-  'VITE_FIREBASE_APP_ID',
-];
+const apiKey = import.meta.env.VITE_FIREBASE_API_KEY || '';
+const authDomain = import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || '';
+const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID || '';
+const appId = import.meta.env.VITE_FIREBASE_APP_ID || '';
 
-const missing = REQUIRED_VARS.filter((v) => !import.meta.env[v]);
-if (missing.length > 0) {
-  throw new Error(
-    `Missing Firebase config: ${missing.join(', ')}. ` +
-    'Add them to .env.local (see .env.example).'
-  );
-}
+export const isFirebaseConfigured = Boolean(
+  apiKey && authDomain && projectId && appId
+);
 
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  apiKey: apiKey || 'placeholder-api-key',
+  authDomain: authDomain || 'chopwise-placeholder.firebaseapp.com',
+  projectId: projectId || 'chopwise-placeholder',
+  appId: appId || '1:000000000000:web:placeholder',
 };
 
 const app = initializeApp(firebaseConfig);
