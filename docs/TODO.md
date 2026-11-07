@@ -17,7 +17,7 @@ Tick a box only when the exit test passes. Prompts are in AGENT_PROMPTS.md (bloc
 - [x] **P8** Dashboard — exit: sign up -> onboard -> real meals
 ### Block 6
 - [x] **P9** Nutrition service + endpoint — exit: edamam result, AI-estimate fallback, cache, NOT_FOUND; Admin `nutrition` test green
-- [ ] **P10** Meal detail + Save — exit: detail survives reload; save/unsave persists
+- [x] **P10** Meal detail + Save — exit: detail survives reload; save/unsave persists
 - [ ] **P11** Filters + Profile — exit: FR1–FR10 demonstrable
 ### Block 7
 - [ ] **P12** Hardening — exit: `npm run verify` green; no key strings in `dist/`; every screen checked in light AND dark at 375 px

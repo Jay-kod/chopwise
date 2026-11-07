@@ -1,9 +1,10 @@
+import { Link } from 'react-router-dom';
 import Card from '../../components/Card';
 import Badge from '../../components/Badge';
 import { formatNaira } from '../../lib/format';
 import SafetyBadge, { MealTypeChip, SuitableForChip } from './SafetyBadge';
 
-export default function MealCard({ meal, perMealCapNGN, isClickable = false }) {
+export default function MealCard({ meal, perMealCapNGN, isClickable = true }) {
   if (!meal) return null;
 
   const costFormatted = formatNaira(meal.costNGN);
@@ -13,7 +14,7 @@ export default function MealCard({ meal, perMealCapNGN, isClickable = false }) {
     ai: 'AI cost estimate',
   };
 
-  const content = (
+  const cardInner = (
     <div className="flex h-full flex-col justify-between space-y-4">
       <div>
         {/* Header row: Meal type & Prep time */}
@@ -28,7 +29,7 @@ export default function MealCard({ meal, perMealCapNGN, isClickable = false }) {
 
         {/* Title and Cost */}
         <div className="mt-3 flex items-start justify-between gap-2">
-          <h3 className="text-base font-bold text-fg leading-snug">
+          <h3 className="text-base font-bold text-fg leading-snug group-hover:text-primary transition-colors">
             {meal.name}
           </h3>
           <span className="shrink-0 text-base font-bold text-primary">
@@ -79,9 +80,23 @@ export default function MealCard({ meal, perMealCapNGN, isClickable = false }) {
     </div>
   );
 
+  if (isClickable && meal.id) {
+    return (
+      <Link
+        to={`/meal/${meal.id}`}
+        className="block group rounded-xl transition-transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-ring"
+        aria-label={`View recipe for ${meal.name}`}
+      >
+        <Card className="h-full flex flex-col justify-between hover:border-field-line shadow-sm hover:shadow-md transition-all">
+          {cardInner}
+        </Card>
+      </Link>
+    );
+  }
+
   return (
-    <Card className="flex flex-col justify-between transition-shadow hover:shadow-md">
-      {content}
+    <Card className="flex flex-col justify-between shadow-sm">
+      {cardInner}
     </Card>
   );
 }
