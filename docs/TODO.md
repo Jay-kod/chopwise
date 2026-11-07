@@ -20,7 +20,7 @@ Tick a box only when the exit test passes. Prompts are in AGENT_PROMPTS.md (bloc
 - [x] **P10** Meal detail + Save — exit: detail survives reload; save/unsave persists
 - [x] **P11** Filters + Profile — exit: FR1–FR10 demonstrable
 ### Block 7
-- [ ] **P12** Hardening — exit: `npm run verify` green; no key strings in `dist/`; every screen checked in light AND dark at 375 px
+- [x] **P12** Hardening — exit: `npm run verify` green; no key strings in `dist/`; every screen checked in light AND dark at 375 px
 - [ ] **P13** Deploy prep — exit: env/rules checklist ready
 
 ## Day 2 — deploy and fix

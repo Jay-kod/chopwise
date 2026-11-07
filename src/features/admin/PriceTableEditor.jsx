@@ -240,3 +240,4 @@ export default function PriceTableEditor({ prices, onSave, onReset }) {
     </Card>
   );
 }
+

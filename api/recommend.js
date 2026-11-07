@@ -10,3 +10,4 @@ export default withHandler(async (req, res) => {
   const result = await getRecommendations(uid, { regenerate });
   return res.status(200).json(result);
 });
+

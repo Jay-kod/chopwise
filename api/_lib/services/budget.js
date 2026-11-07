@@ -118,3 +118,4 @@ export function recomputeMealBudgets(meals, priceTable = [], perMealCapNGN = 0) 
     };
   });
 }
+

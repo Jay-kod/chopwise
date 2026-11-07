@@ -90,3 +90,4 @@ describe('api/_lib/services/safety', () => {
     expect(flags).toHaveLength(4);
   });
 });
+

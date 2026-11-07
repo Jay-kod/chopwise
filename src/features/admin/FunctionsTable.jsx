@@ -116,3 +116,4 @@ export default function FunctionsTable({ functions = [], onTest, onTestAll, test
     </Card>
   );
 }
+

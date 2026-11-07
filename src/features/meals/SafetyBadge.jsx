@@ -49,3 +49,4 @@ export function SuitableForChip({ condition, className = '' }) {
     </span>
   );
 }
+

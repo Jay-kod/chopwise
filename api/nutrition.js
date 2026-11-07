@@ -14,3 +14,4 @@ export default withHandler(async (req, res) => {
   const result = await getMealNutrition(uid, mealId);
   return res.status(200).json(result);
 });
+

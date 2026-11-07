@@ -145,3 +145,4 @@ export default function SettingsForm({ settings, onSave, onReset }) {
     </Card>
   );
 }
+

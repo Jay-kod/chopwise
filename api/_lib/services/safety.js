@@ -101,3 +101,4 @@ export function evaluateMealSafety(meal, userConditions = [], thresholds = {}) {
 
   return flags;
 }
+

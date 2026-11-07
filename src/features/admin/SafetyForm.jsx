@@ -125,3 +125,4 @@ export default function SafetyForm({ safety, onSave, onReset }) {
     </Card>
   );
 }
+

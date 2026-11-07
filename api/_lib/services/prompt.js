@@ -158,3 +158,4 @@ export const GEMINI_RESPONSE_SCHEMA = {
   },
   required: ['meals'],
 };
+
