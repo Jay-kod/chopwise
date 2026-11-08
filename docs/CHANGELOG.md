@@ -1,6 +1,17 @@
 # CHANGELOG.md
 Add one line per task: date, task id, what changed, doc updates.
 
+## Direct Customer Sign-In Navigation (2026-11-08)
+- Updated the header and mobile drawer login buttons to navigate straight to the customer/user login page (`/login`) across both mobile and desktop screens.
+- Updated `Login.jsx` to explicitly label the customer login view, auto-redirect already-authenticated users directly to `/dashboard`, and automatically navigate logged-in customers with completed profiles straight to `/dashboard` instead of onboarding.
+
+## Separate User and Admin Sign-In (2026-11-08)
+- Added `/admin/login` as a separate admin sign-in page, validates admin access through the existing server endpoint, and redirects signed-out `/admin` visitors there; split the user and admin test shortcuts between their respective sign-in pages.
+- Updated docs/ADMIN_PAGE_SPEC.md, docs/REQUIREMENTS.md, and docs/SECURITY.md.
+
+## Registration Crash Fix (2026-11-08)
+- Removed lingering `isSupabaseConfigured` reference from `<Register />` submit button `disabled` prop in `src/pages/Register.jsx` that triggered a `ReferenceError` unhandled render crash caught by `ErrorBoundary`.
+
 ## Local Test User and Admin Seeding (2026-11-08)
 - Created `scripts/seed-users.mjs` and added `npm run seed` script to populate MySQL with active test accounts:
   - User: `chop1@test.com` (password: `password1`), completed onboarding profile (hypertension, no-pork, ₦21,000 budget), 3 pre-cached Nigerian meals, and a saved recipe.

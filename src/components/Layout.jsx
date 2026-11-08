@@ -100,11 +100,11 @@ export default function Layout({
       </Button>
     </div>
   ) : (
-    <div className="hidden sm:flex items-center gap-2">
+    <div className="flex items-center gap-2">
       <Link to="/login">
         <Button
           variant="secondary"
-          className="min-h-9 px-4 text-xs font-semibold border-header-line bg-surface/10 text-header-fg hover:bg-surface/20"
+          className="min-h-8 sm:min-h-9 px-3 sm:px-4 text-xs font-semibold border-header-line bg-surface/10 text-header-fg hover:bg-surface/20"
         >
           Log in
         </Button>

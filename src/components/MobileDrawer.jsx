@@ -114,7 +114,7 @@ export default function MobileDrawer({
               </p>
               <Link to="/login" onClick={onClose} className="block">
                 <Button variant="secondary" className="w-full text-xs min-h-10 font-semibold">
-                  Log in
+                  Customer Log in
                 </Button>
               </Link>
             </div>
