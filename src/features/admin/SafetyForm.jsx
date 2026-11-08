@@ -3,6 +3,7 @@ import Card from '../../components/Card';
 import Button from '../../components/Button';
 import Input from '../../components/Input';
 import Spinner from '../../components/Spinner';
+import ConfirmModal from '../../components/ConfirmModal';
 
 export default function SafetyForm({ safety, onSave, onReset }) {
   const [formData, setFormData] = useState({
@@ -13,6 +14,7 @@ export default function SafetyForm({ safety, onSave, onReset }) {
   });
   const [saving, setSaving] = useState(false);
   const [resetting, setResetting] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   useEffect(() => {
     if (safety) {
@@ -106,7 +108,7 @@ export default function SafetyForm({ safety, onSave, onReset }) {
           <Button
             type="button"
             variant="secondary"
-            onClick={handleReset}
+            onClick={() => setShowResetConfirm(true)}
             disabled={resetting || saving}
             className="text-xs min-h-9 px-3"
           >
@@ -122,6 +124,20 @@ export default function SafetyForm({ safety, onSave, onReset }) {
           </Button>
         </div>
       </form>
+
+      <ConfirmModal
+        isOpen={showResetConfirm}
+        onClose={() => setShowResetConfirm(false)}
+        onConfirm={async () => {
+          setShowResetConfirm(false);
+          await handleReset();
+        }}
+        title="Reset Safety Thresholds?"
+        message="Are you sure you want to reset all health condition safety thresholds to their default values?"
+        confirmText="Reset to defaults"
+        variant="danger"
+        icon="⚠️"
+      />
     </Card>
   );
 }

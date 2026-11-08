@@ -2,8 +2,8 @@ import { useState, useEffect, useMemo } from 'react';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
 import Input from '../../components/Input';
-import Select from '../../components/Select';
 import Spinner from '../../components/Spinner';
+import ConfirmModal from '../../components/ConfirmModal';
 import { formatNaira } from '../../lib/format';
 
 const UNITS = ['100g', '100ml', 'piece'];
@@ -13,6 +13,7 @@ export default function PriceTableEditor({ prices, onSave, onReset }) {
   const [search, setSearch] = useState('');
   const [saving, setSaving] = useState(false);
   const [resetting, setResetting] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   useEffect(() => {
     if (prices?.items) {
@@ -86,12 +87,7 @@ export default function PriceTableEditor({ prices, onSave, onReset }) {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={handleAddRow}
-            className="text-xs min-h-9 px-3"
-          >
+          <Button type="button" variant="secondary" onClick={handleAddRow} className="text-xs min-h-9 px-3">
             + Add ingredient
           </Button>
         </div>
@@ -101,10 +97,7 @@ export default function PriceTableEditor({ prices, onSave, onReset }) {
       <div className="mb-4 space-y-2">
         <div className="flex items-center justify-between text-xs font-medium text-fg">
           <span>
-            Pricing Progress:{' '}
-            <strong className="text-primary">
-              {pricedCount} of {totalCount} priced
-            </strong>
+            Pricing Progress: <strong className="text-primary">{pricedCount} of {totalCount} priced</strong>
           </span>
           {prices?.updatedAt && (
             <span className="text-[11px] text-muted">
@@ -115,8 +108,7 @@ export default function PriceTableEditor({ prices, onSave, onReset }) {
 
         {unpricedCount > 0 && (
           <div className="rounded-lg border border-warn-line bg-warn-bg p-3 text-xs text-warn-fg">
-            ⚠ Warning: {unpricedCount} ingredient{unpricedCount > 1 ? 's have' : ' has'} no price set (null).
-            Any recipe using these items will fall back to AI cost estimates.
+            ⚠ Warning: {unpricedCount} ingredient{unpricedCount > 1 ? 's have' : ' has'} no price set (null). Any recipe using these items will fall back to AI cost estimates.
           </div>
         )}
       </div>
@@ -221,7 +213,7 @@ export default function PriceTableEditor({ prices, onSave, onReset }) {
         <Button
           type="button"
           variant="secondary"
-          onClick={handleReset}
+          onClick={() => setShowResetConfirm(true)}
           disabled={resetting || saving}
           className="text-xs min-h-9 px-3"
         >
@@ -237,6 +229,20 @@ export default function PriceTableEditor({ prices, onSave, onReset }) {
           {saving ? <Spinner label="Saving…" /> : 'Save price table'}
         </Button>
       </div>
+
+      <ConfirmModal
+        isOpen={showResetConfirm}
+        onClose={() => setShowResetConfirm(false)}
+        onConfirm={async () => {
+          setShowResetConfirm(false);
+          await handleReset();
+        }}
+        title="Reset Price Table?"
+        message="Are you sure you want to reset all ingredient prices to the initial seed list? Custom prices will be lost."
+        confirmText="Reset to seed list"
+        variant="danger"
+        icon="⚠️"
+      />
     </Card>
   );
 }

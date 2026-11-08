@@ -8,6 +8,7 @@ import Card from '../components/Card';
 import Button from '../components/Button';
 import Spinner from '../components/Spinner';
 import Disclaimer from '../components/Disclaimer';
+import ConfirmModal from '../components/ConfirmModal';
 import SavedMealsList from '../features/meals/SavedMealsList';
 import Step1Demographics from '../features/onboarding/steps/Step1Demographics';
 import Step2Conditions from '../features/onboarding/steps/Step2Conditions';
@@ -27,19 +28,17 @@ export default function Profile() {
   const [savedMeals, setSavedMeals] = useState([]);
   const [loadingSaved, setLoadingSaved] = useState(true);
   const [removingId, setRemovingId] = useState(null);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [mealToRemove, setMealToRemove] = useState(null);
 
   // Sync profile data from userDoc
   useEffect(() => {
     if (userDoc?.profile) {
       const p = userDoc.profile;
       setFormData({
-        age: p.age ?? '',
-        gender: p.gender ?? '',
-        weightKg: p.weightKg ?? '',
-        conditions: p.conditions ?? [],
-        preferences: p.preferences ?? [],
-        avoidText: p.avoidText ?? '',
-        weeklyBudgetNGN: p.weeklyBudgetNGN ?? '',
+        age: p.age ?? '', gender: p.gender ?? '', weightKg: p.weightKg ?? '',
+        conditions: p.conditions ?? [], preferences: p.preferences ?? [],
+        avoidText: p.avoidText ?? '', weeklyBudgetNGN: p.weeklyBudgetNGN ?? '',
       });
     }
   }, [userDoc]);
@@ -93,8 +92,14 @@ export default function Profile() {
     }
   }
 
-  async function handleRemoveSaved(mealId) {
-    if (!user || !mealId) return;
+  function promptRemoveSaved(mealId) {
+    const target = savedMeals.find((s) => s.id === mealId || s.meal?.id === mealId);
+    setMealToRemove(target || { id: mealId, meal: { name: 'this recipe' } });
+  }
+
+  async function confirmRemoveSaved() {
+    if (!mealToRemove) return;
+    const mealId = mealToRemove.id;
     try {
       setRemovingId(mealId);
       await apiClient('/api/auth', { action: 'delete-saved-meal', mealId });
@@ -104,6 +109,7 @@ export default function Profile() {
       addToast(err?.message || 'Failed to remove saved recipe.', 'error');
     } finally {
       setRemovingId(null);
+      setMealToRemove(null);
     }
   }
 
@@ -123,7 +129,7 @@ export default function Profile() {
             <h1 className="text-2xl font-bold tracking-tight text-fg">Account &amp; Settings</h1>
             <p className="mt-1 text-xs text-muted">Signed in as {user?.email}</p>
           </div>
-          <Button variant="secondary" onClick={handleLogout} className="text-xs min-h-9 px-3">
+          <Button variant="secondary" onClick={() => setShowLogoutConfirm(true)} className="text-xs min-h-9 px-3">
             Log out
           </Button>
         </div>
@@ -164,31 +170,15 @@ export default function Profile() {
             ) : (
               <form onSubmit={handleSaveProfile} className="space-y-6">
                 <Card className="p-5 space-y-6">
-                  <Step1Demographics
-                    data={formData}
-                    errors={errors}
-                    onChange={handleFieldChange}
-                  />
+                  <Step1Demographics data={formData} errors={errors} onChange={handleFieldChange} />
                   <div className="border-t border-line pt-6">
-                    <Step2Conditions
-                      data={formData}
-                      errors={errors}
-                      onChange={handleFieldChange}
-                    />
+                    <Step2Conditions data={formData} errors={errors} onChange={handleFieldChange} />
                   </div>
                   <div className="border-t border-line pt-6">
-                    <Step3Preferences
-                      data={formData}
-                      errors={errors}
-                      onChange={handleFieldChange}
-                    />
+                    <Step3Preferences data={formData} errors={errors} onChange={handleFieldChange} />
                   </div>
                   <div className="border-t border-line pt-6">
-                    <Step4Budget
-                      data={formData}
-                      errors={errors}
-                      onChange={handleFieldChange}
-                    />
+                    <Step4Budget data={formData} errors={errors} onChange={handleFieldChange} />
                   </div>
                 </Card>
 
@@ -207,7 +197,7 @@ export default function Profile() {
           <SavedMealsList
             savedMeals={savedMeals}
             loading={loadingSaved}
-            onRemove={handleRemoveSaved}
+            onRemove={promptRemoveSaved}
             removingId={removingId}
           />
         )}
@@ -215,6 +205,32 @@ export default function Profile() {
         <div className="pt-4">
           <Disclaimer />
         </div>
+
+        {/* Logout Confirmation */}
+        <ConfirmModal
+          isOpen={showLogoutConfirm}
+          onClose={() => setShowLogoutConfirm(false)}
+          onConfirm={handleLogout}
+          title="Log out of ChopWise?"
+          message="Are you sure you want to log out of your account?"
+          confirmText="Log out"
+          variant="danger"
+          icon="🚪"
+        />
+
+        {/* Remove Saved Recipe Confirmation */}
+        <ConfirmModal
+          isOpen={Boolean(mealToRemove)}
+          onClose={() => setMealToRemove(null)}
+          onConfirm={confirmRemoveSaved}
+          title="Remove from saved recipes?"
+          message={`Are you sure you want to remove "${mealToRemove?.meal?.name || 'this recipe'}" from your saved recipes?`}
+          confirmText="Remove recipe"
+          cancelText="Keep recipe"
+          variant="danger"
+          loading={Boolean(removingId)}
+          icon="🗑️"
+        />
       </div>
     </Layout>
   );

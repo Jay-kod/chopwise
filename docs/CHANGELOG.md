@@ -1,13 +1,30 @@
 # CHANGELOG.md
 Add one line per task: date, task id, what changed, doc updates.
 
+## Confirmation Dialogs for Logout and Critical Actions (2026-11-08)
+- Created reusable `ConfirmModal` component (`src/components/ConfirmModal.jsx`) with backdrop overlay, keyboard navigation (Escape to cancel), auto-focus on cancel, and theme-compliant semantic styling.
+- Added confirmation dialog when clicking "Log out" across Desktop Header navigation, Mobile drawer (`Layout.jsx`), and Profile page (`Profile.jsx`).
+- Added confirmation dialog before removing a saved recipe from the user profile (`Profile.jsx`).
+- Upgraded meal plan regeneration confirmation on User Dashboard (`Dashboard.jsx`) to use the unified modal.
+- Added confirmation dialogs before resetting settings, safety thresholds, or ingredient price tables to defaults in the Admin console (`SettingsForm.jsx`, `SafetyForm.jsx`, `PriceTableEditor.jsx`).
+
+## Install Efferd Dashboard-3 Template (2026-11-08)
+- Installed shadcn UI skill and initialized shadcn with Radix UI and Vite `@` path alias support (`jsconfig.json`, `vite.config.js`).
+- Registered `@efferd` registry in `components.json` and installed `@efferd/dashboard-3` and its responsive app shell (`@efferd/app-shell-3`).
+- Added semantic CSS variable mappings to `src/styles/theme.css` so shadcn and dashboard components automatically inherit ChopWise brand colors and dark mode tokens.
+- Configured responsive sidebar overlay and single-column mobile wrapping for all screens down to 375px.
+
 ## Direct Customer Sign-In Navigation (2026-11-08)
 - Updated the header and mobile drawer login buttons to navigate straight to the customer/user login page (`/login`) across both mobile and desktop screens.
 - Updated `Login.jsx` to explicitly label the customer login view, auto-redirect already-authenticated users directly to `/dashboard`, and automatically navigate logged-in customers with completed profiles straight to `/dashboard` instead of onboarding.
 
 ## Separate User and Admin Sign-In (2026-11-08)
 - Added `/admin/login` as a separate admin sign-in page, validates admin access through the existing server endpoint, and redirects signed-out `/admin` visitors there; split the user and admin test shortcuts between their respective sign-in pages.
+- Kept the admin sign-in form available to users with an existing non-admin session so they can switch accounts.
 - Updated docs/ADMIN_PAGE_SPEC.md, docs/REQUIREMENTS.md, and docs/SECURITY.md.
+
+## Admin Sign-In Retry (2026-11-08)
+- Restored the missing `useEffect` import and prevented an already-authenticated non-admin from being redirected away from `/admin/login`, so they can switch to an admin account.
 
 ## Registration Crash Fix (2026-11-08)
 - Removed lingering `isSupabaseConfigured` reference from `<Register />` submit button `disabled` prop in `src/pages/Register.jsx` that triggered a `ReferenceError` unhandled render crash caught by `ErrorBoundary`.

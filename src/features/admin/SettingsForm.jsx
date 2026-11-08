@@ -3,6 +3,7 @@ import Card from '../../components/Card';
 import Button from '../../components/Button';
 import Input from '../../components/Input';
 import Spinner from '../../components/Spinner';
+import ConfirmModal from '../../components/ConfirmModal';
 import { formatNaira } from '../../lib/format';
 
 const HERO_PRESETS = [
@@ -30,6 +31,7 @@ export default function SettingsForm({ settings, onSave, onReset }) {
   });
   const [saving, setSaving] = useState(false);
   const [resetting, setResetting] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [imageError, setImageError] = useState(false);
 
   useEffect(() => {
@@ -203,7 +205,7 @@ export default function SettingsForm({ settings, onSave, onReset }) {
           <Button
             type="button"
             variant="secondary"
-            onClick={handleReset}
+            onClick={() => setShowResetConfirm(true)}
             disabled={resetting || saving}
             className="text-xs min-h-9 px-3"
           >
@@ -219,6 +221,20 @@ export default function SettingsForm({ settings, onSave, onReset }) {
           </Button>
         </div>
       </form>
+
+      <ConfirmModal
+        isOpen={showResetConfirm}
+        onClose={() => setShowResetConfirm(false)}
+        onConfirm={async () => {
+          setShowResetConfirm(false);
+          await handleReset();
+        }}
+        title="Reset Settings?"
+        message="Are you sure you want to reset all recommendation settings and the hero image to their default values?"
+        confirmText="Reset to defaults"
+        variant="danger"
+        icon="⚠️"
+      />
     </Card>
   );
 }

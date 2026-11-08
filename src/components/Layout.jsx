@@ -5,6 +5,7 @@ import ThemeToggle from './ThemeToggle';
 import Button from './Button';
 import Footer from './Footer';
 import MobileDrawer from './MobileDrawer';
+import ConfirmModal from './ConfirmModal';
 import { useAppConfig } from '../context/ConfigContext';
 import { useAuth } from '../features/auth/useAuth';
 import { apiClient } from '../lib/apiClient';
@@ -24,6 +25,8 @@ export default function Layout({
   const { appName } = useAppConfig();
   const [isAdmin, setIsAdmin] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -51,12 +54,16 @@ export default function Layout({
     };
   }, [user]);
 
-  async function handleLogout() {
+  async function confirmLogout() {
     try {
+      setLoggingOut(true);
       await logout();
+      setShowLogoutConfirm(false);
       navigate('/login');
     } catch {
-      // Sign-out fallback
+      setShowLogoutConfirm(false);
+    } finally {
+      setLoggingOut(false);
     }
   }
 
@@ -92,7 +99,7 @@ export default function Layout({
       </span>
       <Button
         variant="secondary"
-        onClick={handleLogout}
+        onClick={() => setShowLogoutConfirm(true)}
         className="min-h-9 px-3 text-xs border-header-line bg-surface/10 text-header-fg hover:bg-surface/20"
         aria-label="Log out of ChopWise"
       >
@@ -157,7 +164,21 @@ export default function Layout({
             onClose={() => setMobileMenuOpen(false)}
             user={user}
             isAdmin={isAdmin}
-            onLogout={handleLogout}
+            onLogout={() => setShowLogoutConfirm(true)}
+          />
+
+          {/* Logout Confirmation Dialog */}
+          <ConfirmModal
+            isOpen={showLogoutConfirm}
+            onClose={() => !loggingOut && setShowLogoutConfirm(false)}
+            onConfirm={confirmLogout}
+            title="Log out of ChopWise?"
+            message="Are you sure you want to log out? You will need to sign in again to view your meal recommendations and saved recipes."
+            confirmText="Log out"
+            cancelText="Cancel"
+            variant="danger"
+            loading={loggingOut}
+            icon="🚪"
           />
         </header>
       )}
