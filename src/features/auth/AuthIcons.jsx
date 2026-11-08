@@ -109,3 +109,53 @@ export function LockIcon({ className = 'h-3.5 w-3.5' }) {
   );
 }
 
+export function MailIcon({ className = 'h-5 w-5' }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
+      <rect width="20" height="16" x="2" y="4" rx="2" />
+      <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+    </svg>
+  );
+}
+
+export function CheckCircleIcon({ className = 'h-5 w-5' }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
+      <circle cx="12" cy="12" r="10" />
+      <path d="m9 12 2 2 4-4" />
+    </svg>
+  );
+}
+
+export function PasswordToggle({ show, onToggle, label = 'password' }) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      className="flex h-8 w-8 items-center justify-center rounded-md text-muted hover:text-fg hover:bg-surface-muted transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      aria-label={show ? `Hide ${label}` : `Show ${label}`}
+      title={show ? `Hide ${label}` : `Show ${label}`}
+    >
+      {show ? <EyeOffIcon /> : <EyeIcon />}
+    </button>
+  );
+}
+

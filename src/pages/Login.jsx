@@ -12,8 +12,7 @@ import { getAuthErrorMessage } from '../features/auth/authErrors';
 import { useAppConfig } from '../context/ConfigContext';
 import { isSupabaseConfigured } from '../lib/supabase';
 import {
-  EyeIcon,
-  EyeOffIcon,
+  PasswordToggle,
   ExclamationIcon,
   LockIcon,
 } from '../features/auth/AuthIcons';
@@ -150,15 +149,11 @@ export default function Login() {
                 placeholder="••••••••"
                 required
                 rightElement={
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="flex h-8 w-8 items-center justify-center rounded-md text-muted hover:text-fg hover:bg-surface-muted transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    aria-label={showPassword ? 'Hide password' : 'Show password'}
-                    title={showPassword ? 'Hide password' : 'Show password'}
-                  >
-                    {showPassword ? <EyeOffIcon /> : <EyeIcon />}
-                  </button>
+                  <PasswordToggle
+                    show={showPassword}
+                    onToggle={() => setShowPassword(!showPassword)}
+                    label="password"
+                  />
                 }
               />
 

@@ -53,9 +53,10 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 BEGIN
-  INSERT INTO public.profiles (id, email, created_at, profile_complete, profile)
-  VALUES (new.id, new.email, now(), false, '{}'::jsonb)
-  ON CONFLICT (id) DO NOTHING;
+  INSERT INTO public.profiles (id, email, created_at, consent_at, profile_complete, profile)
+  VALUES (new.id, new.email, now(), now(), false, '{}'::jsonb)
+  ON CONFLICT (id) DO UPDATE
+  SET consent_at = COALESCE(public.profiles.consent_at, now());
   RETURN new;
 END;
 $$;

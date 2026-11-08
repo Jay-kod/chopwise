@@ -19,6 +19,13 @@ export function getAuthErrorMessage(error) {
   }
 
   if (
+    lowerMsg.includes('email not confirmed') ||
+    code === 'email_not_confirmed'
+  ) {
+    return 'Please confirm your email address before logging in, or disable "Confirm email" in your Supabase Authentication settings.';
+  }
+
+  if (
     code === 'user_already_exists' ||
     lowerMsg.includes('user already registered') ||
     lowerMsg.includes('email already exists') ||
@@ -30,17 +37,24 @@ export function getAuthErrorMessage(error) {
   if (
     code === 'weak_password' ||
     (lowerMsg.includes('password') && lowerMsg.includes('least')) ||
+    lowerMsg.includes('signup requires a valid password') ||
     code === 'auth/weak-password'
   ) {
     return 'Password must be at least 8 characters long.';
   }
 
-  if (code === 'auth/invalid-email' || lowerMsg.includes('invalid email')) {
+  if (code === 'auth/invalid-email' || lowerMsg.includes('invalid email') || lowerMsg.includes('email address: invalid')) {
     return 'Please enter a valid email address.';
   }
 
   if (
     code === 'over_email_send_rate_limit' ||
+    lowerMsg.includes('over_email_send_rate_limit')
+  ) {
+    return 'Too many email requests sent. Please wait a moment and try again.';
+  }
+
+  if (
     code === 'auth/too-many-requests' ||
     lowerMsg.includes('rate limit')
   ) {

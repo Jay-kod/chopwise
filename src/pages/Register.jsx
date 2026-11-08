@@ -4,16 +4,15 @@ import Layout from '../components/Layout';
 import Button from '../components/Button';
 import Input from '../components/Input';
 import Card from '../components/Card';
-import Spinner from '../components/Spinner';
 import Logo from '../components/Logo';
 import ThemeToggle from '../components/ThemeToggle';
 import { useAuth } from '../features/auth/useAuth';
 import { getAuthErrorMessage } from '../features/auth/authErrors';
 import { useAppConfig } from '../context/ConfigContext';
 import { isSupabaseConfigured } from '../lib/supabase';
+import VerificationNotice from '../features/auth/VerificationNotice';
 import {
-  EyeIcon,
-  EyeOffIcon,
+  PasswordToggle,
   ExclamationIcon,
   ShieldCheckIcon,
   LockIcon,
@@ -32,40 +31,37 @@ export default function Register() {
   const [consent, setConsent] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState('');
+  const [needsVerification, setNeedsVerification] = useState(false);
 
   async function handleSubmit(e) {
     e.preventDefault();
     setError('');
 
-    if (!email.trim()) {
-      setError('Please enter a valid email address.');
-      return;
-    }
-
-    if (password.length < 8) {
-      setError('Password must be at least 8 characters long.');
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      setError('Passwords do not match. Please re-enter.');
-      return;
-    }
-
-    if (!consent) {
-      setError('You must agree to health information storage to personalise meals.');
-      return;
-    }
+    if (!email.trim()) return setError('Please enter a valid email address.');
+    if (password.length < 8) return setError('Password must be at least 8 characters long.');
+    if (password !== confirmPassword) return setError('Passwords do not match. Please re-enter.');
+    if (!consent) return setError('You must agree to health information storage to personalise meals.');
 
     try {
       setLoading(true);
-      await register(email, password, consent);
-      navigate('/onboarding');
+      const res = await register(email, password, consent);
+      if (res?.needsEmailVerification) {
+        setRegisteredEmail(email.trim());
+        setNeedsVerification(true);
+      } else {
+        navigate('/onboarding');
+      }
     } catch (err) {
       setError(getAuthErrorMessage(err));
     } finally {
       setLoading(false);
     }
+  }
+
+  function handleResetVerification() {
+    setNeedsVerification(false);
+    setError('');
   }
 
   return (
@@ -93,150 +89,146 @@ export default function Register() {
           </div>
 
           <Card className="rounded-2xl border-line p-6 sm:p-8 shadow-sm">
-            <div className="mb-6 space-y-1">
-              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-fg">
-                Create your account
-              </h1>
-              <p className="text-xs sm:text-sm text-muted">
-                Start getting Nigerian recipes tailored to your health and wallet.
-              </p>
-            </div>
-
-            {!isSupabaseConfigured && (
-              <div
-                className="mb-4 flex items-start gap-2.5 rounded-xl border border-warn-line bg-warn-bg p-3 text-xs text-warn-fg"
-                role="alert"
-              >
-                <ExclamationIcon className="mt-0.5 h-4 w-4 shrink-0 text-warn-fg" />
-                <span className="leading-relaxed">
-                  Supabase variables are missing or not active. Please add <code className="font-mono">VITE_SUPABASE_URL</code> and <code className="font-mono">VITE_SUPABASE_ANON_KEY</code> to your Vercel Environment Variables, then click <strong>Redeploy</strong>.
-                </span>
-              </div>
-            )}
-
-            {error && (
-              <div
-                className="mb-4 flex items-start gap-2.5 rounded-xl border border-danger-line bg-danger-bg p-3 text-xs text-danger-fg"
-                role="alert"
-              >
-                <ExclamationIcon className="mt-0.5 h-4 w-4 shrink-0 text-danger-fg" />
-                <span className="leading-relaxed">{error}</span>
-              </div>
-            )}
-
-            <form onSubmit={handleSubmit} className="space-y-3.5">
-              <Input
-                id="register-email"
-                label="Email address"
-                type="email"
-                autoComplete="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                required
+            {needsVerification ? (
+              <VerificationNotice
+                email={registeredEmail}
+                onReset={handleResetVerification}
               />
+            ) : (
+              <>
+                <div className="mb-6 space-y-1">
+                  <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-fg">
+                    Create your account
+                  </h1>
+                  <p className="text-xs sm:text-sm text-muted">
+                    Start getting Nigerian recipes tailored to your health and wallet.
+                  </p>
+                </div>
 
-              <Input
-                id="register-password"
-                label="Password (min. 8 characters)"
-                type={showPassword ? 'text' : 'password'}
-                autoComplete="new-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                required
-                rightElement={
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="flex h-8 w-8 items-center justify-center rounded-md text-muted hover:text-fg hover:bg-surface-muted transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    aria-label={showPassword ? 'Hide password' : 'Show password'}
-                    title={showPassword ? 'Hide password' : 'Show password'}
+                {!isSupabaseConfigured && (
+                  <div
+                    className="mb-4 flex items-start gap-2.5 rounded-xl border border-warn-line bg-warn-bg p-3 text-xs text-warn-fg"
+                    role="alert"
                   >
-                    {showPassword ? <EyeOffIcon /> : <EyeIcon />}
-                  </button>
-                }
-              />
+                    <ExclamationIcon className="mt-0.5 h-4 w-4 shrink-0 text-warn-fg" />
+                    <span className="leading-relaxed">
+                      Supabase variables are missing or not active. Please add <code className="font-mono">VITE_SUPABASE_URL</code> and <code className="font-mono">VITE_SUPABASE_ANON_KEY</code> to your Vercel Environment Variables, then click <strong>Redeploy</strong>.
+                    </span>
+                  </div>
+                )}
 
-              <Input
-                id="register-confirm"
-                label="Confirm password"
-                type={showConfirmPassword ? 'text' : 'password'}
-                autoComplete="new-password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="••••••••"
-                required
-                rightElement={
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="flex h-8 w-8 items-center justify-center rounded-md text-muted hover:text-fg hover:bg-surface-muted transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    aria-label={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
-                    title={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
+                {error && (
+                  <div
+                    className="mb-4 flex items-start gap-2.5 rounded-xl border border-danger-line bg-danger-bg p-3 text-xs text-danger-fg"
+                    role="alert"
                   >
-                    {showConfirmPassword ? <EyeOffIcon /> : <EyeIcon />}
-                  </button>
-                }
-              />
+                    <ExclamationIcon className="mt-0.5 h-4 w-4 shrink-0 text-danger-fg" />
+                    <span className="leading-relaxed">{error}</span>
+                  </div>
+                )}
 
-              <div className="rounded-xl border border-line bg-surface-muted p-3">
-                <label className="flex items-start gap-2.5 cursor-pointer select-none">
-                  <input
-                    type="checkbox"
-                    checked={consent}
-                    onChange={(e) => setConsent(e.target.checked)}
-                    className="mt-0.5 h-4 w-4 shrink-0 rounded border-field-line text-primary focus:ring-ring"
+                <form onSubmit={handleSubmit} className="space-y-3.5">
+                  <Input
+                    id="register-email"
+                    label="Email address"
+                    type="email"
+                    autoComplete="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@example.com"
                     required
                   />
-                  <div className="space-y-0.5 text-xs text-fg">
-                    <span className="font-semibold flex items-center gap-1.5">
-                      <ShieldCheckIcon className="h-3.5 w-3.5 text-primary" />
-                      Health Data Consent
-                    </span>
-                    <p className="text-muted leading-relaxed text-[11px]">
-                      I agree to my health information being stored securely to personalize my Nigerian meal recommendations.
-                    </p>
+
+                  <Input
+                    id="register-password"
+                    label="Password (min. 8 characters)"
+                    type={showPassword ? 'text' : 'password'}
+                    autoComplete="new-password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    required
+                    rightElement={
+                      <PasswordToggle
+                        show={showPassword}
+                        onToggle={() => setShowPassword(!showPassword)}
+                        label="password"
+                      />
+                    }
+                  />
+
+                  <Input
+                    id="register-confirm"
+                    label="Confirm password"
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    autoComplete="new-password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="••••••••"
+                    required
+                    rightElement={
+                      <PasswordToggle
+                        show={showConfirmPassword}
+                        onToggle={() => setShowConfirmPassword(!showConfirmPassword)}
+                        label="confirm password"
+                      />
+                    }
+                  />
+
+                  <div className="rounded-xl border border-line bg-surface-muted p-3">
+                    <label className="flex items-start gap-2.5 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={consent}
+                        onChange={(e) => setConsent(e.target.checked)}
+                        className="mt-0.5 h-4 w-4 shrink-0 rounded border-field-line text-primary focus:ring-ring"
+                        required
+                      />
+                      <div className="space-y-0.5 text-xs text-fg">
+                        <span className="font-semibold flex items-center gap-1.5">
+                          <ShieldCheckIcon className="h-3.5 w-3.5 text-primary" />
+                          Health Data Consent
+                        </span>
+                        <p className="text-muted leading-relaxed text-[11px]">
+                          I agree to my health information being stored securely to personalize my Nigerian meal recommendations.
+                        </p>
+                      </div>
+                    </label>
                   </div>
-                </label>
-              </div>
 
-              <Button
-                type="submit"
-                className="w-full min-h-11 font-semibold text-sm"
-                disabled={loading || !consent}
-              >
-                {loading ? (
-                  <span className="inline-flex items-center justify-center gap-2">
-                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-on-primary border-t-transparent" />
-                    <span className="animate-pulse">Creating account</span>
-                    <span className="inline-flex font-bold tracking-wider">
-                      <span className="animate-bounce [animation-delay:0ms]">.</span>
-                      <span className="animate-bounce [animation-delay:150ms]">.</span>
-                      <span className="animate-bounce [animation-delay:300ms]">.</span>
-                    </span>
-                  </span>
-                ) : (
-                  'Sign up'
-                )}
-              </Button>
-            </form>
+                  <Button
+                    type="submit"
+                    className="w-full min-h-11 font-semibold text-sm"
+                    disabled={loading || !consent || !isSupabaseConfigured}
+                  >
+                    {loading ? (
+                      <span className="inline-flex items-center justify-center gap-2">
+                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-on-primary border-t-transparent" />
+                        <span>Creating account…</span>
+                      </span>
+                    ) : (
+                      'Sign up'
+                    )}
+                  </Button>
+                </form>
 
-            <div className="mt-5 pt-4 border-t border-line text-center space-y-3">
-              <p className="text-xs sm:text-sm text-muted">
-                Already have an account?{' '}
-                <Link
-                  to="/login"
-                  className="font-semibold text-primary underline hover:text-primary-hover focus-visible:ring-2 focus-visible:ring-ring rounded"
-                >
-                  Log in
-                </Link>
-              </p>
-              <div className="inline-flex items-center gap-1.5 text-[11px] text-muted">
-                <LockIcon />
-                <span>Encrypted health profile • General guidance only</span>
-              </div>
-            </div>
+                <div className="mt-5 pt-4 border-t border-line text-center space-y-3">
+                  <p className="text-xs sm:text-sm text-muted">
+                    Already have an account?{' '}
+                    <Link
+                      to="/login"
+                      className="font-semibold text-primary underline hover:text-primary-hover focus-visible:ring-2 focus-visible:ring-ring rounded"
+                    >
+                      Log in
+                    </Link>
+                  </p>
+                  <div className="inline-flex items-center gap-1.5 text-[11px] text-muted">
+                    <LockIcon />
+                    <span>Encrypted health profile • General guidance only</span>
+                  </div>
+                </div>
+              </>
+            )}
           </Card>
         </div>
       </div>

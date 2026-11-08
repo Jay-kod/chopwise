@@ -1,6 +1,16 @@
 # CHANGELOG.md
 Add one line per task: date, task id, what changed, doc updates.
 
+## Registration & Supabase Email Confirmation Handling (2026-11-08)
+- Fixed user registration flow to handle both Supabase email verification modes (confirmation required vs auto-confirm):
+  - In `AuthContext.jsx`: eliminated unauthenticated client profile upsert that caused RLS permission violations when `session` was null upon sign-up; safeguarded client upserts to active sessions and relied on PostgreSQL `SECURITY DEFINER` trigger for base profile creation.
+  - In `VerificationNotice.jsx`: added dedicated inline verification card presented upon registration when Supabase requires email confirmation, showing the target email, instructions to check inbox, and quick dashboard guidance to disable email confirmation for testing if desired.
+  - In `authErrors.js`: added friendly error messages for `Email not confirmed`, `over_email_send_rate_limit`, and duplicate user identities.
+  - In `supabase/schema.sql`: enhanced `handle_new_user()` trigger to automatically record `consent_at = now()`.
+  - In `AuthIcons.jsx`: extracted reusable `PasswordToggle`, `MailIcon`, and `CheckCircleIcon` components.
+  - All files strictly adhere to <= 250 lines, functions <= 40 lines, and semantic theme tokens.
+
+
 ## Animated Login & ChopWise Preloader (2026-11-08)
 - Added animated authenticating state to the Login page submit button (`Authenticating...` with spinner and animated bouncing dots).
 - Created branded animated `Preloader.jsx` featuring dynamic app name, animated simmering logo emblem, progress shimmer bar, and bouncing dots.

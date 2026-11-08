@@ -104,25 +104,38 @@ export function AuthProvider({ children }) {
     if (error) throw error;
 
     // Supabase returns a user with empty identities if email already exists
-    if (data.user && (!data.user.identities || data.user.identities.length === 0)) {
+    if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
       throw new Error('An account with this email already exists. Please log in.');
     }
 
     const sessionUser = data.user ? { ...data.user, uid: data.user.id } : null;
 
-    if (sessionUser) {
-      const now = new Date().toISOString();
-      await supabase.from('profiles').upsert({
-        id: sessionUser.id,
-        email: sessionUser.email,
-        created_at: now,
-        consent_at: now,
-        profile_complete: false,
-        profile: {},
-      });
+    // If an active session was created (e.g. email confirmations disabled), sync initial profile
+    if (data.session && sessionUser) {
+      try {
+        const now = new Date().toISOString();
+        await supabase.from('profiles').upsert(
+          {
+            id: sessionUser.id,
+            email: sessionUser.email,
+            created_at: now,
+            consent_at: now,
+            profile_complete: false,
+            profile: {},
+          },
+          { onConflict: 'id' }
+        );
+      } catch (profileErr) {
+        // Trigger already created profile record with SECURITY DEFINER
+        console.warn('Profile sync handled by trigger:', profileErr);
+      }
     }
 
-    return sessionUser;
+    return {
+      user: sessionUser,
+      session: data.session,
+      needsEmailVerification: !data.session,
+    };
   }
 
   async function login(email, password) {

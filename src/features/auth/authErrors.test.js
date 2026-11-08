@@ -18,6 +18,18 @@ describe('getAuthErrorMessage', () => {
     ).toContain('Incorrect email or password');
   });
 
+  it('maps Supabase-specific auth errors', () => {
+    expect(getAuthErrorMessage({ message: 'Email not confirmed' })).toContain(
+      'confirm your email address'
+    );
+    expect(getAuthErrorMessage({ code: 'over_email_send_rate_limit', message: 'rate limit' })).toContain(
+      'Too many email requests sent'
+    );
+    expect(getAuthErrorMessage({ message: 'User already registered' })).toContain(
+      'already exists'
+    );
+  });
+
   it('falls back to error.message or generic message for unknown errors', () => {
     expect(getAuthErrorMessage({ message: 'Custom error' })).toBe('Custom error');
     expect(getAuthErrorMessage('unknown/code')).toContain('unexpected authentication error');
