@@ -1,6 +1,11 @@
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 /**
  * Local development middleware to serve /api/* serverless functions
@@ -68,6 +73,11 @@ function viteApiServer() {
 
 export default defineConfig({
   plugins: [react(), tailwindcss(), viteApiServer()],
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
   test: {
     environment: 'node',
     globals: true,
