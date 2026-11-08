@@ -4,12 +4,13 @@ import Layout from '../components/Layout';
 import Button from '../components/Button';
 import Input from '../components/Input';
 import Card from '../components/Card';
-import Spinner from '../components/Spinner';
+import Preloader from '../components/Preloader';
 import Logo from '../components/Logo';
 import ThemeToggle from '../components/ThemeToggle';
 import { useAuth } from '../features/auth/useAuth';
 import { getAuthErrorMessage } from '../features/auth/authErrors';
 import { useAppConfig } from '../context/ConfigContext';
+import { isSupabaseConfigured } from '../lib/supabase';
 import {
   EyeIcon,
   EyeOffIcon,
@@ -34,6 +35,7 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [redirecting, setRedirecting] = useState(false);
 
   const from = location.state?.from?.pathname || '/onboarding';
 
@@ -53,10 +55,10 @@ export default function Login() {
     try {
       setLoading(true);
       await login(email, password);
+      setRedirecting(true);
       navigate(from, { replace: true });
     } catch (err) {
       setError(getAuthErrorMessage(err));
-    } finally {
       setLoading(false);
     }
   }
@@ -69,6 +71,9 @@ export default function Login() {
 
   return (
     <Layout hideHeader={true} hideFooter={true}>
+      {redirecting && (
+        <Preloader fullScreen message="Authenticating session and loading ChopWise…" />
+      )}
       <div className="relative flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center py-4 px-4 sm:px-6">
         {/* Floating Theme Toggle (top-right corner) */}
         <div className="absolute top-0 right-0 sm:top-2 sm:right-2">
@@ -100,6 +105,18 @@ export default function Login() {
                 Log in to view and generate your personalized Nigerian meals.
               </p>
             </div>
+
+            {!isSupabaseConfigured && (
+              <div
+                className="mb-4 flex items-start gap-2.5 rounded-xl border border-warn-line bg-warn-bg p-3 text-xs text-warn-fg"
+                role="alert"
+              >
+                <ExclamationIcon className="mt-0.5 h-4 w-4 shrink-0 text-warn-fg" />
+                <span className="leading-relaxed">
+                  Supabase variables are missing or not active. Please add <code className="font-mono">VITE_SUPABASE_URL</code> and <code className="font-mono">VITE_SUPABASE_ANON_KEY</code> to your Vercel Environment Variables, then click <strong>Redeploy</strong>.
+                </span>
+              </div>
+            )}
 
             {error && (
               <div
@@ -148,9 +165,21 @@ export default function Login() {
               <Button
                 type="submit"
                 className="w-full min-h-11 font-semibold text-sm"
-                disabled={loading}
+                disabled={loading || redirecting}
               >
-                {loading ? <Spinner label="Logging in…" /> : 'Log in'}
+                {loading || redirecting ? (
+                  <span className="inline-flex items-center justify-center gap-2">
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-on-primary border-t-transparent" />
+                    <span className="animate-pulse">Authenticating</span>
+                    <span className="inline-flex font-bold tracking-wider">
+                      <span className="animate-bounce [animation-delay:0ms]">.</span>
+                      <span className="animate-bounce [animation-delay:150ms]">.</span>
+                      <span className="animate-bounce [animation-delay:300ms]">.</span>
+                    </span>
+                  </span>
+                ) : (
+                  'Log in'
+                )}
               </Button>
             </form>
 

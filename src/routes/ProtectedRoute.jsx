@@ -1,6 +1,6 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../features/auth/useAuth';
-import Spinner from '../components/Spinner';
+import Preloader from '../components/Preloader';
 
 /**
  * Route guard that requires the user to be signed in.
@@ -11,11 +11,7 @@ export default function ProtectedRoute() {
   const location = useLocation();
 
   if (loading) {
-    return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <Spinner label="Verifying session…" />
-      </div>
-    );
+    return <Preloader message="Verifying authentication session…" />;
   }
 
   if (!user) {

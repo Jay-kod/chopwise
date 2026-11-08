@@ -1,6 +1,12 @@
 # CHANGELOG.md
 Add one line per task: date, task id, what changed, doc updates.
 
+## Animated Login & ChopWise Preloader (2026-11-08)
+- Added animated authenticating state to the Login page submit button (`Authenticating...` with spinner and animated bouncing dots).
+- Created branded animated `Preloader.jsx` featuring dynamic app name, animated simmering logo emblem, progress shimmer bar, and bouncing dots.
+- Integrated `Preloader` into `ProtectedRoute`, `ProfileGate`, and post-login route transition for a seamless, branded loading experience.
+- Added animated state to the Register button for consistent authentication UX.
+
 ## Backend Migration to Supabase (2026-11-07)
 - Migrated Database and Authentication from Firebase/Firestore to Supabase (PostgreSQL + Supabase Auth with Row Level Security).
 - Generated complete SQL database schema with RLS policies and automatic profile creation trigger in `supabase/schema.sql`.
@@ -10,6 +16,7 @@ Add one line per task: date, task id, what changed, doc updates.
 - Updated BootstrapChecklist, `.env.example`, and `docs/DATABASE.md`.
 
 ## UI & Landing Page Upgrades (2026-11-07)
+- Removed the “AI Nutrition | Tailored for Nigerian Health & Wallets” badge from the landing-page hero.
 - Dynamic Project Identity & Branding: added Admin card (`BrandingSettingsCard.jsx`) and `ConfigContext.jsx` allowing administrators to customize the project name, website icon/emoji (with quick presets `🍲`, `🥘`, `🇳🇬`, `🌿`, `🥗`, `🥑`, or custom image URL), tagline, and hero image. Changes immediately reflect across the site header, logo, footer, mobile drawer, document title, and browser tab favicon via public server configuration (`action: 'publicConfig'`) and reactive state.
 - Codebase compliance: extracted `MealIngredientsAndSteps.jsx`, `evaluationCsv.js`, `validateOnboardingStep`, and `BrandingSettingsCard.jsx` to ensure 100% of files across `src/` adhere strictly to the <= 250 lines rule.
 - Hero section and recipe imagery: added configurable `heroImageUrl` setting in Admin portal (`/admin`) and server config store (`api/_lib/configStore.js`, `settingsSchema`) with quick Nigerian culinary presets and live preview; upgraded Landing page hero into a 2-column responsive layout showcasing the configured meal image with nutritional badge overlay; added images to sample recipes.

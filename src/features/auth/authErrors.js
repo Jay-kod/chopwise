@@ -51,6 +51,10 @@ export function getAuthErrorMessage(error) {
     return 'Network connection failed. Please check your internet and try again.';
   }
 
+  if (lowerMsg.includes('failed to fetch')) {
+    return 'Unable to connect to the database. Please verify your Supabase environment variables in Vercel and click Redeploy.';
+  }
+
   if (code === 'auth/user-disabled') {
     return 'This account has been disabled. Please contact support.';
   }

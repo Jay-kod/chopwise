@@ -10,6 +10,7 @@ import ThemeToggle from '../components/ThemeToggle';
 import { useAuth } from '../features/auth/useAuth';
 import { getAuthErrorMessage } from '../features/auth/authErrors';
 import { useAppConfig } from '../context/ConfigContext';
+import { isSupabaseConfigured } from '../lib/supabase';
 import {
   EyeIcon,
   EyeOffIcon,
@@ -100,6 +101,18 @@ export default function Register() {
                 Start getting Nigerian recipes tailored to your health and wallet.
               </p>
             </div>
+
+            {!isSupabaseConfigured && (
+              <div
+                className="mb-4 flex items-start gap-2.5 rounded-xl border border-warn-line bg-warn-bg p-3 text-xs text-warn-fg"
+                role="alert"
+              >
+                <ExclamationIcon className="mt-0.5 h-4 w-4 shrink-0 text-warn-fg" />
+                <span className="leading-relaxed">
+                  Supabase variables are missing or not active. Please add <code className="font-mono">VITE_SUPABASE_URL</code> and <code className="font-mono">VITE_SUPABASE_ANON_KEY</code> to your Vercel Environment Variables, then click <strong>Redeploy</strong>.
+                </span>
+              </div>
+            )}
 
             {error && (
               <div
@@ -193,7 +206,19 @@ export default function Register() {
                 className="w-full min-h-11 font-semibold text-sm"
                 disabled={loading || !consent}
               >
-                {loading ? <Spinner label="Creating account…" /> : 'Sign up'}
+                {loading ? (
+                  <span className="inline-flex items-center justify-center gap-2">
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-on-primary border-t-transparent" />
+                    <span className="animate-pulse">Creating account</span>
+                    <span className="inline-flex font-bold tracking-wider">
+                      <span className="animate-bounce [animation-delay:0ms]">.</span>
+                      <span className="animate-bounce [animation-delay:150ms]">.</span>
+                      <span className="animate-bounce [animation-delay:300ms]">.</span>
+                    </span>
+                  </span>
+                ) : (
+                  'Sign up'
+                )}
               </Button>
             </form>
 

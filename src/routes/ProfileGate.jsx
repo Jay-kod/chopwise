@@ -1,6 +1,6 @@
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../features/auth/useAuth';
-import Spinner from '../components/Spinner';
+import Preloader from '../components/Preloader';
 
 /**
  * Route guard managing onboarding completion state.
@@ -12,11 +12,7 @@ export default function ProfileGate({ allowIncomplete = false }) {
   const { user, profileComplete, loading } = useAuth();
 
   if (loading) {
-    return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <Spinner label="Loading profile…" />
-      </div>
-    );
+    return <Preloader message="Loading your health profile…" />;
   }
 
   if (!user) {
