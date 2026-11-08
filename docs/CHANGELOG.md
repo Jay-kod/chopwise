@@ -1,6 +1,13 @@
 # CHANGELOG.md
 Add one line per task: date, task id, what changed, doc updates.
 
+## Local Test User and Admin Seeding (2026-11-08)
+- Created `scripts/seed-users.mjs` and added `npm run seed` script to populate MySQL with active test accounts:
+  - User: `chop1@test.com` (password: `password1`), completed onboarding profile (hypertension, no-pork, ₦21,000 budget), 3 pre-cached Nigerian meals, and a saved recipe.
+  - Admin: `adminchop@test.com` (password: `password1`), completed profile, and full admin privileges to `/admin` and system functions.
+- Updated `checkIsAdmin` in `api/_lib/auth.js` and `api/auth.js` to authorize `adminchop@test.com` and `test-admin-001`.
+- Made `updatedAt` in `pricesSchema` nullable-optional to allow empty timestamps during initial bootstrap.
+
 ## Local XAMPP MySQL Database & Auth Migration (2026-11-08)
 - Migrated database and authentication from cloud services to local XAMPP MySQL / MariaDB and local scrypt/JWT authentication.
 - Created `mysql/schema.sql` defining `users`, `saved_meals`, `latest_recs`, `nutrition_cache`, `rate_limits`, and `admin_config` tables with utf8mb4 charset.

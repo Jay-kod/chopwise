@@ -108,7 +108,7 @@ export default withHandler(async (req, res) => {
       profile,
     };
 
-    return res.status(200).json({ user, isAdmin: checkIsAdmin(row.id) });
+    return res.status(200).json({ user, isAdmin: checkIsAdmin(row.id) || checkIsAdmin(row.email) });
   }
 
   // 4. Action: update-profile

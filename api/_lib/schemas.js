@@ -50,7 +50,7 @@ export const priceItemSchema = z.object({
 
 export const pricesSchema = z.object({
   items: z.array(priceItemSchema),
-  updatedAt: z.string().optional(),
+  updatedAt: z.string().nullable().optional(),
 });
 
 export const geminiIngredientSchema = z.object({

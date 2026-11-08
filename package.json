@@ -7,6 +7,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",
+    "seed": "node scripts/seed-users.mjs",
     "check:colors": "node scripts/check-colors.mjs",
     "verify": "npm run check:colors && vitest run && npm run build"
   },
