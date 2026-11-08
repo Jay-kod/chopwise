@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { apiClient } from '../lib/apiClient';
 import { useAuth } from '../features/auth/useAuth';
-import Layout from '../components/Layout';
+import { AppShell } from '@/components/app-shell';
 import Card from '../components/Card';
 import Button from '../components/Button';
 import Spinner from '../components/Spinner';
@@ -83,17 +83,17 @@ export default function MealDetail() {
 
   if (loading) {
     return (
-      <Layout>
+      <AppShell>
         <div className="flex min-h-[60vh] items-center justify-center">
           <Spinner label="Loading recipe details…" />
         </div>
-      </Layout>
+      </AppShell>
     );
   }
 
   if (error || !meal) {
     return (
-      <Layout>
+      <AppShell>
         <div className="mx-auto max-w-lg py-12">
           <ErrorState message={error || 'Meal not found.'} />
           <div className="mt-4 text-center">
@@ -102,13 +102,13 @@ export default function MealDetail() {
             </Link>
           </div>
         </div>
-      </Layout>
+      </AppShell>
     );
   }
 
   return (
-    <Layout>
-      <div className="space-y-6 py-2 sm:py-4">
+    <AppShell>
+      <div className="space-y-6">
         {/* Navigation back bar */}
         <div className="flex items-center justify-between border-b border-line pb-3">
           <Link
@@ -195,7 +195,7 @@ export default function MealDetail() {
           <Disclaimer />
         </div>
       </div>
-    </Layout>
+    </AppShell>
   );
 }
 

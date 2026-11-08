@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiClient } from '../lib/apiClient';
 import { useAuth } from '../features/auth/useAuth';
-import Layout from '../components/Layout';
+import { AppShell } from '@/components/app-shell';
 import Card from '../components/Card';
 import Button from '../components/Button';
 import Spinner from '../components/Spinner';
@@ -125,7 +125,7 @@ export default function Onboarding() {
   const progressPercent = Math.round((step / TOTAL_STEPS) * 100);
 
   return (
-    <Layout>
+    <AppShell>
       <div className="mx-auto max-w-xl py-6 sm:py-10">
         <Card className="p-6 sm:p-8">
           {/* Header & Progress */}
@@ -214,6 +214,6 @@ export default function Onboarding() {
           </div>
         </Card>
       </div>
-    </Layout>
+    </AppShell>
   );
 }

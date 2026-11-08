@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { apiClient } from '../lib/apiClient';
 import { useAuth } from '../features/auth/useAuth';
 import { useToast } from '../components/Toast';
-import Layout from '../components/Layout';
+import { AppShell } from '@/components/app-shell';
 import Card from '../components/Card';
 import Button from '../components/Button';
 import Spinner from '../components/Spinner';
@@ -20,8 +20,13 @@ export default function Profile() {
   const { user, userDoc, logout, refreshProfile } = useAuth();
   const addToast = useToast();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get('tab') === 'saved' ? 'saved' : 'profile';
 
-  const [activeTab, setActiveTab] = useState('profile');
+  function handleTabChange(tab) {
+    setSearchParams(tab === 'saved' ? { tab: 'saved' } : {});
+  }
+
   const [formData, setFormData] = useState(null);
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
@@ -121,13 +126,13 @@ export default function Profile() {
   }
 
   return (
-    <Layout>
-      <div className="space-y-6 py-2 sm:py-4">
+    <AppShell>
+      <div className="space-y-6">
         {/* Header with Account Summary and Logout */}
-        <div className="flex flex-col gap-4 border-b border-line pb-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-line pb-4">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-fg">Account &amp; Settings</h1>
-            <p className="mt-1 text-xs text-muted">Signed in as {user?.email}</p>
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-fg">Account &amp; Settings</h1>
+            <p className="mt-0.5 text-xs text-muted">Signed in as {user?.email}</p>
           </div>
           <Button variant="secondary" onClick={() => setShowLogoutConfirm(true)} className="text-xs min-h-9 px-3">
             Log out
@@ -138,7 +143,7 @@ export default function Profile() {
         <div className="flex border-b border-line">
           <button
             type="button"
-            onClick={() => setActiveTab('profile')}
+            onClick={() => handleTabChange('profile')}
             className={`border-b-2 px-4 py-2 text-xs font-semibold transition-colors ${
               activeTab === 'profile'
                 ? 'border-primary text-primary'
@@ -149,7 +154,7 @@ export default function Profile() {
           </button>
           <button
             type="button"
-            onClick={() => setActiveTab('saved')}
+            onClick={() => handleTabChange('saved')}
             className={`border-b-2 px-4 py-2 text-xs font-semibold transition-colors ${
               activeTab === 'saved'
                 ? 'border-primary text-primary'
@@ -232,7 +237,7 @@ export default function Profile() {
           icon="🗑️"
         />
       </div>
-    </Layout>
+    </AppShell>
   );
 }
 

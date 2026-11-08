@@ -1,6 +1,12 @@
 # CHANGELOG.md
 Add one line per task: date, task id, what changed, doc updates.
 
+## Sidebar and Active Classes on Profile, Meal Detail, and Onboarding Pages (2026-11-08)
+- Upgraded the Profile page (`/profile`), Meal Detail page (`/meal/:id`), and Onboarding/Budget update page (`/onboarding`) to use the responsive `AppShell` with the sidebar.
+- Added URL search parameter synchronization for Profile tabs (`/profile` for Dietary Profile, `/profile?tab=saved` for Saved Recipes).
+- Implemented smart path-aware route matching and active state styling in `NavGroup` and `AppSidebar` using ChopWise brand semantic tokens (`bg-primary-soft text-on-primary-soft font-semibold [&>svg]:text-primary`).
+- Integrated logout confirmation dialog into `NavUser` dropdown menu.
+
 ## Confirmation Dialogs for Logout and Critical Actions (2026-11-08)
 - Created reusable `ConfirmModal` component (`src/components/ConfirmModal.jsx`) with backdrop overlay, keyboard navigation (Escape to cancel), auto-focus on cancel, and theme-compliant semantic styling.
 - Added confirmation dialog when clicking "Log out" across Desktop Header navigation, Mobile drawer (`Layout.jsx`), and Profile page (`Profile.jsx`).

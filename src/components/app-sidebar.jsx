@@ -13,6 +13,7 @@ import { NavGroup } from "@/components/nav-group";
 import { footerNavLinks, navGroups } from "@/components/app-shared";
 import { Link } from "react-router-dom";
 import { SparklesIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export function AppSidebar({
     pathname = "/dashboard",
@@ -55,21 +56,28 @@ export function AppSidebar({
 			</SidebarContent>
 			<SidebarFooter>
 				<SidebarMenu className="mt-2">
-					{footerNavLinks.map((item) => (
-						<SidebarMenuItem key={item.title}>
-							<SidebarMenuButton
-								asChild
-								className="text-muted-foreground"
-								isActive={item.path === pathname}
-								size="sm"
-							>
-								<Link to={item.path}>
-									{item.icon}
-									<span>{item.title}</span>
-								</Link>
-							</SidebarMenuButton>
-						</SidebarMenuItem>
-					))}
+					{footerNavLinks.map((item) => {
+						const isActive = pathname === item.path || (item.path === '/admin' && pathname?.startsWith('/admin'));
+						return (
+							<SidebarMenuItem key={item.title}>
+								<SidebarMenuButton
+									asChild
+									isActive={isActive}
+									size="sm"
+									className={cn(
+										isActive
+											? "bg-primary-soft text-on-primary-soft font-semibold [&>svg]:text-primary"
+											: "text-muted"
+									)}
+								>
+									<Link to={item.path}>
+										{item.icon}
+										<span>{item.title}</span>
+									</Link>
+								</SidebarMenuButton>
+							</SidebarMenuItem>
+						);
+					})}
 				</SidebarMenu>
 			</SidebarFooter>
 		</Sidebar>
