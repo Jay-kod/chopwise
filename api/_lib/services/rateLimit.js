@@ -1,4 +1,4 @@
-import { getSupabaseAdmin } from '../supabaseAdmin.js';
+import { query } from '../mysql.js';
 import { getSettingsConfig } from '../configStore.js';
 import { AppError } from '../http.js';
 
@@ -6,7 +6,7 @@ const WINDOW_MS = 60 * 60 * 1000; // 1 hour
 
 /**
  * Check and increment the per-user hourly rate limit.
- * Stores window state in public.rate_limits table.
+ * Stores window state in MySQL rate_limits table.
  * @param {string} uid - User ID
  * @throws {AppError} 429 RATE_LIMITED if quota is exceeded
  */
@@ -15,22 +15,21 @@ export async function checkRateLimit(uid) {
 
   const settings = await getSettingsConfig();
   const limit = settings.rateLimitPerHour || 10;
-
-  const supabase = getSupabaseAdmin();
   const now = Date.now();
 
-  const { data, error } = await supabase
-    .from('rate_limits')
-    .select('window_start, count')
-    .eq('user_id', uid)
-    .maybeSingle();
+  const rows = await query(
+    'SELECT window_start, count FROM rate_limits WHERE user_id = ? LIMIT 1',
+    [uid]
+  );
+  const data = rows && rows.length > 0 ? rows[0] : null;
 
-  if (error || !data || !data.window_start || now - Number(data.window_start) >= WINDOW_MS) {
-    await supabase.from('rate_limits').upsert({
-      user_id: uid,
-      window_start: now,
-      count: 1,
-    });
+  if (!data || !data.window_start || now - Number(data.window_start) >= WINDOW_MS) {
+    await query(
+      `INSERT INTO rate_limits (user_id, window_start, count)
+       VALUES (?, ?, 1)
+       ON DUPLICATE KEY UPDATE window_start = VALUES(window_start), count = 1`,
+      [uid, now]
+    );
     return;
   }
 
@@ -40,8 +39,5 @@ export async function checkRateLimit(uid) {
     throw AppError.rateLimited(retryAfterSeconds);
   }
 
-  await supabase
-    .from('rate_limits')
-    .update({ count: data.count + 1 })
-    .eq('user_id', uid);
+  await query('UPDATE rate_limits SET count = count + 1 WHERE user_id = ?', [uid]);
 }

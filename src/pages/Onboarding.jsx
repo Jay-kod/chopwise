@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
+import { apiClient } from '../lib/apiClient';
 import { useAuth } from '../features/auth/useAuth';
 import Layout from '../components/Layout';
 import Card from '../components/Card';
@@ -106,21 +106,13 @@ export default function Onboarding() {
     try {
       setSaving(true);
       const now = new Date().toISOString();
-      const userId = user.id || user.uid;
-
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          profile: {
-            ...parsed.data,
-            updatedAt: now,
-          },
-          profile_complete: true,
-          updated_at: now,
-        })
-        .eq('id', userId);
-
-      if (error) throw error;
+      await apiClient('/api/auth', {
+        action: 'update-profile',
+        profile: {
+          ...parsed.data,
+          updatedAt: now,
+        },
+      });
 
       navigate('/dashboard');
     } catch (err) {

@@ -1,83 +1,52 @@
 import crypto from 'node:crypto';
-import { getSupabaseAdmin } from '../supabaseAdmin.js';
+import { query } from '../mysql.js';
 import { getEdamamConfig, getSafetyConfig } from '../configStore.js';
 import { analyzeIngredients } from '../clients/edamam.js';
 import { evaluateMealSafety } from './safety.js';
 import { AppError } from '../http.js';
 
-/**
- * Build ingredient lines suitable for Edamam NLP parser.
- * Format: "<qty> <unit> <item>", or "<qty> <item>" for piece units.
- * @param {Array<{ item: string, quantity: number, unit: string }>} ingredients
- * @returns {string[]}
- */
 export function buildIngredientLines(ingredients = []) {
   return (ingredients || []).map((ingr) => {
     const qty = ingr.quantity != null ? String(ingr.quantity) : '1';
     const unit = (ingr.unit || '').trim().toLowerCase();
     const item = (ingr.item || '').trim();
-
-    if (unit === 'piece') {
-      return `${qty} ${item}`;
-    }
+    if (unit === 'piece') return `${qty} ${item}`;
     return `${qty} ${unit} ${item}`.replace(/\s+/g, ' ').trim();
   });
 }
 
-/**
- * Compute stable SHA-1 hash for ingredient lines.
- * Canonicalizes lines by trimming, lowercasing, and sorting before hashing.
- * @param {string[]} lines
- * @returns {string} SHA-1 hex digest
- */
 export function computeIngredientsHash(lines = []) {
   const normalized = (lines || [])
     .map((l) => l.toLowerCase().trim().replace(/\s+/g, ' '))
     .filter(Boolean)
     .sort();
-
-  return crypto
-    .createHash('sha1')
-    .update(normalized.join('|'), 'utf8')
-    .digest('hex');
+  return crypto.createHash('sha1').update(normalized.join('|'), 'utf8').digest('hex');
 }
 
-/**
- * Format fallback nutrition data from Gemini's aiNutritionEstimate.
- * AI estimates strictly return vitamins as an empty array per docs/API.md.
- * @param {object} estimate
- * @returns {object}
- */
 export function formatAiEstimateNutrients(estimate = {}) {
   return {
-    calories: Math.round(Number(estimate.calories) || 0), proteinG: Math.round(Number(estimate.proteinG) || 0),
-    carbsG: Math.round(Number(estimate.carbsG) || 0), fatG: Math.round(Number(estimate.fatG) || 0),
-    sodiumMg: Math.round(Number(estimate.sodiumMg) || 0), sugarG: Math.round(Number(estimate.sugarG) || 0),
+    calories: Math.round(Number(estimate.calories) || 0),
+    proteinG: Math.round(Number(estimate.proteinG) || 0),
+    carbsG: Math.round(Number(estimate.carbsG) || 0),
+    fatG: Math.round(Number(estimate.fatG) || 0),
+    sodiumMg: Math.round(Number(estimate.sodiumMg) || 0),
+    sugarG: Math.round(Number(estimate.sugarG) || 0),
     vitamins: [],
   };
 }
 
-/**
- * Extract clean nutrient breakdown and vitamins from Edamam response.
- * @param {object} edamamData
- * @returns {object}
- */
 export function extractNutrientsFromEdamam(edamamData = {}) {
   const nutrients = edamamData.totalNutrients || {};
-
-  const getAmount = (key) =>
-    nutrients[key]?.quantity != null ? Math.round(nutrients[key].quantity) : 0;
-
+  const getAmount = (k) => nutrients[k]?.quantity != null ? Math.round(nutrients[k].quantity) : 0;
   const vitamins = [];
-  const vitaminMap = [
+  const map = [
     { key: 'VITA_RAE', name: 'Vitamin A', unit: 'µg' }, { key: 'VITC', name: 'Vitamin C', unit: 'mg' },
     { key: 'VITD', name: 'Vitamin D', unit: 'µg' }, { key: 'TOCPHA', name: 'Vitamin E', unit: 'mg' },
     { key: 'VITB6A', name: 'Vitamin B6', unit: 'mg' }, { key: 'VITB12', name: 'Vitamin B12', unit: 'µg' },
     { key: 'CA', name: 'Calcium', unit: 'mg' }, { key: 'FE', name: 'Iron', unit: 'mg' }, { key: 'K', name: 'Potassium', unit: 'mg' },
   ];
-
-  for (const v of vitaminMap) {
-    if (nutrients[v.key] && nutrients[v.key].quantity > 0) {
+  for (const v of map) {
+    if (nutrients[v.key]?.quantity > 0) {
       vitamins.push({
         name: v.name,
         amount: Math.round(nutrients[v.key].quantity * 10) / 10,
@@ -85,7 +54,6 @@ export function extractNutrientsFromEdamam(edamamData = {}) {
       });
     }
   }
-
   return {
     calories: Math.round(edamamData.calories || 0),
     proteinG: getAmount('PROCNT'),
@@ -97,154 +65,88 @@ export function extractNutrientsFromEdamam(edamamData = {}) {
   };
 }
 
-/**
- * Core nutrition resolution service.
- * Looks up meal server-side, checks SHA-1 ingredient hash cache, calls Edamam,
- * and falls back seamlessly to AI estimates on any failure.
- *
- * @param {string} uid - Firebase user UID
- * @param {string} mealId
- * @param {object} [options]
- * @returns {Promise<{ nutrition: object, source: 'edamam'|'ai-estimate', safetyFlags: string[], cached: boolean }>}
- */
-export async function getMealNutrition(uid, mealId, options = {}) {
-  const { sampleMeal = null, userConditions: overrideConditions = null } = options;
-
-  let meal = sampleMeal;
-  let userConditions = overrideConditions || [];
-  let supabase = null;
-
-  if (!meal) {
-    if (!mealId || typeof mealId !== 'string') {
-      throw AppError.validation({ mealId: 'Valid mealId is required.' });
+async function fetchMealFromDb(uid, mealId) {
+  let userConditions = [];
+  let meal = null;
+  try {
+    const userRows = await query('SELECT profile FROM users WHERE id = ? LIMIT 1', [uid]);
+    if (userRows?.[0]?.profile) {
+      const p = typeof userRows[0].profile === 'string' ? JSON.parse(userRows[0].profile) : userRows[0].profile;
+      userConditions = p?.conditions || [];
     }
-
-    supabase = getSupabaseAdmin();
-
-    // Load user conditions for accurate safety evaluation
-    const { data: profileRow } = await supabase
-      .from('profiles')
-      .select('profile')
-      .eq('id', uid)
-      .maybeSingle();
-    userConditions = profileRow?.profile?.conditions || [];
-
-    // Lookup meal from latest_recs first
-    const { data: recRow } = await supabase
-      .from('latest_recs')
-      .select('meals')
-      .eq('user_id', uid)
-      .maybeSingle();
-
-    if (recRow?.meals) {
-      meal = recRow.meals.find((m) => m.id === mealId);
+    const recRows = await query('SELECT meals FROM latest_recs WHERE user_id = ? LIMIT 1', [uid]);
+    if (recRows?.[0]?.meals) {
+      const meals = typeof recRows[0].meals === 'string' ? JSON.parse(recRows[0].meals) : recRows[0].meals;
+      meal = meals.find((m) => m.id === mealId);
     }
-
-    // Fallback lookup in saved_meals
     if (!meal) {
-      const { data: savedRow } = await supabase
-        .from('saved_meals')
-        .select('meal')
-        .eq('user_id', uid)
-        .eq('meal_id', mealId)
-        .maybeSingle();
-
-      if (savedRow?.meal) {
-        meal = savedRow.meal;
+      const saved = await query('SELECT meal FROM saved_meals WHERE user_id = ? AND meal_id = ? LIMIT 1', [uid, mealId]);
+      if (saved?.[0]?.meal) {
+        meal = typeof saved[0].meal === 'string' ? JSON.parse(saved[0].meal) : saved[0].meal;
       }
     }
+  } catch {}
+  return { meal, userConditions };
+}
 
-    if (!meal) {
-      throw AppError.notFound(`Meal "${mealId}" not found in current recommendations or saved meals.`);
+async function resolveEdamam(lines, mealName) {
+  try {
+    const res = await analyzeIngredients(mealName, lines);
+    if (res?.calories > 0) {
+      return { nutrition: extractNutrientsFromEdamam(res.raw), source: 'edamam' };
     }
+  } catch {}
+  return null;
+}
+
+export async function getMealNutrition(uid, mealId, options = {}) {
+  let { sampleMeal: meal = null, userConditions = [] } = options;
+  if (!meal) {
+    if (!mealId || typeof mealId !== 'string') throw AppError.validation({ mealId: 'Valid mealId required.' });
+    const fetched = await fetchMealFromDb(uid, mealId);
+    meal = fetched.meal;
+    userConditions = fetched.userConditions;
+    if (!meal) throw AppError.notFound(`Meal "${mealId}" not found in recommendations or saved meals.`);
   }
 
-  // Build ingredient lines and compute canonical ingredients hash
-  const ingredientLines = buildIngredientLines(meal.ingredients || []);
-  const ingredientsHash = computeIngredientsHash(ingredientLines);
+  const lines = buildIngredientLines(meal.ingredients || []);
+  const hash = computeIngredientsHash(lines);
+  const thresholds = await getSafetyConfig();
 
-  const safetyThresholds = await getSafetyConfig();
-
-  // 1. Check nutrition_cache in Supabase
-  if (supabase && ingredientsHash) {
+  if (hash) {
     try {
-      const { data: cached } = await supabase
-        .from('nutrition_cache')
-        .select('*')
-        .eq('ingredients_hash', ingredientsHash)
-        .maybeSingle();
-
-      if (cached?.nutrition) {
-        const safetyFlags = evaluateMealSafety(
-          { ...meal, nutrition: cached.nutrition },
-          userConditions,
-          safetyThresholds
-        );
+      const rows = await query('SELECT nutrition, source FROM nutrition_cache WHERE ingredients_hash = ? LIMIT 1', [hash]);
+      if (rows?.[0]?.nutrition) {
+        const nut = typeof rows[0].nutrition === 'string' ? JSON.parse(rows[0].nutrition) : rows[0].nutrition;
         return {
-          nutrition: cached.nutrition,
-          source: cached.source || 'edamam',
-          safetyFlags,
+          nutrition: nut,
+          source: rows[0].source || 'edamam',
+          safetyFlags: evaluateMealSafety({ ...meal, nutrition: nut }, userConditions, thresholds),
           cached: true,
         };
       }
-    } catch {
-      // Proceed to live resolution if cache read fails
-    }
+    } catch {}
   }
 
-  // 2. Resolve via Edamam or AI estimate fallback
-  const edamamConfig = await getEdamamConfig();
-  let resolvedNutrition = null;
-  let source = 'ai-estimate';
+  const conf = await getEdamamConfig();
+  let resolved = conf.enabled && conf.appId && conf.appKey && lines.length > 0 ? await resolveEdamam(lines, meal.name) : null;
+  const source = resolved?.source || 'ai-estimate';
+  const nutrition = resolved?.nutrition || formatAiEstimateNutrients(meal.aiNutritionEstimate);
 
-  const canUseEdamam =
-    edamamConfig.enabled && Boolean(edamamConfig.appId) && Boolean(edamamConfig.appKey);
-
-  if (canUseEdamam && ingredientLines.length > 0) {
+  if (hash) {
     try {
-      const edamamData = await analyzeIngredients(meal.name, ingredientLines);
-      if (edamamData && edamamData.calories > 0) {
-        resolvedNutrition = extractNutrientsFromEdamam(edamamData.raw);
-        source = 'edamam';
-      }
-    } catch {
-      // Fallback on ANY non-2xx error, 555 unparseable dish, or timeout
-      source = 'ai-estimate';
-    }
+      await query(
+        `INSERT INTO nutrition_cache (ingredients_hash, nutrition, source, fetched_at)
+         VALUES (?, ?, ?, NOW()) ON DUPLICATE KEY UPDATE nutrition = VALUES(nutrition), source = VALUES(source), fetched_at = NOW()`,
+        [hash, JSON.stringify(nutrition), source]
+      );
+    } catch {}
   }
-
-  // If Edamam was not used or failed parsing, use Gemini's aiNutritionEstimate
-  if (!resolvedNutrition) {
-    resolvedNutrition = formatAiEstimateNutrients(meal.aiNutritionEstimate);
-    source = 'ai-estimate';
-  }
-
-  // 3. Cache the resolved nutrition in Supabase
-  if (supabase && ingredientsHash) {
-    try {
-      await supabase.from('nutrition_cache').upsert({
-        ingredients_hash: ingredientsHash,
-        nutrition: resolvedNutrition,
-        source,
-        fetched_at: new Date().toISOString(),
-      });
-    } catch {
-      // Non-fatal if cache write fails
-    }
-  }
-
-  // 4. Calculate safety flags based on resolved values
-  const safetyFlags = evaluateMealSafety(
-    { ...meal, nutrition: resolvedNutrition },
-    userConditions,
-    safetyThresholds
-  );
 
   return {
-    nutrition: resolvedNutrition,
+    nutrition,
     source,
-    safetyFlags,
+    safetyFlags: evaluateMealSafety({ ...meal, nutrition }, userConditions, thresholds),
     cached: false,
   };
 }
-

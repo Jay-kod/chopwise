@@ -1,5 +1,5 @@
-import { createContext, useContext, useEffect, useState } from 'react';
-import { supabase } from '../../lib/supabase';
+import { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { apiClient } from '../../lib/apiClient';
 
 const AuthContext = createContext(null);
 
@@ -8,148 +8,86 @@ export function AuthProvider({ children }) {
   const [userDoc, setUserDoc] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  async function loadProfile(userId) {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .maybeSingle();
+  const loadProfile = useCallback(async () => {
+    const token = localStorage.getItem('chopwise_token');
+    if (!token) {
+      setUser(null);
+      setUserDoc(null);
+      setLoading(false);
+      return;
+    }
 
-      if (!error && data) {
+    try {
+      const res = await apiClient('/api/auth', { action: 'me' });
+      if (res?.user) {
+        setUser(res.user);
         setUserDoc({
-          ...data,
-          profileComplete: data.profile_complete,
-          createdAt: data.created_at,
-          consentAt: data.consent_at,
+          ...res.user,
+          profileComplete: Boolean(res.user.profileComplete),
         });
       } else {
+        localStorage.removeItem('chopwise_token');
+        setUser(null);
         setUserDoc(null);
       }
     } catch {
+      localStorage.removeItem('chopwise_token');
+      setUser(null);
       setUserDoc(null);
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
   useEffect(() => {
-    let channel = null;
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      const currentUser = session?.user ? { ...session.user, uid: session.user.id } : null;
-      setUser(currentUser);
-
-      if (currentUser) {
-        loadProfile(currentUser.id);
-        channel = supabase
-          .channel(`profile:${currentUser.id}`)
-          .on(
-            'postgres_changes',
-            {
-              event: '*',
-              schema: 'public',
-              table: 'profiles',
-              filter: `id=eq.${currentUser.id}`,
-            },
-            (payload) => {
-              if (payload.new) {
-                setUserDoc({
-                  ...payload.new,
-                  profileComplete: payload.new.profile_complete,
-                  createdAt: payload.new.created_at,
-                  consentAt: payload.new.consent_at,
-                });
-              }
-            }
-          )
-          .subscribe();
-      } else {
-        setUserDoc(null);
-        setLoading(false);
-      }
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      const currentUser = session?.user ? { ...session.user, uid: session.user.id } : null;
-      setUser(currentUser);
-      if (currentUser) {
-        loadProfile(currentUser.id);
-      } else {
-        setUserDoc(null);
-        setLoading(false);
-      }
-    });
-
-    return () => {
-      subscription?.unsubscribe();
-      if (channel) supabase.removeChannel(channel);
-    };
-  }, []);
+    loadProfile();
+  }, [loadProfile]);
 
   async function register(email, password, consent) {
     if (!consent) {
-      throw new Error(
-        'You must agree to your health information being stored to personalise your meals.'
-      );
+      throw new Error('You must agree to your health information being stored to personalise your meals.');
     }
 
-    const { data, error } = await supabase.auth.signUp({
+    const res = await apiClient('/api/auth', {
+      action: 'register',
       email: email.trim(),
       password,
+      consent,
     });
 
-    if (error) throw error;
-
-    // Supabase returns a user with empty identities if email already exists
-    if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
-      throw new Error('An account with this email already exists. Please log in.');
+    if (res?.token) {
+      localStorage.setItem('chopwise_token', res.token);
+      setUser(res.user);
+      setUserDoc({
+        ...res.user,
+        profileComplete: Boolean(res.user.profileComplete),
+      });
     }
 
-    const sessionUser = data.user ? { ...data.user, uid: data.user.id } : null;
-
-    // If an active session was created (e.g. email confirmations disabled), sync initial profile
-    if (data.session && sessionUser) {
-      try {
-        const now = new Date().toISOString();
-        await supabase.from('profiles').upsert(
-          {
-            id: sessionUser.id,
-            email: sessionUser.email,
-            created_at: now,
-            consent_at: now,
-            profile_complete: false,
-            profile: {},
-          },
-          { onConflict: 'id' }
-        );
-      } catch (profileErr) {
-        // Trigger already created profile record with SECURITY DEFINER
-        console.warn('Profile sync handled by trigger:', profileErr);
-      }
-    }
-
-    return {
-      user: sessionUser,
-      session: data.session,
-      needsEmailVerification: !data.session,
-    };
+    return { user: res.user };
   }
 
   async function login(email, password) {
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const res = await apiClient('/api/auth', {
+      action: 'login',
       email: email.trim(),
       password,
     });
 
-    if (error) throw error;
-    return data.user ? { ...data.user, uid: data.user.id } : null;
+    if (res?.token) {
+      localStorage.setItem('chopwise_token', res.token);
+      setUser(res.user);
+      setUserDoc({
+        ...res.user,
+        profileComplete: Boolean(res.user.profileComplete),
+      });
+    }
+
+    return res.user;
   }
 
   async function logout() {
-    await supabase.auth.signOut();
+    localStorage.removeItem('chopwise_token');
     setUser(null);
     setUserDoc(null);
   }
@@ -162,7 +100,7 @@ export function AuthProvider({ children }) {
     register,
     login,
     logout,
-    refreshProfile: () => user && loadProfile(user.id),
+    refreshProfile: loadProfile,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -10,7 +10,6 @@ import ThemeToggle from '../components/ThemeToggle';
 import { useAuth } from '../features/auth/useAuth';
 import { getAuthErrorMessage } from '../features/auth/authErrors';
 import { useAppConfig } from '../context/ConfigContext';
-import { isSupabaseConfigured } from '../lib/supabase';
 import {
   PasswordToggle,
   ExclamationIcon,
@@ -69,11 +68,11 @@ export default function Login() {
   }
 
   return (
-    <Layout hideHeader={true} hideFooter={true}>
+    <Layout hideHeader={true} hideFooter={true} fullWidth={true}>
       {redirecting && (
         <Preloader fullScreen message="Authenticating session and loading ChopWise…" />
       )}
-      <div className="relative flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center py-4 px-4 sm:px-6">
+      <div className="relative flex min-h-screen flex-col items-center justify-center py-4 px-4 sm:px-6">
         {/* Floating Theme Toggle (top-right corner) */}
         <div className="absolute top-0 right-0 sm:top-2 sm:right-2">
           <ThemeToggle />
@@ -104,18 +103,6 @@ export default function Login() {
                 Log in to view and generate your personalized Nigerian meals.
               </p>
             </div>
-
-            {!isSupabaseConfigured && (
-              <div
-                className="mb-4 flex items-start gap-2.5 rounded-xl border border-warn-line bg-warn-bg p-3 text-xs text-warn-fg"
-                role="alert"
-              >
-                <ExclamationIcon className="mt-0.5 h-4 w-4 shrink-0 text-warn-fg" />
-                <span className="leading-relaxed">
-                  Supabase variables are missing or not active. Please add <code className="font-mono">VITE_SUPABASE_URL</code> and <code className="font-mono">VITE_SUPABASE_ANON_KEY</code> to your Vercel Environment Variables, then click <strong>Redeploy</strong>.
-                </span>
-              </div>
-            )}
 
             {error && (
               <div

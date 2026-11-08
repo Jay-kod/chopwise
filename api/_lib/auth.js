@@ -1,19 +1,19 @@
-import { getSupabaseAdmin } from './supabaseAdmin.js';
+import { verifyToken } from './authTokens.js';
 import { AppError } from './http.js';
 
 /**
- * Check whether a user UID is present in the ADMIN_UIDS environment list.
- * @param {string} uid
+ * Check whether a user UID or email is present in the ADMIN_UIDS environment list.
+ * @param {string} identifier - User UUID or email
  * @returns {boolean}
  */
-export function checkIsAdmin(uid) {
-  if (!uid) return false;
+export function checkIsAdmin(identifier) {
+  if (!identifier) return false;
   const adminUidsRaw = process.env.ADMIN_UIDS || '';
   const adminUids = adminUidsRaw
     .split(',')
-    .map((s) => s.trim())
+    .map((s) => s.trim().toLowerCase())
     .filter(Boolean);
-  return adminUids.includes(uid);
+  return adminUids.includes(String(identifier).toLowerCase());
 }
 
 /**
@@ -33,26 +33,17 @@ export async function verifyRequest(req) {
   }
 
   const token = match[1];
-  try {
-    const supabase = getSupabaseAdmin();
-    const {
-      data: { user },
-      error,
-    } = await supabase.auth.getUser(token);
+  const payload = verifyToken(token);
 
-    if (error || !user) {
-      throw AppError.unauthorized('Invalid or expired authentication token.');
-    }
-
-    return {
-      uid: user.id,
-      email: user.email || '',
-      token: user,
-    };
-  } catch (err) {
-    if (err instanceof AppError) throw err;
-    throw AppError.unauthorized('Invalid or expired authentication token.');
+  if (!payload || !payload.uid) {
+    throw AppError.unauthorized('Invalid or expired authentication token. Please log in.');
   }
+
+  return {
+    uid: payload.uid,
+    email: payload.email || '',
+    token: payload,
+  };
 }
 
 /**
@@ -62,7 +53,7 @@ export async function verifyRequest(req) {
  */
 export async function requireAdmin(req) {
   const { uid, email } = await verifyRequest(req);
-  if (!checkIsAdmin(uid)) {
+  if (!checkIsAdmin(uid) && !checkIsAdmin(email)) {
     throw AppError.forbidden('Admin access required.');
   }
   return { uid, email, isAdmin: true };

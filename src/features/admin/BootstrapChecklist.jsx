@@ -4,16 +4,16 @@ import Badge from '../../components/Badge';
 export default function BootstrapChecklist({ bootstrap = {} }) {
   const items = [
     {
-      key: 'supabaseAdmin',
-      name: 'SUPABASE_SERVICE_ROLE_KEY',
-      present: Boolean(bootstrap.supabaseAdmin),
-      desc: 'Service role secret key from Supabase Project Settings > API for serverless operations.',
+      key: 'mysql',
+      name: 'XAMPP MySQL / MariaDB',
+      present: Boolean(bootstrap.mysql),
+      desc: 'Local MySQL running on port 3306 (XAMPP Control Panel) for local data persistence.',
     },
     {
       key: 'adminUidsSet',
       name: 'ADMIN_UIDS',
       present: Boolean(bootstrap.adminUidsSet),
-      desc: 'Comma-separated list of user UUIDs authorized to access this /admin portal.',
+      desc: 'Comma-separated list of user UUIDs or emails authorized to access this /admin portal.',
     },
     {
       key: 'encryptionKeySet',
@@ -35,7 +35,7 @@ export default function BootstrapChecklist({ bootstrap = {} }) {
           </Badge>
         </div>
         <p className="mt-1 text-xs text-muted">
-          Bootstrap variables are critical host environment variables set in .env.local and Vercel.
+          Bootstrap variables are critical host environment variables set in .env / .env.local.
           Values are never rendered or returned over the wire.
         </p>
       </div>
@@ -60,41 +60,19 @@ export default function BootstrapChecklist({ bootstrap = {} }) {
       </div>
 
       <div className="mt-5 rounded-xl border border-line bg-surface p-4 text-xs text-fg space-y-3">
-        <div className="font-semibold text-fg">Bootstrap Setup Reference &amp; Links:</div>
-        <div className="flex flex-wrap gap-3">
-          <a
-            href="https://supabase.com/dashboard"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-primary underline hover:text-primary-hover font-medium"
-          >
-            Supabase Dashboard ↗
-          </a>
-          <a
-            href="https://vercel.com/docs/environment-variables"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-primary underline hover:text-primary-hover font-medium"
-          >
-            Vercel Env Variables ↗
-          </a>
-        </div>
-
+        <div className="font-semibold text-fg">Local Setup Reference &amp; Instructions:</div>
         <ol className="list-decimal space-y-2 pl-4 text-muted text-[11px]">
           <li>
-            <strong>Database Schema:</strong> Run the SQL script from <code>supabase/schema.sql</code> in your
-            Supabase Project SQL Editor to create tables and Row Level Security (RLS) policies.
+            <strong>XAMPP MySQL:</strong> Open the XAMPP Control Panel and ensure the <strong>MySQL</strong> module is started (port 3306).
           </li>
           <li>
-            <strong>API Credentials:</strong> In Supabase Dashboard &gt; Project Settings &gt; API, copy the
-            Project URL and <code>anon</code> public key into <code>.env.local</code> as <code>VITE_SUPABASE_URL</code> and <code>VITE_SUPABASE_ANON_KEY</code>.
+            <strong>Database Schema:</strong> ChopWise automatically bootstraps the <code>chopwise</code> database and tables on startup (or you can run <code>mysql/schema.sql</code> in phpMyAdmin).
           </li>
           <li>
-            <strong>Service Role Key:</strong> Copy the <code>service_role</code> secret into <code>.env.local</code> as <code>SUPABASE_SERVICE_ROLE_KEY</code>.
+            <strong>Admin Access:</strong> Add your email address or user ID to <code>ADMIN_UIDS</code> in <code>.env</code> (e.g. <code>ADMIN_UIDS=admin@example.com</code>).
           </li>
           <li>
-            <strong>Admin Access:</strong> Register in ChopWise, copy your user UUID from Supabase Auth &gt; Users,
-            and set <code>ADMIN_UIDS=&lt;your-uuid&gt;</code> in <code>.env.local</code>.
+            <strong>API Keys:</strong> You can configure Gemini and Edamam keys directly from the Integration Cards below.
           </li>
         </ol>
       </div>

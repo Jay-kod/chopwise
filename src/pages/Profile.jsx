@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
+import { apiClient } from '../lib/apiClient';
 import { useAuth } from '../features/auth/useAuth';
 import { useToast } from '../components/Toast';
 import Layout from '../components/Layout';
@@ -16,7 +16,7 @@ import Step4Budget from '../features/onboarding/steps/Step4Budget';
 import { profileSchema } from '../features/onboarding/schema';
 
 export default function Profile() {
-  const { user, userDoc, logout } = useAuth();
+  const { user, userDoc, logout, refreshProfile } = useAuth();
   const addToast = useToast();
   const navigate = useNavigate();
 
@@ -44,27 +44,22 @@ export default function Profile() {
     }
   }, [userDoc]);
 
-  // Real-time listener for saved meals
-  useEffect(() => {
+  const loadSaved = useCallback(async () => {
     if (!user) return;
-    const userId = user.id || user.uid;
-    const loadSaved = async () => {
-      const { data, error } = await supabase
-        .from('saved_meals')
-        .select('*')
-        .eq('user_id', userId)
-        .order('saved_at', { ascending: false });
-      if (!error && data) {
-        setSavedMeals(data.map((d) => ({ id: d.meal_id || d.id, meal: d.meal, savedAt: d.saved_at })));
-      }
+    try {
+      setLoadingSaved(true);
+      const res = await apiClient('/api/auth', { action: 'get-saved-meals' });
+      setSavedMeals(res?.savedMeals || []);
+    } catch {
+      setSavedMeals([]);
+    } finally {
       setLoadingSaved(false);
-    };
-    loadSaved();
-    const ch = supabase.channel(`saved_meals:${userId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'saved_meals', filter: `user_id=eq.${userId}` }, loadSaved)
-      .subscribe();
-    return () => { supabase.removeChannel(ch); };
+    }
   }, [user]);
+
+  useEffect(() => {
+    loadSaved();
+  }, [loadSaved]);
 
   function handleFieldChange(field, value) {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -84,14 +79,12 @@ export default function Profile() {
     }
     try {
       setSaving(true);
-      const userId = user.id || user.uid;
       const now = new Date().toISOString();
-      const { error } = await supabase.from('profiles').update({
+      await apiClient('/api/auth', {
+        action: 'update-profile',
         profile: { ...result.data, updatedAt: now },
-        profile_complete: true,
-        updated_at: now,
-      }).eq('id', userId);
-      if (error) throw error;
+      });
+      await refreshProfile();
       addToast('Profile updated! Your next meal plan will use these settings.', 'ok');
     } catch (err) {
       addToast(err?.message || 'Failed to update profile.', 'error');
@@ -104,9 +97,8 @@ export default function Profile() {
     if (!user || !mealId) return;
     try {
       setRemovingId(mealId);
-      const userId = user.id || user.uid;
-      const { error } = await supabase.from('saved_meals').delete().eq('user_id', userId).eq('meal_id', mealId);
-      if (error) throw error;
+      await apiClient('/api/auth', { action: 'delete-saved-meal', mealId });
+      setSavedMeals((prev) => prev.filter((s) => s.id !== mealId && s.meal?.id !== mealId));
       addToast('Recipe removed from saved list.', 'ok');
     } catch (err) {
       addToast(err?.message || 'Failed to remove saved recipe.', 'error');

@@ -1,6 +1,20 @@
 # CHANGELOG.md
 Add one line per task: date, task id, what changed, doc updates.
 
+## Local XAMPP MySQL Database & Auth Migration (2026-11-08)
+- Migrated database and authentication from cloud services to local XAMPP MySQL / MariaDB and local scrypt/JWT authentication.
+- Created `mysql/schema.sql` defining `users`, `saved_meals`, `latest_recs`, `nutrition_cache`, `rate_limits`, and `admin_config` tables with utf8mb4 charset.
+- Created `api/_lib/mysql.js` with `mysql2/promise` connection pooling and automatic database and table initialization on first query.
+- Implemented `api/_lib/authTokens.js` using Node.js built-in `crypto.scryptSync` (salted password hashing) and HMAC-SHA256 JWT signing/verification.
+- Created `api/auth.js` serving `register`, `login`, `me`, `update-profile`, `get-saved-meals`, `save-meal`, `delete-saved-meal`, and `get-meal` actions.
+- Migrated server services `nutritionService.js`, `recommendationService.js`, `rateLimit.js`, `configStore.js`, `integrations.js`, and `admin.js` to execute queries directly on MySQL.
+- Updated client `AuthContext.jsx`, `apiClient.js`, `Onboarding.jsx`, `Profile.jsx`, and `MealDetail.jsx` to communicate through `/api/auth` without cloud database SDKs.
+- Updated `vite.config.js` local API middleware to handle `/api/auth`, enabling complete local execution with `npm run dev`.
+- Updated `docs/DATABASE.md`, `src/features/admin/BootstrapChecklist.jsx`, and `.env.example`.
+
+## Login Viewport Height (2026-11-08)
+- Set the login page content to a 100vh minimum height and removed the shared layout's outer padding so the full page fits the viewport without clipping content on short screens.
+
 ## Registration & Supabase Email Confirmation Handling (2026-11-08)
 - Fixed user registration flow to handle both Supabase email verification modes (confirmation required vs auto-confirm):
   - In `AuthContext.jsx`: eliminated unauthenticated client profile upsert that caused RLS permission violations when `session` was null upon sign-up; safeguarded client upserts to active sessions and relied on PostgreSQL `SECURITY DEFINER` trigger for base profile creation.

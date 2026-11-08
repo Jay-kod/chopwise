@@ -36,6 +36,10 @@ function viteApiServer() {
 
         const endpoint = url.replace(/^\/api\//, '');
         try {
+          if (endpoint === 'auth') {
+            const mod = await server.ssrLoadModule('/api/auth.js');
+            return await mod.default(req, res);
+          }
           if (endpoint === 'recommend') {
             const mod = await server.ssrLoadModule('/api/recommend.js');
             return await mod.default(req, res);

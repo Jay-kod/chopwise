@@ -1,10 +1,6 @@
 import crypto from 'node:crypto';
-import { getSupabaseAdmin } from '../supabaseAdmin.js';
-import {
-  getSettingsConfig,
-  getSafetyConfig,
-  getPricesConfig,
-} from '../configStore.js';
+import { query } from '../mysql.js';
+import { getSettingsConfig, getSafetyConfig, getPricesConfig } from '../configStore.js';
 import {
   RECOMMENDATION_SYSTEM_INSTRUCTION,
   GEMINI_RESPONSE_SCHEMA,
@@ -18,224 +14,122 @@ import { generateJson } from '../clients/gemini.js';
 import { profileSchema, geminiResponseSchema } from '../schemas.js';
 import { AppError } from '../http.js';
 
-/**
- * Generate a URL-friendly slug with random tail for meal ID.
- * e.g. "Egusi Soup with Pounded Yam" -> "egusi-soup-with-pounded-yam-a1b2c3"
- * @param {string} name
- * @returns {string}
- */
 export function generateMealId(name) {
   const base = (name || 'nigerian-meal')
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)/g, '')
     .slice(0, 40);
-
   const suffix = crypto.randomBytes(3).toString('hex');
   return `${base}-${suffix}`;
 }
 
-/**
- * Core recommendation pipeline.
- *
- * @param {string} uid - Firebase user UID
- * @param {{ regenerate?: boolean, isSampleTest?: boolean }} [options]
- * @returns {Promise<{ meals: Array<object>, perMealCapNGN: number, generatedAt: string, fromCache: boolean, warnings: string[] }>}
- */
-export async function getRecommendations(uid, options = {}) {
-  const { regenerate = false, isSampleTest = false, customProfile = null } = options;
+async function fetchUserProfile(uid) {
+  const rows = await query('SELECT profile, profile_complete FROM users WHERE id = ? LIMIT 1', [uid]);
+  if (!rows?.[0]) throw AppError.profileIncomplete('User profile not found. Please complete onboarding.');
+  const row = rows[0];
+  const raw = typeof row.profile === 'string' ? JSON.parse(row.profile || '{}') : row.profile || {};
+  if (!row.profile_complete || !raw) throw AppError.profileIncomplete('Please complete your dietary profile first.');
+  const parsed = profileSchema.safeParse(raw);
+  if (!parsed.success) throw AppError.profileIncomplete('Stored profile data is invalid. Please update your profile.');
+  return parsed.data;
+}
 
-  let profile;
-  let supabase = null;
-
-  if (customProfile) {
-    profile = customProfile;
-  } else if (isSampleTest) {
-    profile = {
-      age: 28,
-      gender: 'female',
-      weightKg: 65,
-      conditions: ['hypertension'],
-      preferences: ['no-pork'],
-      avoidText: '',
-      weeklyBudgetNGN: 21000,
-    };
-  } else {
-    // 1. Rate limit check
-    await checkRateLimit(uid);
-
-    // 2. Read and validate user profile from Supabase
-    supabase = getSupabaseAdmin();
-    const { data: userRow } = await supabase
-      .from('profiles')
-      .select('profile, profile_complete')
-      .eq('id', uid)
-      .maybeSingle();
-
-    if (!userRow) {
-      throw AppError.profileIncomplete('User profile not found. Please complete onboarding.');
-    }
-
-    if (!userRow.profile_complete || !userRow.profile) {
-      throw AppError.profileIncomplete('Please complete your dietary onboarding profile first.');
-    }
-
-    const parsedProfile = profileSchema.safeParse(userRow.profile);
-    if (!parsedProfile.success) {
-      throw AppError.profileIncomplete('Stored profile data is invalid. Please update your profile.');
-    }
-
-    profile = parsedProfile.data;
-  }
-
-  const profileHash = computeProfileHash(profile);
-
-  // 3. Cache lookup (unless regenerate requested or running sample test / custom profile)
-  if (!regenerate && !isSampleTest && !customProfile && supabase) {
-    try {
-      const { data: recsData } = await supabase
-        .from('latest_recs')
-        .select('meals, profile_hash, per_meal_cap_ngn, generated_at')
-        .eq('user_id', uid)
-        .maybeSingle();
-
-      if (
-        recsData?.profile_hash === profileHash &&
-        Array.isArray(recsData.meals) &&
-        recsData.meals.length > 0
-      ) {
+async function checkRecsCache(uid, profileHash) {
+  try {
+    const rows = await query('SELECT meals, profile_hash, per_meal_cap_ngn, generated_at FROM latest_recs WHERE user_id = ? LIMIT 1', [uid]);
+    if (rows?.[0]?.profile_hash === profileHash) {
+      const meals = typeof rows[0].meals === 'string' ? JSON.parse(rows[0].meals) : rows[0].meals;
+      if (Array.isArray(meals) && meals.length > 0) {
         return {
-          meals: recsData.meals,
-          perMealCapNGN: Number(recsData.per_meal_cap_ngn) || 0,
-          generatedAt: recsData.generated_at || new Date().toISOString(),
+          meals,
+          perMealCapNGN: Number(rows[0].per_meal_cap_ngn) || 0,
+          generatedAt: rows[0].generated_at ? new Date(rows[0].generated_at).toISOString() : new Date().toISOString(),
           fromCache: true,
           warnings: [],
         };
       }
-    } catch {
-      // If cache lookup fails, proceed to fresh generation
     }
-  }
+  } catch {}
+  return null;
+}
 
-  // 4. Resolve configurations
-  const settings = await getSettingsConfig();
-  const safety = await getSafetyConfig();
-  const prices = await getPricesConfig();
-
-  const perMealCapNGN = calculatePerMealCap(
-    profile.weeklyBudgetNGN,
-    settings.budgetDivisor
-  );
-
-  const payload = buildRecommendationPayload(
-    profile,
-    perMealCapNGN,
-    settings.mealsPerType,
-    prices.items
-  );
-
-  // 5. Call Gemini in structured JSON mode with automatic single retry on schema failure
-  let rawAiOutput = null;
+async function callGemini(instruction, payload) {
   try {
-    rawAiOutput = await generateJson(
-      RECOMMENDATION_SYSTEM_INSTRUCTION,
-      payload,
-      GEMINI_RESPONSE_SCHEMA
-    );
-  } catch (err) {
-    // Retry once with strict instruction
+    return await generateJson(instruction, payload, GEMINI_RESPONSE_SCHEMA);
+  } catch {
+    const retryInstruction = `${instruction}\nIMPORTANT: Previous attempt failed. Return strict valid JSON conforming to the schema.`;
     try {
-      rawAiOutput = await generateJson(
-        `${RECOMMENDATION_SYSTEM_INSTRUCTION}\nIMPORTANT: Previous response failed. Ensure output is strict valid JSON conforming to the schema.`,
-        payload,
-        GEMINI_RESPONSE_SCHEMA
-      );
+      return await generateJson(retryInstruction, payload, GEMINI_RESPONSE_SCHEMA);
     } catch (retryErr) {
       throw AppError.aiFailed(`AI recommendation generation failed: ${retryErr.message}`);
     }
   }
-
-  // Validate parsed JSON structure
-  const parsedResponse = geminiResponseSchema.safeParse(rawAiOutput);
-  if (!parsedResponse.success) {
-    throw AppError.aiFailed('Gemini returned an invalid meal response structure.');
-  }
-
-  let candidateMeals = parsedResponse.data.meals;
-
-  // 6. Deterministic Budget Recomputation
-  let enrichedMeals = recomputeMealBudgets(
-    candidateMeals,
-    prices.items,
-    perMealCapNGN
-  );
-
-  // 7. Over-budget check & single retry if configured
-  if (settings.retryOnOverBudget) {
-    const overBudgetCount = enrichedMeals.filter((m) => m.overBudget).length;
-    if (overBudgetCount > enrichedMeals.length / 2) {
-      try {
-        const stricterInstruction = `${RECOMMENDATION_SYSTEM_INSTRUCTION}\nCRITICAL REQUIREMENT: ${overBudgetCount} of ${enrichedMeals.length} meals exceeded the perMealCapNGN of ₦${perMealCapNGN}. You MUST select economical Nigerian meals whose ingredients strictly stay within ₦${perMealCapNGN} per meal.`;
-
-        const retryAiOutput = await generateJson(
-          stricterInstruction,
-          payload,
-          GEMINI_RESPONSE_SCHEMA
-        );
-
-        const retryParsed = geminiResponseSchema.safeParse(retryAiOutput);
-        if (retryParsed.success) {
-          const retryEnriched = recomputeMealBudgets(
-            retryParsed.data.meals,
-            prices.items,
-            perMealCapNGN
-          );
-          const retryOverBudgetCount = retryEnriched.filter((m) => m.overBudget).length;
-
-          // Keep whichever batch had fewer over-budget meals
-          if (retryOverBudgetCount < overBudgetCount) {
-            enrichedMeals = retryEnriched;
-          }
-        }
-      } catch {
-        // If retry fails, keep initial enriched meals
-      }
-    }
-  }
-
-  // 8. Attach Safety Flags & Unique Meal IDs
-  const finalMeals = enrichedMeals.map((meal) => {
-    const safetyFlags = evaluateMealSafety(meal, profile.conditions, safety);
-    return {
-      ...meal,
-      id: generateMealId(meal.name),
-      safetyFlags,
-    };
-  });
-
-  const generatedAt = new Date().toISOString();
-
-  // 9. Persist to Supabase (unless running in sample test or custom profile mode)
-  if (!isSampleTest && !customProfile && supabase) {
-    try {
-      await supabase.from('latest_recs').upsert({
-        user_id: uid,
-        meals: finalMeals,
-        profile_hash: profileHash,
-        per_meal_cap_ngn: perMealCapNGN,
-        generated_at: generatedAt,
-      });
-    } catch (saveErr) {
-      // Non-fatal if saving to cache fails
-    }
-  }
-
-  return {
-    meals: finalMeals,
-    perMealCapNGN,
-    generatedAt,
-    fromCache: false,
-    warnings: [],
-  };
 }
 
+async function retryOverBudgetMeals(meals, prices, cap, payload) {
+  const overCount = meals.filter((m) => m.overBudget).length;
+  if (overCount <= meals.length / 2) return meals;
+  try {
+    const instruction = `${RECOMMENDATION_SYSTEM_INSTRUCTION}\nCRITICAL: ${overCount} of ${meals.length} meals exceeded ₦${cap}. Select economical Nigerian meals within ₦${cap}.`;
+    const retryRaw = await generateJson(instruction, payload, GEMINI_RESPONSE_SCHEMA);
+    const parsed = geminiResponseSchema.safeParse(retryRaw);
+    if (parsed.success) {
+      const recomputed = recomputeMealBudgets(parsed.data.meals, prices.items, cap);
+      if (recomputed.filter((m) => m.overBudget).length < overCount) return recomputed;
+    }
+  } catch {}
+  return meals;
+}
+
+export async function getRecommendations(uid, options = {}) {
+  const { regenerate = false, isSampleTest = false, customProfile = null } = options;
+  let profile = customProfile;
+
+  if (!profile && isSampleTest) {
+    profile = {
+      age: 28, gender: 'female', weightKg: 65, conditions: ['hypertension'],
+      preferences: ['no-pork'], avoidText: '', weeklyBudgetNGN: 21000,
+    };
+  } else if (!profile) {
+    await checkRateLimit(uid);
+    profile = await fetchUserProfile(uid);
+  }
+
+  const profileHash = computeProfileHash(profile);
+  if (!regenerate && !isSampleTest && !customProfile) {
+    const cached = await checkRecsCache(uid, profileHash);
+    if (cached) return cached;
+  }
+
+  const [settings, safety, prices] = await Promise.all([getSettingsConfig(), getSafetyConfig(), getPricesConfig()]);
+  const perMealCapNGN = calculatePerMealCap(profile.weeklyBudgetNGN, settings.budgetDivisor);
+  const payload = buildRecommendationPayload(profile, perMealCapNGN, settings.mealsPerType, prices.items);
+
+  const rawAi = await callGemini(RECOMMENDATION_SYSTEM_INSTRUCTION, payload);
+  const parsed = geminiResponseSchema.safeParse(rawAi);
+  if (!parsed.success) throw AppError.aiFailed('Gemini returned an invalid meal structure.');
+
+  let enriched = recomputeMealBudgets(parsed.data.meals, prices.items, perMealCapNGN);
+  if (settings.retryOnOverBudget) enriched = await retryOverBudgetMeals(enriched, prices, perMealCapNGN, payload);
+
+  const finalMeals = enriched.map((meal) => ({
+    ...meal,
+    id: generateMealId(meal.name),
+    safetyFlags: evaluateMealSafety(meal, profile.conditions, safety),
+  }));
+
+  const generatedAt = new Date().toISOString();
+  if (!isSampleTest && !customProfile) {
+    try {
+      await query(
+        `INSERT INTO latest_recs (user_id, meals, profile_hash, per_meal_cap_ngn, generated_at)
+         VALUES (?, ?, ?, ?, NOW())
+         ON DUPLICATE KEY UPDATE meals = VALUES(meals), profile_hash = VALUES(profile_hash), per_meal_cap_ngn = VALUES(per_meal_cap_ngn), generated_at = NOW()`,
+        [uid, JSON.stringify(finalMeals), profileHash, perMealCapNGN]
+      );
+    } catch {}
+  }
+
+  return { meals: finalMeals, perMealCapNGN, generatedAt, fromCache: false, warnings: [] };
+}

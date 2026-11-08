@@ -1,7 +1,5 @@
-import { supabase } from './supabase';
-
 /**
- * Call a JSON API endpoint, attaching the Supabase JWT token.
+ * Call a JSON API endpoint, attaching local JWT token if available.
  * Parses the error envelope into a typed error.
  *
  * @param {string} url - The API path (e.g. '/api/recommend').
@@ -10,22 +8,19 @@ import { supabase } from './supabase';
  * @throws {{ code: string, message: string, details?: object }}
  */
 export async function apiClient(url, body) {
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
+  const token = typeof window !== 'undefined' ? localStorage.getItem('chopwise_token') : null;
 
-  if (!session?.access_token) {
-    throw { code: 'UNAUTHORIZED', message: 'You must be signed in.' };
+  const headers = {
+    'Content-Type': 'application/json',
+  };
+
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
   }
-
-  const token = session.access_token;
 
   const res = await fetch(url, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
+    headers,
     body: JSON.stringify(body ?? {}),
   });
 
