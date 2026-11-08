@@ -8,6 +8,11 @@ Add one line per task: date, task id, what changed, doc updates.
 - Upgraded meal plan regeneration confirmation on User Dashboard (`Dashboard.jsx`) to use the unified modal.
 - Added confirmation dialogs before resetting settings, safety thresholds, or ingredient price tables to defaults in the Admin console (`SettingsForm.jsx`, `SafetyForm.jsx`, `PriceTableEditor.jsx`).
 
+## Apply Efferd Dashboard Template to User & Admin Dashboards (2026-11-08)
+- Transitioned User Dashboard (`/dashboard`) to use the `@efferd/dashboard-3` template with `AppShell`, stat cards (`DashboardStats`), responsive filters, Nigerian meal recommendations grid, and saved recipes section.
+- Integrated `AppShell` with the mobile-responsive sidebar, header breadcrumbs, live theme toggle, and authenticated user dropdown.
+- Updated Admin Dashboard (`/admin`) to share the same responsive `AppShell` layout.
+
 ## Install Efferd Dashboard-3 Template (2026-11-08)
 - Installed shadcn UI skill and initialized shadcn with Radix UI and Vite `@` path alias support (`jsconfig.json`, `vite.config.js`).
 - Registered `@efferd` registry in `components.json` and installed `@efferd/dashboard-3` and its responsive app shell (`@efferd/app-shell-3`).

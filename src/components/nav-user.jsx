@@ -1,0 +1,82 @@
+"use client";
+
+import {
+	Avatar,
+	AvatarFallback,
+} from "@/components/ui/avatar";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuGroup,
+	DropdownMenuItem,
+	DropdownMenuLabel,
+	DropdownMenuSeparator,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { UserIcon, LogOutIcon } from "lucide-react";
+import { useAuth } from "@/features/auth/useAuth";
+import { useNavigate } from "react-router-dom";
+
+export function NavUser() {
+	const { user, logout } = useAuth();
+	const navigate = useNavigate();
+
+	const displayName = user?.name || user?.email?.split("@")[0] || "User";
+	const email = user?.email || "";
+	const initial = displayName.charAt(0).toUpperCase();
+
+	async function handleLogout() {
+		try {
+			await logout();
+		} finally {
+			navigate("/login", { replace: true });
+		}
+	}
+
+	return (
+		<DropdownMenu>
+			<DropdownMenuTrigger asChild>
+				<button
+					type="button"
+					aria-label="User menu"
+					className="flex items-center gap-2 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
+				>
+					<Avatar className="size-8">
+						<AvatarFallback className="bg-primary-soft text-on-primary-soft font-semibold text-xs">
+							{initial}
+						</AvatarFallback>
+					</Avatar>
+				</button>
+			</DropdownMenuTrigger>
+			<DropdownMenuContent align="end" className="w-56">
+				<DropdownMenuGroup>
+					<DropdownMenuLabel className="pointer-events-none flex items-center gap-2">
+						<Avatar className="size-8">
+							<AvatarFallback className="bg-primary-soft text-on-primary-soft font-semibold text-xs">
+								{initial}
+							</AvatarFallback>
+						</Avatar>
+						<div className="min-w-0">
+							<span className="font-medium text-foreground block truncate">{displayName}</span>
+							<div className="truncate text-muted-foreground text-xs">
+								{email}
+							</div>
+						</div>
+					</DropdownMenuLabel>
+				</DropdownMenuGroup>
+				<DropdownMenuSeparator />
+				<DropdownMenuGroup>
+					<DropdownMenuItem onClick={() => navigate("/profile")} className="cursor-pointer">
+						<UserIcon className="mr-2 size-4" />
+						Profile & Preferences
+					</DropdownMenuItem>
+				</DropdownMenuGroup>
+				<DropdownMenuSeparator />
+				<DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-danger-fg">
+					<LogOutIcon className="mr-2 size-4" />
+					Log out
+				</DropdownMenuItem>
+			</DropdownMenuContent>
+		</DropdownMenu>
+	);
+}

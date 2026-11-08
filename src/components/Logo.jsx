@@ -32,6 +32,8 @@ export function LogoMark({ className = 'h-7 w-7', inverted = false }) {
   );
 }
 
+export const LogoIcon = LogoMark;
+
 /** Dynamic project logo & wordmark: Adapts to appName and appIcon from ConfigContext */
 export default function Logo({ className = '', inverted = false }) {
   const { appName } = useAppConfig();

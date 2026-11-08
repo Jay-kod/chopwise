@@ -1,9 +1,8 @@
 import { Link } from 'react-router-dom';
-import Layout from '../components/Layout';
+import { AppShell } from '@/components/app-shell';
 import Spinner from '../components/Spinner';
 import ErrorState from '../components/ErrorState';
 import Button from '../components/Button';
-import ThemeToggle from '../components/ThemeToggle';
 import FunctionsTable from '../features/admin/FunctionsTable';
 import IntegrationCard from '../features/admin/IntegrationCard';
 import BrandingSettingsCard from '../features/admin/BrandingSettingsCard';
@@ -47,29 +46,29 @@ export default function Admin() {
 
   if (loading && !status) {
     return (
-      <Layout hideHeader={true} hideFooter={true}>
+      <AppShell pathname="/admin">
         <div className="flex min-h-[60vh] items-center justify-center">
           <Spinner label="Loading admin configurations…" />
         </div>
-      </Layout>
+      </AppShell>
     );
   }
 
   if (error && !status) {
     return (
-      <Layout hideHeader={true} hideFooter={true}>
+      <AppShell pathname="/admin">
         <div className="mx-auto max-w-lg py-12">
           <ErrorState message={error} onRetry={fetchStatus} />
         </div>
-      </Layout>
+      </AppShell>
     );
   }
 
   const integrations = status?.integrations || [];
 
   return (
-    <Layout hideHeader={true} hideFooter={true}>
-      <div className="space-y-8 py-4 sm:py-6">
+    <AppShell pathname="/admin">
+      <div className="space-y-6">
         {/* Admin Navigation Bar (Replaces global site header) */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-line pb-4">
           <div className="space-y-1">
@@ -103,7 +102,6 @@ export default function Admin() {
             >
               {loading ? <Spinner label="Refreshing…" /> : '↻ Refresh Status'}
             </Button>
-            <ThemeToggle />
           </div>
         </div>
 
@@ -175,6 +173,6 @@ export default function Admin() {
           <EvaluationRunner />
         </section>
       </div>
-    </Layout>
+    </AppShell>
   );
 }

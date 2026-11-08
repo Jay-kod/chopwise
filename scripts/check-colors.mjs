@@ -9,6 +9,7 @@ const ROOT = process.cwd();
 const TARGETS = ['src', 'index.html'];
 const EXTS = new Set(['.js', '.jsx', '.ts', '.tsx', '.css', '.html']);
 const SKIP_FILES = new Set([join('src', 'styles', 'theme.css')]);
+const SKIP_DIRS = new Set([join('src', 'components', 'ui')]);
 
 const PALETTE = 'slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose';
 const PREFIX = 'bg|text|border|ring|outline|fill|stroke|from|via|to|divide|placeholder|caret|accent|decoration|shadow';
@@ -25,6 +26,8 @@ function* walk(p) {
   const st = statSync(p, { throwIfNoEntry: false });
   if (!st) return;
   if (st.isDirectory()) {
+    const rel = relative(ROOT, p);
+    if (SKIP_DIRS.has(rel)) return;
     for (const f of readdirSync(p)) if (f !== 'node_modules') yield* walk(join(p, f));
   } else if (EXTS.has(extname(p))) {
     yield p;

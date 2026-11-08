@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import Button from '../components/Button';
@@ -37,7 +37,7 @@ export default function Login({ adminOnly = false }) {
   const [redirecting, setRedirecting] = useState(false);
 
   useEffect(() => {
-    if (user && !loading && !redirecting) {
+    if (user && !loading && !redirecting && !adminOnly) {
       const dest = location.state?.from?.pathname || (adminOnly ? '/admin' : (user.profileComplete ? '/dashboard' : '/onboarding'));
       navigate(dest, { replace: true });
     }

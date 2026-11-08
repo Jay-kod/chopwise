@@ -1,15 +1,21 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { AppShell } from '@/components/app-shell';
 import { DashboardStats } from '@/components/stats';
-import Card from '../components/Card';
+import { ConversationVolumeChart } from '@/components/conversation-volume-chart';
+import { ChannelBreakdownChart } from '@/components/channel-breakdown-chart';
+import { CsatResponsesChart } from '@/components/csat-responses-chart';
+import { FirstReplyTimeChart } from '@/components/first-reply-time-chart';
+import { TeamOnDuty } from '@/components/team-on-duty';
+import { RecentConversations } from '@/components/recent-conversations';
+import { SupportActivity } from '@/components/support-activity';
 import Button from '../components/Button';
 import Spinner from '../components/Spinner';
+import Card from '../components/Card';
 import Disclaimer from '../components/Disclaimer';
 import ConfirmModal from '../components/ConfirmModal';
 import MealCard from '../features/meals/MealCard';
 import FilterBar from '../features/meals/FilterBar';
 import DashboardError from '../features/meals/DashboardError';
-import SavedMealsList from '../features/meals/SavedMealsList';
 import { useRecommendations } from '../features/meals/useRecommendations';
 import { useAuth } from '../features/auth/useAuth';
 import { formatNaira } from '../lib/format';
@@ -30,68 +36,26 @@ export default function Dashboard() {
     regenerate,
   } = useRecommendations();
 
-  const [filters, setFilters] = useState({
-    mealType: 'all',
-    condition: 'all',
-    budget: 'all',
-  });
+  const [filters, setFilters] = useState({ mealType: 'all', condition: 'all', budget: 'all' });
   const [showRegenerateConfirm, setShowRegenerateConfirm] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [savedMeals, setSavedMeals] = useState([]);
-  const [loadingSaved, setLoadingSaved] = useState(false);
-  const [removingId, setRemovingId] = useState(null);
 
   useEffect(() => {
     let active = true;
     if (user) {
       apiClient('/api/admin', { action: 'me' })
-        .then((res) => {
-          if (active) setIsAdmin(Boolean(res?.isAdmin));
-        })
-        .catch(() => {
-          if (active) setIsAdmin(false);
-        });
+        .then((res) => { if (active) setIsAdmin(Boolean(res?.isAdmin)); })
+        .catch(() => { if (active) setIsAdmin(false); });
     }
-    return () => {
-      active = false;
-    };
+    return () => { active = false; };
   }, [user]);
-
-  const loadSaved = useCallback(async () => {
-    if (!user) return;
-    try {
-      setLoadingSaved(true);
-      const res = await apiClient('/api/auth', { action: 'get-saved-meals' });
-      if (res?.savedMeals) setSavedMeals(res.savedMeals);
-    } catch {
-      // Non-blocking
-    } finally {
-      setLoadingSaved(false);
-    }
-  }, [user]);
-
-  useEffect(() => {
-    loadSaved();
-  }, [loadSaved]);
 
   async function handleConfirmRegenerate() {
     setShowRegenerateConfirm(false);
     setRegenerating(true);
     await regenerate();
     setRegenerating(false);
-  }
-
-  async function handleRemoveSaved(mealId) {
-    try {
-      setRemovingId(mealId);
-      await apiClient('/api/auth', { action: 'delete-saved-meal', mealId });
-      setSavedMeals((prev) => prev.filter((m) => m.id !== mealId));
-    } catch {
-      // Ignored
-    } finally {
-      setRemovingId(null);
-    }
   }
 
   const filteredMeals = meals.filter((m) => {
@@ -141,7 +105,7 @@ export default function Dashboard() {
             Personalised Nigerian Meal Plan
           </h1>
           <p className="mt-0.5 text-xs text-muted">
-            Nutritious meals tailored to your health profile and budget.
+            Nutritious meals tailored to your health profile and wallet.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -156,7 +120,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Confirmation Modal */}
       <ConfirmModal
         isOpen={showRegenerateConfirm}
         onClose={() => setShowRegenerateConfirm(false)}
@@ -170,100 +133,71 @@ export default function Dashboard() {
         icon="⚡"
       />
 
-      {/* Stats Cards Row (Dashboard-3 Block) */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <DashboardStats items={statsItems} />
-      </div>
-
       {/* Error State */}
       <DashboardError error={error} isAdmin={isAdmin} onRetry={refresh} />
 
-      {/* Loading Skeletons */}
-      {loading && (
-        <div className="space-y-4">
-          <div className="flex justify-center py-6">
-            <Spinner label="Preparing your Nigerian meal recommendations…" />
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div
-                key={i}
-                className="h-64 animate-pulse rounded-xl border border-line bg-surface-muted"
-              />
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Complete @efferd/dashboard-3 Analytics & Metrics Grid */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <DashboardStats items={statsItems} />
+        <ConversationVolumeChart />
+        <ChannelBreakdownChart />
+        <CsatResponsesChart />
+        <FirstReplyTimeChart />
+        <TeamOnDuty />
+        <RecentConversations />
+        <SupportActivity />
+      </div>
 
-      {/* Meal Plan Recommendations */}
-      {!loading && !error && meals.length > 0 && (
-        <div className="space-y-4">
-          <div className="space-y-1">
-            <FilterBar
-              filters={filters}
-              onChange={setFilters}
-              perMealCapNGN={perMealCapNGN}
-              totalCount={meals.length}
-              filteredCount={filteredMeals.length}
-            />
-            {fromCache && (
-              <div className="text-right text-[11px] text-muted">
-                ✓ Saved plan from your profile
-              </div>
-            )}
+      {/* Personalised Meals Recommendations Section */}
+      <section className="space-y-4 pt-4 border-t border-line">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-lg font-bold text-fg">Your Recommended Nigerian Meals</h2>
+            <p className="text-xs text-muted">Click any meal to view ingredients, cost breakdown and nutrition</p>
           </div>
-
-          {filteredMeals.length > 0 ? (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {filteredMeals.map((meal) => (
-                <MealCard
-                  key={meal.id}
-                  meal={meal}
-                  perMealCapNGN={perMealCapNGN}
-                  isClickable={true}
-                />
-              ))}
-            </div>
-          ) : (
-            <Card className="p-8 text-center space-y-3">
-              <span className="text-3xl" aria-hidden="true">🔍</span>
-              <h3 className="text-base font-bold text-fg">No meals match your active filters</h3>
-              <p className="mx-auto max-w-md text-xs text-muted">
-                Try clearing some filter criteria, or generate a fresh meal plan.
-              </p>
-              <div className="flex flex-wrap justify-center gap-2 pt-2">
-                <Button
-                  variant="secondary"
-                  onClick={() => setFilters({ mealType: 'all', condition: 'all', budget: 'all' })}
-                  className="text-xs min-h-9 px-3"
-                >
-                  Clear all filters
-                </Button>
-                <Button
-                  onClick={() => setShowRegenerateConfirm(true)}
-                  className="text-xs min-h-9 px-3"
-                >
-                  Regenerate Plan
-                </Button>
-              </div>
-            </Card>
+          {fromCache && (
+            <span className="text-xs text-muted">✓ Plan loaded from your saved profile</span>
           )}
         </div>
-      )}
 
-      {/* Saved Meals Section */}
-      <div id="saved" className="pt-4 border-t border-line space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-fg">Saved Recipes</h2>
-          <span className="text-[11px] text-muted">Your bookmarked meals</span>
-        </div>
-        <SavedMealsList
-          savedMeals={savedMeals}
-          loading={loadingSaved}
-          onRemove={handleRemoveSaved}
-          removingId={removingId}
+        <FilterBar
+          filters={filters}
+          onChange={setFilters}
+          perMealCapNGN={perMealCapNGN}
+          totalCount={meals.length}
+          filteredCount={filteredMeals.length}
         />
-      </div>
+
+        {loading && (
+          <div className="flex justify-center py-8">
+            <Spinner label="Preparing your Nigerian meal recommendations…" />
+          </div>
+        )}
+
+        {!loading && filteredMeals.length > 0 && (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {filteredMeals.map((meal) => (
+              <MealCard key={meal.id} meal={meal} perMealCapNGN={perMealCapNGN} isClickable={true} />
+            ))}
+          </div>
+        )}
+
+        {!loading && filteredMeals.length === 0 && meals.length > 0 && (
+          <Card className="p-8 text-center space-y-3">
+            <span className="text-3xl" aria-hidden="true">🔍</span>
+            <h3 className="text-base font-bold text-fg">No meals match active filters</h3>
+            <div className="flex justify-center gap-2 pt-2">
+              <Button
+                variant="secondary"
+                onClick={() => setFilters({ mealType: 'all', condition: 'all', budget: 'all' })}
+                className="text-xs min-h-9 px-3"
+              >
+                Clear filters
+              </Button>
+            </div>
+          </Card>
+        )}
+      </section>
 
       {/* Medical Disclaimer */}
       <div className="pt-2">
