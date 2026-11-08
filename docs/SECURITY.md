@@ -6,7 +6,7 @@
 | API key leakage | Gemini/Edamam keys only on the server; browser never calls them; `grep` the built `dist/` for key patterns before deploy |
 | Secrets at rest | Admin-saved secrets encrypted AES-256-GCM with `CONFIG_ENCRYPTION_KEY`; never returned to clients (only `configured` + last 4 chars) |
 | Admin takeover | Admin = UID in `ADMIN_UIDS` (not email); `requireAdmin` on every admin action except `me`; client check is UX only |
-| Test login shortcuts | Public login shortcuts prefill the shared test password in the browser; Firebase Auth plus the `ADMIN_UIDS` check remain required. These credentials are public, so use disposable test accounts only and store no sensitive data in them |
+| Test login shortcuts | Public user/admin sign-in shortcuts prefill the shared test password in the browser; authentication plus the server-side admin allowlist check remain required. These credentials are public, so use disposable test accounts only and store no sensitive data in them |
 | Unauthenticated API use | Verify Firebase ID token on every function call |
 | Data access | Firestore rules in DATABASE.md; deny by default; `adminConfig`, `nutritionCache`, `rateLimits` server-only |
 | Input abuse | zod on every request body and on the profile read from Firestore; size limits (`avoidText` <= 100) |

@@ -3,7 +3,7 @@
 ## Functional requirements (from Chapter 3)
 | ID | Requirement | Where | Acceptance criteria |
 |----|-------------|-------|---------------------|
-| FR1 | Register/login with email + password (Firebase Auth) | `/register`, `/login` | Register creates `users/{uid}`; session survives refresh; logout works; Firebase errors shown in plain language; test-account shortcuts prefill the dedicated Test User or Test Admin email and shared test password while Firebase Auth remains required |
+| FR1 | Register/login with email + password | `/register`, `/login`, `/admin/login` | Registration and user login are available to all users; admins have a separate sign-in page that verifies admin access server-side; session survives refresh; logout works; auth errors are shown in plain language; test-account shortcuts are shown only on their matching sign-in page |
 | FR2 | Multi-step onboarding: age, gender, weight, conditions, preferences, weekly budget | `/onboarding` | 4 steps, per-step validation, back/next, progress bar, limits from DATABASE.md |
 | FR3 | Save/retrieve profile in Firestore | `users/{uid}.profile` | Reload shows saved values; another account cannot read it |
 | FR4 | Send profile to Gemini, receive Nigerian meals | `POST /api/recommend` | 6 valid meals (2 per meal type) in ~5 s typical; profile read server-side; no personal identifiers sent to Gemini |
@@ -17,7 +17,7 @@
 ## Admin requirements
 | ID | Requirement | Acceptance criteria |
 |----|-------------|---------------------|
-| AR1 | Only admins access `/admin` | Enforced on the server by `ADMIN_UIDS`; non-admin sees Not Found; non-admin API calls return 403 |
+| AR1 | Only admins access `/admin` | Dedicated admin sign-in at `/admin/login`; authorization is enforced by the server; non-admin sees Not Found; non-admin API calls return 403 |
 | AR2 | One page lists every function/API with status and Test button | Functions table: Firestore, Gemini, Edamam, Recommendation pipeline, Nutrition pipeline |
 | AR3 | Each integration card has how-to-get links + steps and accepts keys | Links verified to open; secret fields are write-only and show masked state |
 | AR4 | Secrets encrypted at rest and never returned to any client | AES-256-GCM; API returns only `configured` + last 4 chars mask |

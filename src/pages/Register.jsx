@@ -186,7 +186,7 @@ export default function Register() {
                   <Button
                     type="submit"
                     className="w-full min-h-11 font-semibold text-sm"
-                    disabled={loading || !consent || !isSupabaseConfigured}
+                    disabled={loading || !consent}
                   >
                     {loading ? (
                       <span className="inline-flex items-center justify-center gap-2">

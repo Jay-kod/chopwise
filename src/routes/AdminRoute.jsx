@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../features/auth/useAuth';
 import { apiClient } from '../lib/apiClient';
 import Spinner from '../components/Spinner';
@@ -12,6 +12,7 @@ import NotFound from '../pages/NotFound';
  */
 export default function AdminRoute() {
   const { user, loading: authLoading } = useAuth();
+  const location = useLocation();
   const [isAdmin, setIsAdmin] = useState(null);
   const [checking, setChecking] = useState(true);
 
@@ -58,10 +59,13 @@ export default function AdminRoute() {
     );
   }
 
+  if (!user) {
+    return <Navigate to="/admin/login" replace state={{ from: location }} />;
+  }
+
   if (!isAdmin) {
     return <NotFound />;
   }
 
   return <Outlet />;
 }
-

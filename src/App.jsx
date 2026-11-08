@@ -23,6 +23,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/admin/login" element={<Login adminOnly={true} />} />
           <Route path="/register" element={<Register />} />
 
           {/* Protected Area */}
@@ -39,10 +40,11 @@ export default function App() {
               <Route path="/profile" element={<Profile />} />
             </Route>
 
-            {/* Admin Management Portal */}
-            <Route element={<AdminRoute />}>
-              <Route path="/admin" element={<Admin />} />
-            </Route>
+          </Route>
+
+          {/* Admin Management Portal */}
+          <Route element={<AdminRoute />}>
+            <Route path="/admin" element={<Admin />} />
           </Route>
 
           {/* 404 Catch-All */}
