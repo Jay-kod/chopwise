@@ -1,6 +1,13 @@
 # CHANGELOG.md
 Add one line per task: date, task id, what changed, doc updates.
 
+## Skeletal Preloading for User and Admin Dashboards (2026-11-09)
+- Implemented comprehensive skeletal preloading for User Dashboard (`src/components/dashboard-skeleton.jsx`), replacing raw spinners with animated placeholders for stat cards, metrics charts, filter bar, and meal recommendation cards.
+- Created reusable `MealCardSkeleton` (`src/features/meals/MealCardSkeleton.jsx`) matching the exact layout, tags, badges, and proportions of `MealCard`.
+- Integrated `MealCardSkeleton` into the recommendations section during meal regeneration or filtering so the UI updates smoothly without layout shift.
+- Created `AdminSkeleton` (`src/features/admin/AdminSkeleton.jsx`) for the Admin Dashboard, displaying full-page animated skeletons for the Functions Table, API Integration cards, Configuration forms, Price Table, and Verification checklist.
+- Updated `Skeleton` primitive in `src/components/ui/skeleton.jsx` to use theme semantic token `bg-surface-muted`.
+
 ## Dashboard Text Contrast and Clarity Enhancement (2026-11-09)
 - Resolved dark-mode text invisibility where `--color-muted` in `@theme inline` had overwritten secondary text with the dark background color `#182B22`.
 - Upgraded `.dark` `--color-fg` to `#FFFFFF` and `--color-muted` to luminous, high-contrast `#B8D9C8` (11.3:1 contrast against surface).

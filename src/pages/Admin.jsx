@@ -12,6 +12,7 @@ import SafetyForm from '../features/admin/SafetyForm';
 import PriceTableEditor from '../features/admin/PriceTableEditor';
 import BootstrapChecklist from '../features/admin/BootstrapChecklist';
 import EvaluationRunner from '../features/admin/EvaluationRunner';
+import AdminSkeleton from '../features/admin/AdminSkeleton';
 import { useAdminApi } from '../features/admin/useAdminApi';
 import { ROUTES } from '../lib/routes';
 
@@ -58,9 +59,7 @@ export default function Admin() {
   if (loading && !status) {
     return (
       <AppShell pathname={ROUTES.admin.dashboard}>
-        <div className="flex min-h-[60vh] items-center justify-center">
-          <Spinner label="Loading admin configurations…" />
-        </div>
+        <AdminSkeleton />
       </AppShell>
     );
   }

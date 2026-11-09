@@ -16,6 +16,8 @@ import ConfirmModal from '../components/ConfirmModal';
 import MealCard from '../features/meals/MealCard';
 import FilterBar from '../features/meals/FilterBar';
 import DashboardError from '../features/meals/DashboardError';
+import MealCardSkeleton from '../features/meals/MealCardSkeleton';
+import { DashboardSkeleton } from '@/components/dashboard-skeleton';
 import { useRecommendations } from '../features/meals/useRecommendations';
 import { useAuth } from '../features/auth/useAuth';
 import { formatNaira } from '../lib/format';
@@ -97,6 +99,14 @@ export default function Dashboard() {
     },
   ];
 
+  if (loading && meals.length === 0 && !error) {
+    return (
+      <AppShell pathname={ROUTES.customer.dashboard}>
+        <DashboardSkeleton />
+      </AppShell>
+    );
+  }
+
   return (
     <AppShell pathname={ROUTES.customer.dashboard} onRegenerate={() => setShowRegenerateConfirm(true)}>
       {/* Top Heading & Actions */}
@@ -170,8 +180,10 @@ export default function Dashboard() {
         />
 
         {loading && (
-          <div className="flex justify-center py-8">
-            <Spinner label="Preparing your Nigerian meal recommendations…" />
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {[1, 2, 3, 4, 5, 6].map((idx) => (
+              <MealCardSkeleton key={idx} />
+            ))}
           </div>
         )}
 
