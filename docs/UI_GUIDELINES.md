@@ -17,8 +17,8 @@ Single source: `src/styles/theme.css` (Tailwind v4 `@theme static` for light val
 | surface-muted | `bg-surface-muted` | #F0FAF4 | #182B22 | Hover, stripes, neutral badges |
 | line | `border-line` | #BFD8C9 | #2E4B3C | Card borders, dividers |
 | field-line | `border-field-line` | #6B8A78 | #5E8571 | Input and button borders |
-| fg | `text-fg` | #0F2A1D | #E8F5EE | Main text |
-| muted | `text-muted` | #41584B | #A3BBAE | Secondary text, placeholders |
+| fg | `text-fg` | #0F2A1D | #FFFFFF | Main text |
+| muted | `text-muted` | #41584B | #B8D9C8 | Secondary text, placeholders |
 | primary | `bg-primary` `text-primary` | #047857 | #059669 | Brand: buttons, links, active |
 | primary-hover | `bg-primary-hover` | #065F46 | #10B981 | Hover on primary |
 | on-primary | `text-on-primary` | #FFFFFF | #FFFFFF | Text on primary |

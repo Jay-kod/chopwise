@@ -44,7 +44,7 @@ export function DashboardStats({ items = stats }) {
 			{items.map((s) => (
 				<Card className={cn("shadow-none border border-line bg-surface")} key={s.label}>
 					<CardHeader className="pb-2">
-						<CardTitle className="font-normal text-muted text-xs">
+						<CardTitle className="font-medium text-muted text-xs tracking-wide">
 							{s.label}
 						</CardTitle>
 					</CardHeader>
@@ -57,7 +57,7 @@ export function DashboardStats({ items = stats }) {
 									<DeltaValue />
 								</Delta>
 							)}
-							{s.footnote && <span className="text-muted text-[11px] truncate">{s.footnote}</span>}
+							{s.footnote && <span className="text-muted text-[11px] font-medium truncate">{s.footnote}</span>}
 						</div>
 					</CardContent>
 				</Card>

@@ -1,6 +1,15 @@
 # CHANGELOG.md
 Add one line per task: date, task id, what changed, doc updates.
 
+## Dashboard Text Contrast and Clarity Enhancement (2026-11-09)
+- Resolved dark-mode text invisibility where `--color-muted` in `@theme inline` had overwritten secondary text with the dark background color `#182B22`.
+- Upgraded `.dark` `--color-fg` to `#FFFFFF` and `--color-muted` to luminous, high-contrast `#B8D9C8` (11.3:1 contrast against surface).
+- Enforced explicit utilities `.text-muted`, `.text-muted-foreground`, and recharts tick fills to always resolve to `var(--color-muted)`.
+- Enhanced stat card titles and footnotes in `src/components/stats.jsx` with clear, legible text styles.
+- Updated `Delta` neutral values (`0.0%`) in `src/components/delta.jsx` to render with readable `text-muted`.
+- Styled unselected sidebar menu items and section labels in `src/components/nav-group.jsx` with crisp `text-fg` and `text-muted`.
+- Enhanced rate-limit warning banner subtitle in `src/features/meals/DashboardError.jsx` with high-contrast text.
+
 ## Dedicated Saved Meals Page, Full-Screen Onboarding, and Unified Sidebar (2026-11-09)
 - Isolated `/onboarding` as a full-screen, 4-step profile wizard with minimal header and no sidebar before profile completion.
 - Added dedicated `/saved` route and page (`src/pages/Saved.jsx`) for bookmarked Nigerian meals with search filter and removal confirmation dialog.

@@ -79,17 +79,17 @@ export function AppSidebar({
 			</SidebarContent>
 			<SidebarFooter className="border-t border-line p-3 space-y-2">
 				<div className="flex items-center justify-between gap-2 px-1">
-					<span className="text-xs font-medium text-muted">Theme</span>
+					<span className="text-xs font-semibold text-fg">Theme</span>
 					<ThemeToggle showLabel={true} className="w-auto h-8 text-xs" />
 				</div>
 				<SidebarMenu>
 					<SidebarMenuItem>
 						<SidebarMenuButton
 							onClick={() => setShowLogoutConfirm(true)}
-							className="w-full text-danger-fg hover:bg-danger-bg hover:text-danger-fg cursor-pointer flex items-center gap-2"
+							className="w-full text-danger-fg font-medium hover:bg-danger-bg hover:text-danger-fg cursor-pointer flex items-center gap-2 [&>svg]:text-danger-fg"
 						>
 							<LogOutIcon className="size-4 shrink-0 text-danger-fg" />
-							<span className="font-medium">Log out</span>
+							<span className="font-medium text-danger-fg">Log out</span>
 						</SidebarMenuButton>
 					</SidebarMenuItem>
 				</SidebarMenu>

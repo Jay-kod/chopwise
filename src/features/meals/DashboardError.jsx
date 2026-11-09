@@ -45,8 +45,8 @@ export default function DashboardError({ error, isAdmin, onRetry }) {
         <span className="text-3xl" aria-hidden="true">
           ⏳
         </span>
-        <h3 className="mt-2 text-base font-bold">Hourly Request Limit Reached</h3>
-        <p className="mt-1 text-xs">
+        <h3 className="mt-2 text-base font-bold text-warn-fg">Hourly Request Limit Reached</h3>
+        <p className="mt-1 text-xs font-medium text-warn-fg opacity-95">
           {error.message ||
             'You have reached your hourly meal recommendation limit. Please try again later.'}
         </p>

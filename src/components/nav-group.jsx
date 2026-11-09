@@ -52,7 +52,7 @@ export function NavGroup({
 }) {
 	return (
 		<SidebarGroup>
-			{label && <SidebarGroupLabel>{label}</SidebarGroupLabel>}
+			{label && <SidebarGroupLabel className="text-[11px] font-bold uppercase tracking-wider text-muted px-2">{label}</SidebarGroupLabel>}
 			<SidebarMenu>
 				{items.map((item) => {
 					const active = isItemActive(item.path, pathname);
@@ -72,7 +72,9 @@ export function NavGroup({
 											<SidebarMenuButton
 												isActive={active}
 												className={cn(
-													active && "bg-primary text-on-primary font-semibold shadow-xs [&>svg]:text-on-primary hover:bg-primary-hover hover:text-on-primary data-active:bg-primary data-active:text-on-primary"
+													active
+														? "bg-primary text-on-primary font-semibold shadow-xs [&>svg]:text-on-primary hover:bg-primary-hover hover:text-on-primary data-active:bg-primary data-active:text-on-primary"
+														: "text-fg font-medium hover:bg-surface-muted hover:text-fg [&>svg]:text-muted group-hover/menu-button:[&>svg]:text-fg"
 												)}
 											>
 												{item.icon}
@@ -90,7 +92,9 @@ export function NavGroup({
 																asChild
 																isActive={subActive}
 																className={cn(
-																	subActive && "bg-primary text-on-primary font-medium [&>svg]:text-on-primary hover:bg-primary-hover hover:text-on-primary data-active:bg-primary data-active:text-on-primary"
+																	subActive
+																		? "bg-primary text-on-primary font-medium [&>svg]:text-on-primary hover:bg-primary-hover hover:text-on-primary data-active:bg-primary data-active:text-on-primary"
+																		: "text-fg font-medium hover:bg-surface-muted hover:text-fg [&>svg]:text-muted group-hover/menu-button:[&>svg]:text-fg"
 																)}
 															>
 																<Link to={subItem.path}>
@@ -109,7 +113,9 @@ export function NavGroup({
 										asChild
 										isActive={active}
 										className={cn(
-											active && "bg-primary text-on-primary font-semibold shadow-xs [&>svg]:text-on-primary hover:bg-primary-hover hover:text-on-primary data-active:bg-primary data-active:text-on-primary"
+											active
+												? "bg-primary text-on-primary font-semibold shadow-xs [&>svg]:text-on-primary hover:bg-primary-hover hover:text-on-primary data-active:bg-primary data-active:text-on-primary"
+												: "text-fg font-medium hover:bg-surface-muted hover:text-fg [&>svg]:text-muted group-hover/menu-button:[&>svg]:text-fg"
 										)}
 									>
 										<Link to={item.path}>
