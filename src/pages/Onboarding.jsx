@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiClient } from '../lib/apiClient';
 import { useAuth } from '../features/auth/useAuth';
-import { AppShell } from '@/components/app-shell';
+import Logo from '../components/Logo';
+import ThemeToggle from '../components/ThemeToggle';
 import Card from '../components/Card';
 import Button from '../components/Button';
 import Spinner from '../components/Spinner';
@@ -125,8 +126,12 @@ export default function Onboarding() {
   const progressPercent = Math.round((step / TOTAL_STEPS) * 100);
 
   return (
-    <AppShell>
-      <div className="mx-auto max-w-xl py-6 sm:py-10">
+    <div className="min-h-screen bg-page flex flex-col justify-between py-6 px-4 sm:px-6">
+      <header className="mx-auto w-full max-w-xl flex items-center justify-between pb-4">
+        <Logo />
+        <ThemeToggle />
+      </header>
+      <main className="mx-auto w-full max-w-xl my-auto">
         <Card className="p-6 sm:p-8">
           {/* Header & Progress */}
           <div className="mb-6">
@@ -213,7 +218,10 @@ export default function Onboarding() {
             )}
           </div>
         </Card>
-      </div>
-    </AppShell>
+      </main>
+      <footer className="mx-auto w-full max-w-xl text-center pt-4 text-[11px] text-muted">
+        ChopWise • Personalised Nigerian Nutrition
+      </footer>
+    </div>
   );
 }
