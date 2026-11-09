@@ -131,8 +131,10 @@ export default function Profile() {
         {/* Header with Account Summary and Logout */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-line pb-4">
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-fg">Account &amp; Settings</h1>
-            <p className="mt-0.5 text-xs text-muted">Signed in as {user?.email}</p>
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-fg">My Profile</h1>
+            <p className="mt-0.5 text-xs text-muted">
+              Edit your details, weekly budget, health conditions and food preferences.
+            </p>
           </div>
           <Button variant="secondary" onClick={() => setShowLogoutConfirm(true)} className="text-xs min-h-9 px-3">
             Log out
