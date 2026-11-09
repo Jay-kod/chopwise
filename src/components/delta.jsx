@@ -31,8 +31,8 @@ function Delta({
 					className={cn(
 						"gap-1 border-none tabular-nums [&_svg]:size-4 [&_svg]:shrink-0",
 						value > 0
-							? "bg-primary-soft text-on-primary-soft"
-							: "bg-danger-bg text-danger-fg",
+							? "bg-primary text-on-primary font-semibold [&_svg]:text-on-primary"
+							: "bg-danger-bg text-danger-fg font-semibold [&_svg]:text-danger-fg",
 						className
 					)}
 					data-slot="delta"
@@ -64,7 +64,7 @@ function FilledShell({
 		<span
 			className={cn(
 				"inline-flex size-3 shrink-0 items-center justify-center rounded-full",
-				"[&_svg]:size-2! [&_svg]:shrink-0 [&_svg]:stroke-3! [&_svg]:text-background",
+				"[&_svg]:size-2! [&_svg]:shrink-0 [&_svg]:stroke-3! [&_svg]:text-on-primary",
 				value > 0 && "bg-primary",
 				value < 0 && "bg-danger-fg",
 				(!value || value === 0) && "bg-muted-foreground"

@@ -1,6 +1,15 @@
 # CHANGELOG.md
 Add one line per task: date, task id, what changed, doc updates.
 
+## Remove Admin Portal from User Sidebar & Contrast Fixes (2026-11-09)
+- Removed "Admin Portal" from the user dashboard sidebar by decoupling `userNavGroups` and `adminNavGroups` in `src/components/app-shared.jsx` and `src/components/app-sidebar.jsx`.
+- Removed `/admin` links from user footer navigation (`userFooterNavLinks = []`); admin links only render when navigating within `/admin`.
+- Fixed unreadable black text on green backgrounds in dark mode by updating `.dark` `--color-on-primary` from `#052E1F` to `#FFFFFF` and `--color-primary` from `#34D399` to `#059669` in `src/styles/theme.css` and `docs/UI_GUIDELINES.md`.
+- Updated active sidebar navigation items in `src/components/nav-group.jsx` and `src/components/app-sidebar.jsx` to use high-contrast solid `bg-primary text-on-primary` with pure white text and icons (`data-active:text-on-primary`, `hover:text-on-primary`), eliminating black text on active green items.
+- Fixed `Delta` badge and arrow indicator contrast in `src/components/delta.jsx` by using `text-on-primary` instead of `text-background` in `FilledShell` and `bg-primary text-on-primary` on positive delta badges.
+- Updated `ChannelBreakdownChart` in `src/components/channel-breakdown-chart.jsx` to render slice text labels in `var(--color-on-primary)` (white) instead of `currentColor` (black) inside green chart slices.
+- Updated user avatar fallback initials in `src/components/nav-user.jsx` to use `bg-primary text-on-primary`.
+
 ## Sidebar and Active Classes on Profile, Meal Detail, and Onboarding Pages (2026-11-08)
 - Upgraded the Profile page (`/profile`), Meal Detail page (`/meal/:id`), and Onboarding/Budget update page (`/onboarding`) to use the responsive `AppShell` with the sidebar.
 - Added URL search parameter synchronization for Profile tabs (`/profile` for Dietary Profile, `/profile?tab=saved` for Saved Recipes).

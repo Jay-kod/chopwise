@@ -7,7 +7,7 @@ import {
 	ActivityIcon,
 } from "lucide-react";
 
-export const navGroups = [
+export const userNavGroups = [
 	{
 		label: "Meal Planning",
 		items: [
@@ -38,31 +38,60 @@ export const navGroups = [
 			},
 		],
 	},
+];
+
+export const adminNavGroups = [
 	{
-		label: "Administration",
+		label: "Admin Controls",
 		items: [
 			{
-				title: "Admin Portal",
+				title: "Admin Overview",
 				path: "/admin",
 				icon: <ShieldAlertIcon className="size-4 shrink-0" />,
+			},
+			{
+				title: "API Integrations",
+				path: "/admin#integrations",
+				icon: <ActivityIcon className="size-4 shrink-0" />,
+			},
+		],
+	},
+	{
+		label: "Navigation",
+		items: [
+			{
+				title: "User Dashboard",
+				path: "/dashboard",
+				icon: <LayoutGridIcon className="size-4 shrink-0" />,
 			},
 		],
 	},
 ];
 
-export const footerNavLinks = [
+// navGroups defaults to userNavGroups so the user sidebar never contains Admin Portal
+export const navGroups = userNavGroups;
+
+export const userFooterNavLinks = [];
+
+export const adminFooterNavLinks = [
 	{
-		title: "System Status",
-		path: "/admin",
-		icon: <ActivityIcon className="size-4 shrink-0" />,
+		title: "User Dashboard",
+		path: "/dashboard",
+		icon: <LayoutGridIcon className="size-4 shrink-0" />,
 	},
 ];
 
+export const footerNavLinks = userFooterNavLinks;
+
 export const navLinks = [
-	...navGroups.flatMap((group) =>
+	...userNavGroups.flatMap((group) =>
 		group.items.flatMap((item) =>
 			item.subItems?.length ? [item, ...item.subItems] : [item]
 		)
 	),
-	...footerNavLinks,
+	...adminNavGroups.flatMap((group) =>
+		group.items.flatMap((item) =>
+			item.subItems?.length ? [item, ...item.subItems] : [item]
+		)
+	),
 ];

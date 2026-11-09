@@ -19,9 +19,9 @@ Single source: `src/styles/theme.css` (Tailwind v4 `@theme static` for light val
 | field-line | `border-field-line` | #6B8A78 | #5E8571 | Input and button borders |
 | fg | `text-fg` | #0F2A1D | #E8F5EE | Main text |
 | muted | `text-muted` | #41584B | #A3BBAE | Secondary text, placeholders |
-| primary | `bg-primary` `text-primary` | #047857 | #34D399 | Brand: buttons, links, active |
-| primary-hover | `bg-primary-hover` | #065F46 | #6EE7B7 | Hover on primary |
-| on-primary | `text-on-primary` | #FFFFFF | #052E1F | Text on primary |
+| primary | `bg-primary` `text-primary` | #047857 | #059669 | Brand: buttons, links, active |
+| primary-hover | `bg-primary-hover` | #065F46 | #10B981 | Hover on primary |
+| on-primary | `text-on-primary` | #FFFFFF | #FFFFFF | Text on primary |
 | primary-soft / on-primary-soft | `bg-primary-soft` `text-on-primary-soft` | #D1FAE5 / #065F46 | #0F3D2B / #A7F3D0 | Success, configured, selected |
 | warn-bg / warn-fg / warn-line | `bg-warn-bg` `text-warn-fg` `border-warn-line` | #FEF3C7 / #78350F / #B45309 | #3B2A0B / #FCD34D / #D97706 | Over budget, safety flags, untested |
 | danger-bg / danger-fg / danger-line | `bg-danger-bg` `text-danger-fg` `border-danger-line` | #FEE2E2 / #7F1D1D / #B91C1C | #3F1414 / #FCA5A5 / #EF4444 | Errors, failing tests |

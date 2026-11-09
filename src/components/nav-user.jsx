@@ -44,7 +44,7 @@ export function NavUser() {
 						className="flex items-center gap-2 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
 					>
 						<Avatar className="size-8">
-							<AvatarFallback className="bg-primary-soft text-on-primary-soft font-semibold text-xs">
+							<AvatarFallback className="bg-primary text-on-primary font-semibold text-xs">
 								{initial}
 							</AvatarFallback>
 						</Avatar>
@@ -54,7 +54,7 @@ export function NavUser() {
 					<DropdownMenuGroup>
 						<DropdownMenuLabel className="pointer-events-none flex items-center gap-2">
 							<Avatar className="size-8">
-								<AvatarFallback className="bg-primary-soft text-on-primary-soft font-semibold text-xs">
+								<AvatarFallback className="bg-primary text-on-primary font-semibold text-xs">
 									{initial}
 								</AvatarFallback>
 							</Avatar>

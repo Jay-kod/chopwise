@@ -76,10 +76,10 @@ export function ChannelBreakdownChart({
 							strokeWidth={4}
 						>
 							<LabelList
-								className="fill-background font-medium"
+								className="font-semibold text-xs"
 								dataKey="share"
-								fill="currentColor"
-								fontWeight={500}
+								fill="var(--color-on-primary)"
+								fontWeight={600}
 								formatter={(label) => {
 									const n = Number(label);
 									return Number.isFinite(n) ? `${n}%` : String(label ?? "");

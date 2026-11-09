@@ -65,7 +65,7 @@ export function NavGroup({
 											<SidebarMenuButton
 												isActive={active}
 												className={cn(
-													active && "bg-primary-soft text-on-primary-soft font-semibold shadow-xs [&>svg]:text-primary"
+													active && "bg-primary text-on-primary font-semibold shadow-xs [&>svg]:text-on-primary hover:bg-primary-hover hover:text-on-primary data-active:bg-primary data-active:text-on-primary"
 												)}
 											>
 												{item.icon}
@@ -83,7 +83,7 @@ export function NavGroup({
 																asChild
 																isActive={subActive}
 																className={cn(
-																	subActive && "bg-primary-soft text-on-primary-soft font-medium [&>svg]:text-primary"
+																	subActive && "bg-primary text-on-primary font-medium [&>svg]:text-on-primary hover:bg-primary-hover hover:text-on-primary data-active:bg-primary data-active:text-on-primary"
 																)}
 															>
 																<Link to={subItem.path}>
@@ -102,7 +102,7 @@ export function NavGroup({
 										asChild
 										isActive={active}
 										className={cn(
-											active && "bg-primary-soft text-on-primary-soft font-semibold shadow-xs [&>svg]:text-primary"
+											active && "bg-primary text-on-primary font-semibold shadow-xs [&>svg]:text-on-primary hover:bg-primary-hover hover:text-on-primary data-active:bg-primary data-active:text-on-primary"
 										)}
 									>
 										<Link to={item.path}>
