@@ -1,6 +1,6 @@
 # AGENTS.md — Rules for AI coding agents
 
-Project: AI-based Nigerian recipe recommendation web app. React + Vite + Tailwind, Firebase Auth + Firestore, Vercel serverless functions, Gemini API, Edamam API. One Admin page (`/admin`) manages every API key, setting and health check.
+Project: AI-based Nigerian recipe recommendation web app. React + Vite + Tailwind, MySQL/MariaDB with server-issued JWTs, Vercel serverless functions, Gemini API, Edamam API. Admin pages under `/admin/*` manage system configuration, customer account status, the shared recipe catalogue, administrator access, and operational maintenance.
 
 ## Before ANY task
 1. Read this file.
@@ -8,9 +8,9 @@ Project: AI-based Nigerian recipe recommendation web app. React + Vite + Tailwin
 3. The docs are the source of truth. If code and docs disagree, or a doc lacks something you need, STOP and ask. Never guess silently.
 
 ## Hard rules
-1. Never invent files, endpoints, Firestore fields, env vars, packages or features that are not in the docs. If a detail is missing: state a one-line assumption and proceed only if it is safe.
-2. Secrets: Gemini/Edamam keys and the Firebase service account NEVER appear in `src/`, logs, API responses, commits or docs. The browser never calls Gemini or Edamam. Server only.
-3. Never weaken security (Firestore rules, token checks, admin checks, validation) to make something work.
+1. Never invent files, endpoints, database fields, env vars, packages or features that are not in the docs. If a detail is missing: state a one-line assumption and proceed only if it is safe.
+2. Secrets: Gemini/Edamam keys, `MYSQL_PASSWORD`, `JWT_SECRET`, and `CONFIG_ENCRYPTION_KEY` NEVER appear in `src/`, logs, API responses, commits or docs. The browser never calls Gemini or Edamam. Server only.
+3. Never weaken security (database ownership checks, token checks, admin checks, validation) to make something work.
 4. One task at a time. Finish it, run its exit test, report, then STOP. If a prompt lists several tasks (a block), do them strictly in order, verify and commit each before the next, and stop at the first task that still fails after 2 fix attempts (log it in docs/KNOWN_ISSUES.md). Never start tasks outside the block.
 5. Smallest change that works. Do not refactor or rewrite working code unless the task says so.
 6. New dependency only with a one-line reason. Prefer what is already installed.
@@ -40,7 +40,7 @@ ES modules. React function components + hooks. Pages are thin; logic lives in `s
 | What/why/scope/stack | docs/PROJECT_CONTEXT.md |
 | Requirements + acceptance | docs/REQUIREMENTS.md |
 | Layers, folders, env vars, config flow | docs/ARCHITECTURE.md |
-| Firestore schema + rules | docs/DATABASE.md |
+| MySQL schema + data access | docs/DATABASE.md |
 | Endpoints, errors, schemas | docs/API.md |
 | Prompt, budget, nutrition, safety logic | docs/AI_AND_NUTRITION_SPEC.md |
 | Admin page behaviour + key links | docs/ADMIN_PAGE_SPEC.md |

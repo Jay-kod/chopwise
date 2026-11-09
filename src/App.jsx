@@ -7,7 +7,16 @@ import Dashboard from './pages/Dashboard';
 import MealDetail from './pages/MealDetail';
 import Saved from './pages/Saved';
 import Profile from './pages/Profile';
-import Admin from './pages/Admin';
+import AdminLayout from './pages/admin/AdminLayout';
+import AdminOverview from './pages/admin/AdminOverview';
+import AdminFunctions from './pages/admin/AdminFunctions';
+import AdminGemini from './pages/admin/AdminGemini';
+import AdminEdamam from './pages/admin/AdminEdamam';
+import AdminSettings from './pages/admin/AdminSettings';
+import AdminSafety from './pages/admin/AdminSafety';
+import AdminPrices from './pages/admin/AdminPrices';
+import AdminChecklist from './pages/admin/AdminChecklist';
+import AdminEvaluation from './pages/admin/AdminEvaluation';
 import NotFound from './pages/NotFound';
 import ProtectedRoute from './routes/ProtectedRoute';
 import ProfileGate from './routes/ProfileGate';
@@ -71,7 +80,17 @@ export default function App() {
 
           {/* Admin Management Portal */}
           <Route element={<AdminRoute />}>
-            <Route path={ROUTES.admin.dashboard} element={<Admin />} />
+            <Route element={<AdminLayout />}>
+              <Route path={ROUTES.admin.dashboard} element={<AdminOverview />} />
+              <Route path={ROUTES.admin.functions} element={<AdminFunctions />} />
+              <Route path={ROUTES.admin.gemini} element={<AdminGemini />} />
+              <Route path={ROUTES.admin.edamam} element={<AdminEdamam />} />
+              <Route path={ROUTES.admin.settings} element={<AdminSettings />} />
+              <Route path={ROUTES.admin.safety} element={<AdminSafety />} />
+              <Route path={ROUTES.admin.prices} element={<AdminPrices />} />
+              <Route path={ROUTES.admin.checklist} element={<AdminChecklist />} />
+              <Route path={ROUTES.admin.evaluation} element={<AdminEvaluation />} />
+            </Route>
           </Route>
 
           <Route path="/login" element={<Navigate to={ROUTES.customer.login} replace />} />

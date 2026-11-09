@@ -1,6 +1,17 @@
-# ADMIN_PAGE_SPEC.md — one page for every function and API
+# ADMIN_PAGE_SPEC.md — administration portal and dedicated modular pages
 
-Routes: `/admin/login` is administrator sign-in and `/admin` is the single management page (sections stacked on mobile, two columns on wide screens). Both use email/password authentication. The admin sign-in checks `POST /api/admin {action:"me"}` and refuses accounts the server does not recognize as admins. Signed-out visits to `/admin` go to `/admin/login`; authenticated non-admins see the NotFound page. Navbar/sidebar link shows only when `POST /api/admin {action:"me"}` returns `isAdmin: true`. The server is the authority; the client check is only for UX.
+Routes: `/admin/login` is administrator sign-in. `/admin` and `/admin/dashboard` serve as the executive overview hub, with dedicated subpages for each management module:
+- `/admin/dashboard` — Executive overview & KPIs
+- `/admin/functions` — Serverless functions table & health checks
+- `/admin/gemini` — Google Gemini AI credentials & live model selection
+- `/admin/edamam` — Edamam nutrition analysis API setup
+- `/admin/settings` — Recommendation limits & platform branding
+- `/admin/safety` — Clinical safety nutrient thresholds
+- `/admin/prices` — Nigerian ingredient market price table
+- `/admin/checklist` — Bootstrap readiness checklist
+- `/admin/evaluation` — Automated recommendation test suite (Chapter 4)
+
+Both use email/password authentication. The admin sign-in checks `POST /api/admin {action:"me"}` and refuses accounts the server does not recognize as admins. Signed-out visits to `/admin` go to `/admin/login`; authenticated non-admins see the NotFound page. Navbar/sidebar link shows only when `POST /api/admin {action:"me"}` returns `isAdmin: true`. The server is the authority; the client check is only for UX.
 
 ## Access
 Admins are Firebase **UIDs** listed in env `ADMIN_UIDS` (comma-separated). UIDs, not emails: anyone can register an email address before the owner does, but nobody can choose their UID.
@@ -42,7 +53,7 @@ Admins are Firebase **UIDs** listed in env `ADMIN_UIDS` (comma-separated). UIDs,
 
 ### Gemini API (Admin-managed: apiKey, model)
 Links: Get a key (official docs) https://ai.google.dev/gemini-api/docs/api-key | Google AI Studio https://aistudio.google.com/ | Models list https://ai.google.dev/gemini-api/docs/models | Structured output https://ai.google.dev/gemini-api/docs/structured-output
-Steps: 1) Open Google AI Studio and sign in with a Google account. 2) Open the API keys page and choose Create API key (new or existing Cloud project). 3) Copy the key (it starts with `AIza`). 4) Paste it into the API key field. 5) Enter a current Flash-tier model name from the Models page. 6) Save, then Test.
+Steps: 1) Open Google AI Studio and sign in with a Google account. 2) Open the API keys page and choose Create API key (new or existing Cloud project). 3) Copy the key (it starts with `AIza`). 4) Paste it into the API key field (live available models will be queried automatically). 5) Choose a current Flash-tier model (e.g. gemini-2.5-flash) from the dropdown. 6) Save, then Test.
 Notes: the free tier has rate limits shown in AI Studio; keep the key private; consider restricting it to the Gemini API in Google Cloud.
 
 ### Edamam Nutrition Analysis API (Admin-managed: appId, appKey, enabled)

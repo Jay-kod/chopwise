@@ -4,6 +4,7 @@ import Button from '../../components/Button';
 import Badge from '../../components/Badge';
 import Input from '../../components/Input';
 import Spinner from '../../components/Spinner';
+import GeminiModelField from './GeminiModelField';
 
 export default function IntegrationCard({
   integration,
@@ -177,6 +178,21 @@ export default function IntegrationCard({
                 />
                 {field.help && <p className="text-xs text-muted">{field.help}</p>}
               </div>
+            );
+          }
+
+          if (integration.id === 'gemini' && field.key === 'model') {
+            const apiKeyField = integration.fields.find((f) => f.key === 'apiKey');
+            return (
+              <GeminiModelField
+                key={field.key}
+                field={field}
+                value={formValues[field.key]}
+                onChange={(val) => handleChange(field.key, val)}
+                error={fieldErrors[field.key]}
+                apiKey={formValues.apiKey}
+                isConfigured={Boolean(apiKeyField?.configured)}
+              />
             );
           }
 

@@ -16,6 +16,14 @@ describe('route configuration', () => {
   it('defines the core admin routes', () => {
     expect(ROUTES.admin.dashboard).toBe('/admin/dashboard');
     expect(ROUTES.admin.login).toBe('/admin/login');
+    expect(ROUTES.admin.functions).toBe('/admin/functions');
+    expect(ROUTES.admin.gemini).toBe('/admin/gemini');
+    expect(ROUTES.admin.edamam).toBe('/admin/edamam');
+    expect(ROUTES.admin.settings).toBe('/admin/settings');
+    expect(ROUTES.admin.safety).toBe('/admin/safety');
+    expect(ROUTES.admin.prices).toBe('/admin/prices');
+    expect(ROUTES.admin.checklist).toBe('/admin/checklist');
+    expect(ROUTES.admin.evaluation).toBe('/admin/evaluation');
   });
 
   it('keeps the public landing page at the root', () => {

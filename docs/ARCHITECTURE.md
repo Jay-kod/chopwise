@@ -3,80 +3,91 @@
 ## Layers
 ```
 Browser (React)
-  |- Firebase Auth (client SDK) -> ID token
-  |- Firestore (client SDK, rules-protected): own profile, savedMeals, latestRecs (read)
+  |- /api/auth -> email/password, scrypt hashes, server-issued JWT
+  |- /api/recommend, /api/nutrition -> authenticated customer operations
+  |- /api/catalog -> authenticated, read-only recipe catalogue
   v
-Vercel functions (/api): recommend.js, nutrition.js, admin.js   (3 functions only; keep count low)
-  |- verify Firebase ID token (firebase-admin)
-  |- read admin-managed config (Firestore adminConfig/*, decrypt, 60 s cache, env fallback)
-  |- call Gemini / Edamam
+Vercel functions (/api): auth.js, recommend.js, nutrition.js, admin.js, catalog.js
+  |- verify JWT and active account in MySQL
+  |- check bootstrap or database-managed admin role for privileged actions
+  |- read/write MySQL through prepared statements
+  |- call Gemini / Edamam from the server only
   v
-Firestore (server writes via Admin SDK): latestRecs, nutritionCache, rateLimits, adminConfig
+MySQL/MariaDB: users, saved_meals, latest_recs, nutrition_cache, rate_limits,
+admin_config, admin_roles, recipe_catalog, admin_activity
 ```
-The browser never talks to Gemini or Edamam.
+The browser never talks directly to MySQL, Gemini or Edamam.
 
 ## Config resolution (`api/_lib/configStore.js`)
-1. Read Firestore `adminConfig/*`, decrypt secret fields, cache in memory 60 s (invalidate on save).
-2. If a value is absent, fall back to env: `GEMINI_API_KEY`, `GEMINI_MODEL`, `EDAMAM_APP_ID`, `EDAMAM_APP_KEY`.
-3. If still absent: the integration is "not configured"; callers throw `NOT_CONFIGURED` with the missing integration id.
+1. Read `admin_config`, decrypt secret fields, cache in memory for 60 seconds, and invalidate after a successful save.
+2. If a value is absent, fall back to optional server env vars: `GEMINI_API_KEY`, `GEMINI_MODEL`, `EDAMAM_APP_ID`, `EDAMAM_APP_KEY`.
+3. If still absent, report the integration as not configured; callers return `NOT_CONFIGURED`.
 
 ## Bootstrap env vars (cannot live in Admin page)
-Client (Vite, public by design): `VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_AUTH_DOMAIN`, `VITE_FIREBASE_PROJECT_ID`, `VITE_FIREBASE_APP_ID`.
-Server only: `FIREBASE_SERVICE_ACCOUNT_B64`, `ADMIN_UIDS` (comma-separated Firebase UIDs), `CONFIG_ENCRYPTION_KEY` (32 random bytes, base64).
-Optional server fallbacks: `GEMINI_API_KEY`, `GEMINI_MODEL`, `EDAMAM_APP_ID`, `EDAMAM_APP_KEY`.
-Commit only `.env.example` (blank values). `.env*` stays in `.gitignore`.
+Server only: `MYSQL_HOST`, `MYSQL_PORT`, `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_DATABASE`, `JWT_SECRET` (at least 32 characters), `ADMIN_UIDS` (comma-separated account IDs protected as bootstrap admins), and `CONFIG_ENCRYPTION_KEY` (32 random bytes, base64).
+Optional server fallbacks: `GEMINI_API_KEY`, `GEMINI_MODEL`, `EDAMAM_APP_ID`, `EDAMAM_APP_KEY`. Local MySQL connection defaults are documented in `DATABASE.md`.
+No MySQL password, token signing secret, or API key may be placed in frontend variables. `.env*` stays in `.gitignore`.
 
 ## Server folders
 ```
 api/
-  recommend.js            thin: method -> auth -> service -> respond
-  nutrition.js
-  admin.js                action router -> api/_lib/admin handlers
-  _lib/                   (underscore prefix: not deployed as functions)
+  auth.js                 registration, login and customer-owned data
+  recommend.js            recommendation endpoint
+  nutrition.js            nutrition endpoint
+  admin.js                admin action router
+  catalog.js              authenticated customer catalogue read endpoint
+  _lib/
     http.js               withHandler(), AppError classes, error envelope
-    firebaseAdmin.js      init from FIREBASE_SERVICE_ACCOUNT_B64
+    mysql.js              MySQL pool and additive schema initialization
     auth.js               verifyRequest(req), requireAdmin(req)
+    authTokens.js         scrypt password hashes and HMAC-SHA256 JWTs
     crypto.js             encrypt/decrypt (AES-256-GCM, "v1:iv:tag:data")
     configStore.js        get/save/reset/mask config sections
-    integrations.js       registry: metadata, field defs, help links, steps, zod schema, test fn
-    schemas.js            zod: profile, meal, aiResponse, settings, safety, prices
-    clients/gemini.js     generateJson(...)
-    clients/edamam.js     analyzeIngredients(...)
-    services/             recommendationService, nutritionService, budget, safety, prompt, rateLimit
-    data/                 defaults.js, seedPrices.json, evaluationProfiles.js (AR9 only)
+    integrations.js       integration registry and health tests
+    schemas.js            zod request, recipe, settings, safety and price schemas
+    clients/              Gemini and Edamam server clients
+    services/             recommendation, nutrition, admin management, budget, safety, prompt, rate limit
+    data/                 defaults.js, seedPrices.json, evaluationProfiles.js
+mysql/
+  schema.sql              canonical schema for MySQL/MariaDB
 ```
 
 ## Client folders
 ```
 src/
-  main.jsx  App.jsx  firebase.js
+  main.jsx  App.jsx
   routes/      ProtectedRoute, ProfileGate, AdminRoute
-  pages/       Landing, Login, Register, Onboarding, Dashboard, MealDetail, Saved, Profile, Admin, NotFound
+  pages/       customer pages, admin login, shared catalogue browser, modular admin pages
   features/
     auth/        AuthContext, useAuth
     onboarding/  steps/*, schema.js
     meals/       MealCard, FilterBar, SafetyBadge, NutritionPanel, useRecommendations
-    admin/       FunctionsTable, IntegrationCard, SettingsForm, SafetyForm, PriceTableEditor,
-                 BootstrapChecklist, EvaluationRunner (AR9), useAdminApi
-  components/  Button, Card, Input, Select, Badge, Spinner, ErrorState, EmptyState, Disclaimer, Toast, Logo, ThemeToggle
-  lib/         apiClient.js (attaches token, parses error envelope), format.js (naira), constants.js (APP_NAME, APP_TAGLINE),
-               theme.js, useTheme.js
+    admin/       system configuration, customer accounts, catalogue, audit, access and maintenance
+  components/  shared UI primitives and shell
+  lib/         apiClient.js (attaches JWT, parses error envelope), routes.js, format.js
   styles/      theme.css (the only file with colour values)
-public/        favicon.svg
-starter/       brand + theme source files copied in at P1 (leave untouched afterwards)
-scripts/       edamam-probe.mjs, check-colors.mjs (dev tooling)
 ```
-Pages are thin; logic lives in `features/*`.
+Pages remain thin; domain behavior lives in `features/*`.
 
 ## Client routes
-- Public pages: `/`, `/login`, `/register`, `/admin/login`
-- Customer pages (sidebar shown once unlocked): `/onboarding` (full-screen wizard), `/dashboard` (recommendations & filters), `/meal/:id` (recipe details), `/saved` (bookmarked meals), `/profile` (dietary profile & budget)
-- Admin portal: `/admin` (admin only, with sidebar section anchors: `#functions`, `#gemini`, `#edamam`, `#settings`, `#safety`, `#prices`, `#checklist`, `#evaluation`)
+- Public pages: `/`, `/customer/login`, `/customer/register`, `/admin/login`
+- Customer pages: `/customer/onboarding`, `/customer/dashboard`, `/customer/meal/:id`, `/customer/saved`, `/customer/profile`, `/customer/recipes`
+- Admin pages: `/admin/dashboard`, `/admin/functions`, `/admin/gemini`, `/admin/edamam`, `/admin/settings`, `/admin/safety`, `/admin/prices`, `/admin/checklist`, `/admin/evaluation`, `/admin/customers`, `/admin/recipes`, `/admin/activity`, `/admin/access`, `/admin/maintenance`
+- Admin routes require an active session and server-side role authorization. Legacy paths redirect to namespaced routes.
+
+## Admin data controls
+- Customer management exposes account metadata only; health profiles and password hashes are excluded. Admin-created customer accounts and permanent deletes are not available. Deactivation is reversible and invalidates existing sessions on the next request.
+- The recipe catalogue is shared and customer-browsable; it is separate from personalized Gemini recommendations.
+- `ADMIN_UIDS` entries are protected bootstrap admins. Additional admins are existing active users stored in `admin_roles`.
+- `admin_activity` records successful privileged mutations and maintenance actions; the admin UI is read-only.
+- Maintenance can clear nutrition cache or reset rate-limit counters only; it cannot purge customer data.
 
 ## Request flows
-**Recommend:** token -> rate limit -> read profile (server) -> validate -> profile hash; if cached and `regenerate` false return cache -> build prompt -> Gemini JSON -> validate (retry once) -> budget recompute -> over-budget retry (per setting) -> safety flags -> save `latestRecs/current` -> respond.
-**Nutrition:** token -> load meal by `mealId` from `latestRecs/current` or `savedMeals` (never trust client ingredients) -> ingredient hash -> cache hit? -> Edamam -> on failure AI estimate -> safety flags -> cache -> respond.
-**Admin:** token -> `requireAdmin` (except `me`) -> action handler -> response.
+**Auth:** registration/login -> verify password hash -> issue HMAC JWT -> on authenticated request, verify JWT and require an active MySQL user.
+**Recommend:** token -> rate limit -> read own profile -> validate -> profile hash -> cache lookup -> Gemini JSON -> validate -> budget recompute -> optional over-budget retry -> safety flags -> store latest recommendations -> respond.
+**Nutrition:** token -> load meal by ID from the caller's latest recommendations or saved meals -> ingredient hash/cache -> Edamam -> AI estimate fallback -> store cache -> respond.
+**Catalogue:** active customer token -> validate pagination/search -> return published catalogue recipes only.
+**Admin:** active token -> verify bootstrap UID or database role on each request -> validate action and payload -> perform operation and append audit event for mutations.
 
 ## Deployment
-Vercel serves the Vite build and `/api`. `vercel.json`: SPA rewrite for non-API paths; set `maxDuration` for API functions as high as the plan allows (target 30 s; if Vercel rejects it, remove and report).
+Vercel serves the Vite build and `/api`. MySQL/MariaDB must be reachable from the API runtime. `vercel.json` keeps SPA rewrites scoped to non-API paths.

@@ -1,6 +1,32 @@
 # CHANGELOG.md
 Add one line per task: date, task id, what changed, doc updates.
 
+## Single Unified Admin Sidebar and Dedicated Modular Subpages (2026-11-09)
+- Unified the admin sidebar into a single navigation group (`Admin Portal`), removing the redundant duplicate "Customer View" group that caused two sidebars.
+- Added a streamlined "Customer App" switch link in the sidebar footer for quick access back to the customer area.
+- Converted all admin sections from in-page hash anchors (`#functions`, `#gemini`, etc.) into dedicated, standalone page routes under `/admin/*`:
+  - Overview: `/admin/dashboard` (and `/admin`)
+  - Functions & APIs: `/admin/functions`
+  - Gemini AI: `/admin/gemini`
+  - Edamam Nutrition: `/admin/edamam`
+  - Recommendation & Branding Settings: `/admin/settings`
+  - Medical Safety Thresholds: `/admin/safety`
+  - Ingredient Market Prices: `/admin/prices`
+  - Setup & Readiness Checklist: `/admin/checklist`
+  - Evaluation Suite: `/admin/evaluation`
+- Created `AdminLayout.jsx` with shared state management via `useAdminApi()` and `useAdminContext()`, caching status across transitions.
+- Created `AdminPageHeader.jsx` with consistent title, description, and status refresh actions.
+- Updated `ROUTES.admin` definitions in `src/lib/routes.js`, active path detection in `src/components/nav-group.jsx`, and test assertions in `src/lib/routes.test.js`.
+- Updated `docs/ADMIN_PAGE_SPEC.md` and `docs/CHANGELOG.md`.
+
+## Intelligent Gemini Model Auto-Discovery and Selection (2026-11-09)
+- Added live model fetching endpoint (`action: "listGeminiModels"`) in `api/admin.js` leveraging `@google/genai` `ai.models.list()`.
+- Implemented `parseGeminiModels` and `sortGeminiModels` in `api/_lib/clients/gemini.js` with comprehensive Vitest unit tests in `api/_lib/clients/gemini.test.js`.
+- Created `useGeminiModels` hook (`src/features/admin/useGeminiModels.js`) that automatically queries live models when an API key is entered (debounced) or if already configured, with fallback resilience.
+- Built `GeminiModelField` (`src/features/admin/GeminiModelField.jsx`) replacing the plain text model input with a rich, intelligent `<Select>` dropdown displaying live model names, Flash-tier recommendations, refresh button, and optional manual entry toggle.
+- Integrated `GeminiModelField` into `src/features/admin/IntegrationCard.jsx` at `/admin/dashboard#gemini`.
+- Updated `api/_lib/data/integrationsRegistry.js` and `docs/ADMIN_PAGE_SPEC.md` setup instructions.
+
 ## Skeletal Preloading for User and Admin Dashboards (2026-11-09)
 - Implemented comprehensive skeletal preloading for User Dashboard (`src/components/dashboard-skeleton.jsx`), replacing raw spinners with animated placeholders for stat cards, metrics charts, filter bar, and meal recommendation cards.
 - Created reusable `MealCardSkeleton` (`src/features/meals/MealCardSkeleton.jsx`) matching the exact layout, tags, badges, and proportions of `MealCard`.

@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/sidebar";
 import { NavGroup } from "@/components/nav-group";
 import { adminNavGroups, customerNavGroups } from "@/components/app-shared";
-import { SparklesIcon, LogOutIcon } from "lucide-react";
+import { SparklesIcon, LogOutIcon, ArrowLeftIcon } from "lucide-react";
 import { useAuth } from "@/features/auth/useAuth";
 import ThemeToggle from "@/components/ThemeToggle";
 import ConfirmModal from "@/components/ConfirmModal";
@@ -78,6 +78,22 @@ export function AppSidebar({
 				))}
 			</SidebarContent>
 			<SidebarFooter className="border-t border-line p-3 space-y-2">
+				{isAdminRoute && (
+					<SidebarMenu>
+						<SidebarMenuItem>
+							<SidebarMenuButton
+								asChild
+								className="w-full text-muted font-medium hover:bg-surface-muted hover:text-primary cursor-pointer flex items-center gap-2 [&>svg]:text-muted group-hover:[&>svg]:text-primary"
+								tooltip="Customer App"
+							>
+								<Link to={ROUTES.customer.dashboard}>
+									<ArrowLeftIcon className="size-4 shrink-0" />
+									<span className="font-medium text-xs">Customer App</span>
+								</Link>
+							</SidebarMenuButton>
+						</SidebarMenuItem>
+					</SidebarMenu>
+				)}
 				<div className="flex items-center justify-between gap-2 px-1">
 					<span className="text-xs font-semibold text-fg">Theme</span>
 					<ThemeToggle showLabel={true} className="w-auto h-8 text-xs" />

@@ -14,5 +14,13 @@ export const ROUTES = {
   admin: {
     login: '/admin/login',
     dashboard: '/admin/dashboard',
+    functions: '/admin/functions',
+    gemini: '/admin/gemini',
+    edamam: '/admin/edamam',
+    settings: '/admin/settings',
+    safety: '/admin/safety',
+    prices: '/admin/prices',
+    checklist: '/admin/checklist',
+    evaluation: '/admin/evaluation',
   },
 };

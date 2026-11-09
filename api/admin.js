@@ -14,6 +14,7 @@ import { query, isMysqlConfigured } from './_lib/mysql.js';
 import { EVALUATION_PROFILES } from './_lib/data/evaluationProfiles.js';
 import { getRecommendations } from './_lib/services/recommendationService.js';
 import { getMealNutrition } from './_lib/services/nutritionService.js';
+import { listAvailableModels } from './_lib/clients/gemini.js';
 
 async function handleStatus() {
   const bootstrap = {
@@ -157,6 +158,11 @@ export default withHandler(async (req, res) => {
   if (action === 'status') {
     const statusData = await handleStatus();
     return res.status(200).json(statusData);
+  }
+
+  if (action === 'listGeminiModels') {
+    const models = await listAvailableModels(body.apiKey);
+    return res.status(200).json({ ok: true, models });
   }
 
   if (action === 'saveConfig') {

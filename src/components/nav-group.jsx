@@ -40,7 +40,7 @@ function isItemActive(itemPath, currentPath) {
 			cleanCurrent.startsWith(ROUTES.customer.mealPrefix);
 	}
 	if (cleanItem === ROUTES.admin.dashboard) {
-		return cleanCurrent === ROUTES.admin.dashboard && !currentPath.includes("#");
+		return cleanCurrent === ROUTES.admin.dashboard || cleanCurrent === '/admin';
 	}
 	return cleanCurrent === cleanItem;
 }

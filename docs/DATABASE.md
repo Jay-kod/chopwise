@@ -1,53 +1,34 @@
-# DATABASE.md (XAMPP MySQL / MariaDB)
+# DATABASE.md — MySQL / MariaDB
 
-## Schema & Tables (`mysql/schema.sql`)
-```sql
-users
-  id VARCHAR(36) PRIMARY KEY,
-  email VARCHAR(255) UNIQUE,
-  password_hash VARCHAR(255) NOT NULL,
-  created_at DATETIME,
-  consent_at DATETIME,
-  profile_complete TINYINT(1) DEFAULT 0,
-  profile LONGTEXT,
-  updated_at DATETIME
+The canonical schema is `mysql/schema.sql`; the server also creates/migrates tables from `api/_lib/mysql.js`.
 
-saved_meals
-  id VARCHAR(100) PRIMARY KEY,
-  user_id VARCHAR(36) NOT NULL,
-  meal_id VARCHAR(100) NOT NULL,
-  meal LONGTEXT NOT NULL,
-  saved_at DATETIME
+| Table | Purpose |
+|---|---|
+| `users` | Customer/admin accounts, scrypt password hash, consent timestamp, profile JSON, completion and active flags |
+| `saved_meals` | Per-user saved recipe snapshots |
+| `latest_recs` | Per-user personalized recommendation cache |
+| `nutrition_cache` | Server-side Edamam/AI nutrition cache |
+| `rate_limits` | Per-user recommendation limits |
+| `admin_config` | Server-only integration credentials and system configuration |
+| `admin_roles` | Additional administrator grants; bootstrap admins remain in `ADMIN_UIDS` |
+| `recipe_catalog` | Shared recipes maintained by admins and visible to signed-in customers |
+| `admin_activity` | Append-only audit records for privileged mutations and maintenance |
 
-latest_recs
-  user_id VARCHAR(36) PRIMARY KEY,
-  meals LONGTEXT NOT NULL,
-  profile_hash VARCHAR(64),
-  per_meal_cap_ngn DECIMAL(10,2),
-  generated_at DATETIME
+`admin_config` sections (`integrations`, `settings`, `safety`, `prices`, `testResults`) are server-only. Encrypted values use `v1:<iv>:<tag>:<ciphertext>` (base64 parts) with AES-256-GCM.
 
-nutrition_cache
-  ingredients_hash VARCHAR(64) PRIMARY KEY,
-  nutrition LONGTEXT NOT NULL,
-  source VARCHAR(50) NOT NULL,
-  fetched_at DATETIME
+Admin customer views expose only account metadata: ID, email, creation date, profile-complete and active status. Health profiles and password hashes are never returned by admin endpoints. Customer removal is a soft-disable (`users.is_active = 0`); existing sessions are rejected on the next API request. Admin-created customer accounts are not supported.
 
-rate_limits
-  user_id VARCHAR(64) PRIMARY KEY,
-  window_start BIGINT NOT NULL,
-  count INT DEFAULT 1
+Only active registered users can be granted an additional admin role. `ADMIN_UIDS` entries are protected bootstrap admins and cannot be revoked or disabled through the app. Role changes are checked against the database for every admin request.
 
-admin_config
-  section VARCHAR(50) PRIMARY KEY,
-  config LONGTEXT NOT NULL,
-  updated_at DATETIME
-```
-All `admin_config` sections (`integrations`, `settings`, `safety`, `prices`, `testResults`) are server-only. Encrypted values use the format `v1:<iv>:<tag>:<ciphertext>` (base64 parts) with AES-256-GCM.
+Catalogue recipes are validated server-side against the recipe schema. Customers can browse recipes but catalogue entries do not replace or influence their personalized Gemini recommendation pipeline. Admin activity is read-only and has no edit/delete action.
+
+Maintenance actions are limited to clearing `nutrition_cache` and resetting `rate_limits`; neither action deletes customer data.
 
 ## Authentication & Security
-- Passwords hashed with Node.js `crypto.scryptSync` with random 16-byte salt (`salt:hash`).
-- Sessions authenticated with HMAC-SHA256 JWT tokens verified server-side.
-- The `chopwise` database and tables are automatically bootstrapped on first query if they do not exist.
+- Passwords are hashed with Node.js `crypto.scryptSync` and a random 16-byte salt (`salt:hash`).
+- Sessions use server-verified HMAC-SHA256 JWT tokens. `JWT_SECRET` is a server-only bootstrap variable.
+- Database access uses prepared statements through `mysql2`; customer profile reads and writes are scoped to the authenticated user ID.
+- The `chopwise` database/tables are initialized on first query; existing databases receive additive migrations.
 
 ## Profile validation limits (client and server must match)
 - age: integer 10–100
