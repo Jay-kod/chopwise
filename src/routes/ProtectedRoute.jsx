@@ -1,10 +1,11 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../features/auth/useAuth';
 import Preloader from '../components/Preloader';
+import { ROUTES } from '../lib/routes';
 
 /**
  * Route guard that requires the user to be signed in.
- * Redirects unauthenticated visitors to /login preserving the intended destination.
+ * Redirects unauthenticated visitors to customer sign-in preserving their destination.
  */
 export default function ProtectedRoute() {
   const { user, loading } = useAuth();
@@ -15,9 +16,8 @@ export default function ProtectedRoute() {
   }
 
   if (!user) {
-    return <Navigate to="/login" replace state={{ from: location }} />;
+    return <Navigate to={ROUTES.customer.login} replace state={{ from: location }} />;
   }
 
   return <Outlet />;
 }
-

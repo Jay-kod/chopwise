@@ -71,4 +71,5 @@ Green means "good/brand" only. Flagged or over-budget meals are never shown in g
 - Footer: privacy note about storing health information; Edamam attribution where applicable.
 - Copy tone: plain, short, friendly; no jargon ("weekly food budget", not "budget cap").
 - Navigation: any action reachable within 3 clicks from the dashboard.
+- Route namespaces are strict: every customer page route uses `/customer/<page-name>` and every admin page route uses `/admin/<page-name>`. `/` is public landing only; old unprefixed page URLs may only redirect to their canonical namespaced route.
 - Motion: minimal; reduced-motion respected (set in theme.css).

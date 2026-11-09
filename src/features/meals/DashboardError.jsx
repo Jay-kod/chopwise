@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
 import ErrorState from '../../components/ErrorState';
+import { ROUTES } from '../../lib/routes';
 
 /**
  * Handles error display states on Dashboard (NOT_CONFIGURED, RATE_LIMITED, or generic error).
@@ -24,7 +25,7 @@ export default function DashboardError({ error, isAdmin, onRetry }) {
         </p>
         {isAdmin && (
           <div className="mt-4">
-            <Link to="/admin">
+            <Link to={ROUTES.admin.dashboard}>
               <Button className="text-xs min-h-9">
                 Open Admin Portal to add API key
               </Button>
@@ -60,4 +61,3 @@ export default function DashboardError({ error, isAdmin, onRetry }) {
     />
   );
 }
-

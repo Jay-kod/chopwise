@@ -81,7 +81,7 @@ Set the following environment variables in Vercel (**Project Settings -> Environ
 | `ADMIN_UIDS` | Comma-separated Firebase Auth UIDs granted admin access |
 | `CONFIG_ENCRYPTION_KEY` | 32-byte base64 string generated in step 3A |
 
-*(Note: API keys for Google Gemini and Edamam do NOT need to be in Vercel env vars; you will paste them directly into the encrypted Admin page at `/admin`).*
+*(Note: API keys for Google Gemini and Edamam do NOT need to be in Vercel env vars; you will paste them directly into the encrypted Admin page at `/admin/dashboard`).*
 
 ---
 
@@ -112,12 +112,12 @@ The project `vercel.json` defines `"maxDuration": 30` for `api/*.js` to permit G
 1. Open the deployed URL.
 2. Sign up with a new email and check the medical consent checkbox.
 3. Complete the 4-step onboarding flow.
-4. Open `/admin` as an authorized Admin UID:
+4. Open `/admin/dashboard` as an authorized Admin UID:
    - Check the **Bootstrap Checklist** (all green).
    - Enter your **Google Gemini API Key** and model name.
    - Enter your **Edamam Application ID** and **Application Key**.
    - Click **Test all** in Section A (Functions Table) and verify all rows turn green.
-5. Return to `/dashboard` and click **⚡ Regenerate Plan** to generate personalized Nigerian meal recommendations!
+5. Return to `/customer/dashboard` and click **⚡ Regenerate Plan** to generate personalized Nigerian meal recommendations!
 
 ### Login test-account shortcuts
 The login page shortcuts for `chop1@test.com` (Test User) and `adminchop@test.com` (Test Admin) fill both fields using the shared test password `password1`. Create both accounts through the app's registration flow and set each password to `password1` in Firebase Auth; the shortcuts do not create accounts or bypass password authentication. Add the Test Admin's Firebase UID to `ADMIN_UIDS` to grant admin access. These credentials are public in the deployed client; use disposable test accounts without sensitive health data.

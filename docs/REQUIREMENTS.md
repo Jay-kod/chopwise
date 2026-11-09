@@ -3,7 +3,7 @@
 ## Functional requirements (from Chapter 3)
 | ID | Requirement | Where | Acceptance criteria |
 |----|-------------|-------|---------------------|
-| FR1 | Register/login with email + password | `/register`, `/login`, `/admin/login` | Registration and user login are available to all users; admins have a separate sign-in page that verifies admin access server-side; session survives refresh; logout works; auth errors are shown in plain language; test-account shortcuts are shown only on their matching sign-in page |
+| FR1 | Register/login with email + password | `/register`, `/login`, `/admin/login` | Registration and customer login are available to all users; admins have a separate sign-in page that verifies admin access server-side; session survives refresh; logout works; auth errors are shown in plain language; test-account shortcuts are shown only on their matching sign-in page |
 | FR2 | Multi-step onboarding: age, gender, weight, conditions, preferences, weekly budget | `/onboarding` | 4 steps, per-step validation, back/next, progress bar, limits from DATABASE.md |
 | FR3 | Save/retrieve profile in Firestore | `users/{uid}.profile` | Reload shows saved values; another account cannot read it |
 | FR4 | Send profile to Gemini, receive Nigerian meals | `POST /api/recommend` | 6 valid meals (2 per meal type) in ~5 s typical; profile read server-side; no personal identifiers sent to Gemini |
@@ -12,7 +12,7 @@
 | FR7 | Meal detail: ingredients, steps, nutrition | `/meal/:id` | Opens from card and survives reload |
 | FR8 | Filter by condition, budget range, meal type | Dashboard filter bar | Filters combine; empty state offers Regenerate |
 | FR9 | Update profile any time | `/profile` | Saving changes the profile hash so the next visit regenerates |
-| FR10 | Save/unsave meals (addition) | Detail page, `/profile` | Saved list persists |
+| FR10 | Save/unsave meals (addition) | `/meal/:id`, `/saved`, `/profile` | Dedicated saved meals page at `/saved` and saved list persist |
 
 ## Admin requirements
 | ID | Requirement | Acceptance criteria |

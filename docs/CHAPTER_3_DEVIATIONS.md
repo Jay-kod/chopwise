@@ -50,7 +50,7 @@ This document catalogs all architectural enhancements and design adjustments mad
 ## 6. Centralized Administration & Credential Management
 * **Chapter 3 Proposal**: Static hardcoded settings and environment variables.
 * **Implementation Reality**: Rotating credentials or tuning clinical thresholds (e.g. hypertension sodium limit) would require full redeployment.
-* **Enhancement**: Created a single administrative portal at `/admin` protected by `ADMIN_UIDS` and AES-256-GCM encryption (`CONFIG_ENCRYPTION_KEY`). Allows dynamic key rotation, setting adjustments, price table edits, and health checks with a 60-second in-memory cache.
+* **Enhancement**: Created a single administrative portal at `/admin/dashboard` protected by `ADMIN_UIDS` and AES-256-GCM encryption (`CONFIG_ENCRYPTION_KEY`). Allows dynamic key rotation, setting adjustments, price table edits, and health checks with a 60-second in-memory cache.
 
 ---
 
@@ -63,5 +63,4 @@ This document catalogs all architectural enhancements and design adjustments mad
 
 ## 8. Automated Evidence Suite: Evaluation Runner (P14 / AR9)
 * **Chapter 3 Proposal**: Manual data collection for Chapter 4 results.
-* **Enhancement**: Integrated an automated batch test runner in `/admin` (Section G) that runs 10 clinical profiles sequentially through the live AI pipelines, generating budget adherence percentages, safety flag totals, Edamam vs. AI fallback ratios, and downloadable CSV evidence (`chopwise_chapter4_evaluation.csv`).
-
+* **Enhancement**: Integrated an automated batch test runner in `/admin/dashboard` (Section G) that runs 10 clinical profiles sequentially through the live AI pipelines, generating budget adherence percentages, safety flag totals, Edamam vs. AI fallback ratios, and downloadable CSV evidence (`chopwise_chapter4_evaluation.csv`).

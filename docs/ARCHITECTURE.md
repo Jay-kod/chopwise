@@ -51,7 +51,7 @@ api/
 src/
   main.jsx  App.jsx  firebase.js
   routes/      ProtectedRoute, ProfileGate, AdminRoute
-  pages/       Landing, Login, Register, Onboarding, Dashboard, MealDetail, Profile, Admin, NotFound
+  pages/       Landing, Login, Register, Onboarding, Dashboard, MealDetail, Saved, Profile, Admin, NotFound
   features/
     auth/        AuthContext, useAuth
     onboarding/  steps/*, schema.js
@@ -67,6 +67,11 @@ starter/       brand + theme source files copied in at P1 (leave untouched after
 scripts/       edamam-probe.mjs, check-colors.mjs (dev tooling)
 ```
 Pages are thin; logic lives in `features/*`.
+
+## Client routes
+- Public pages: `/`, `/login`, `/register`, `/admin/login`
+- Customer pages (sidebar shown once unlocked): `/onboarding` (full-screen wizard), `/dashboard` (recommendations & filters), `/meal/:id` (recipe details), `/saved` (bookmarked meals), `/profile` (dietary profile & budget)
+- Admin portal: `/admin` (admin only, with sidebar section anchors: `#functions`, `#gemini`, `#edamam`, `#settings`, `#safety`, `#prices`, `#checklist`, `#evaluation`)
 
 ## Request flows
 **Recommend:** token -> rate limit -> read profile (server) -> validate -> profile hash; if cached and `regenerate` false return cache -> build prompt -> Gemini JSON -> validate (retry once) -> budget recompute -> over-budget retry (per setting) -> safety flags -> save `latestRecs/current` -> respond.

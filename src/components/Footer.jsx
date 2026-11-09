@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import Logo from './Logo';
 import { useAppConfig } from '../context/ConfigContext';
+import { ROUTES } from '../lib/routes';
 
 /**
  * Standard comprehensive footer for ChopWise.
@@ -38,17 +39,17 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link to="/dashboard" className="hover:text-primary transition-colors">
+                <Link to={ROUTES.customer.dashboard} className="hover:text-primary transition-colors">
                   Meal Recommendations
                 </Link>
               </li>
               <li>
-                <Link to="/profile" className="hover:text-primary transition-colors">
+                <Link to={ROUTES.customer.profile} className="hover:text-primary transition-colors">
                   Health &amp; Budget Profile
                 </Link>
               </li>
               <li>
-                <Link to="/login" className="hover:text-primary transition-colors">
+                <Link to={ROUTES.customer.login} className="hover:text-primary transition-colors">
                   Account Login
                 </Link>
               </li>
@@ -89,4 +90,3 @@ export default function Footer() {
     </footer>
   );
 }
-

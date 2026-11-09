@@ -16,24 +16,31 @@ import {
 import { ChevronRightIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { ROUTES } from "@/lib/routes";
 
 function isItemActive(itemPath, currentPath) {
 	if (!currentPath || !itemPath) return false;
 	if (itemPath === currentPath) return true;
-	const cleanCurrent = currentPath.split("?")[0];
-	const cleanItem = itemPath.split("?")[0];
 
-	if (itemPath.includes("tab=saved")) {
-		return currentPath.includes("tab=saved");
+	if (itemPath.includes("#")) {
+		return currentPath === itemPath;
 	}
-	if (cleanItem === "/profile") {
-		return cleanCurrent === "/profile" && !currentPath.includes("tab=saved");
+
+	const cleanCurrent = currentPath.split("?")[0].split("#")[0];
+	const cleanItem = itemPath.split("?")[0].split("#")[0];
+
+	if (cleanItem === ROUTES.customer.saved) {
+		return cleanCurrent === ROUTES.customer.saved;
 	}
-	if (cleanItem === "/dashboard") {
-		return cleanCurrent === "/dashboard" || cleanCurrent.startsWith("/meal/");
+	if (cleanItem === ROUTES.customer.profile) {
+		return cleanCurrent === ROUTES.customer.profile;
 	}
-	if (cleanItem === "/admin") {
-		return cleanCurrent.startsWith("/admin");
+	if (cleanItem === ROUTES.customer.dashboard) {
+		return cleanCurrent === ROUTES.customer.dashboard ||
+			cleanCurrent.startsWith(ROUTES.customer.mealPrefix);
+	}
+	if (cleanItem === ROUTES.admin.dashboard) {
+		return cleanCurrent === ROUTES.admin.dashboard && !currentPath.includes("#");
 	}
 	return cleanCurrent === cleanItem;
 }

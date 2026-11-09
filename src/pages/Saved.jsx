@@ -12,6 +12,7 @@ import EmptyState from '../components/EmptyState';
 import ConfirmModal from '../components/ConfirmModal';
 import { MealTypeChip, SuitableForChip } from '../features/meals/SafetyBadge';
 import { formatNaira } from '../lib/format';
+import { ROUTES } from '../lib/routes';
 
 export default function Saved() {
   const { user } = useAuth();
@@ -86,7 +87,7 @@ export default function Saved() {
               Your bookmarked Nigerian recipes for quick planning and cooking.
             </p>
           </div>
-          <Link to="/dashboard">
+          <Link to={ROUTES.customer.dashboard}>
             <Button variant="secondary" className="text-xs min-h-9 px-3">
               ← Back to Recommendations
             </Button>
@@ -103,7 +104,7 @@ export default function Saved() {
             title="No saved recipes yet"
             description="Explore your meal recommendations and click Save Recipe on any meal to bookmark it here."
             action={
-              <Link to="/dashboard">
+              <Link to={ROUTES.customer.dashboard}>
                 <Button className="text-xs min-h-9 px-4">Browse Meals</Button>
               </Link>
             }
@@ -159,7 +160,7 @@ export default function Saved() {
                   </div>
 
                   <div className="mt-4 flex items-center justify-between border-t border-line pt-3">
-                    <Link to={`/meal/${meal.id || id}`}>
+                    <Link to={ROUTES.customer.meal(meal.id || id)}>
                       <Button variant="secondary" className="text-xs min-h-8 px-3">
                         View Recipe →
                       </Button>

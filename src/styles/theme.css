@@ -45,8 +45,8 @@
   --color-surface-muted: #182B22;
   --color-line: #2E4B3C;
   --color-field-line: #5E8571;
-  --color-fg: #E8F5EE;
-  --color-muted: #A3BBAE;
+  --color-fg: #FFFFFF;
+  --color-muted: #B8D9C8;
   --color-primary: #059669;
   --color-primary-hover: #10B981;
   --color-on-primary: #FFFFFF;
@@ -61,8 +61,8 @@
   --color-ring: #6EE7B7;
   --color-overlay: #000000;
   --color-header-bg: #05261B;
-  --color-header-fg: #E8F5EE;
-  --color-header-muted: #6EE7B7;
+  --color-header-fg: #FFFFFF;
+  --color-header-muted: #B8D9C8;
   --color-header-line: #0D3E2C;
 }
 
@@ -137,7 +137,7 @@
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
+  --color-muted: var(--color-muted);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-secondary: var(--secondary);
   --color-primary-foreground: var(--primary-foreground);
@@ -153,4 +153,15 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) * 1.4);
   --radius-2xl: calc(var(--radius) * 1.8);
+}
+
+@layer utilities {
+  .text-muted,
+  .text-muted-foreground {
+    color: var(--color-muted) !important;
+  }
+  .fill-muted-foreground,
+  [class*="recharts-cartesian-axis-tick"] text {
+    fill: var(--color-muted) !important;
+  }
 }

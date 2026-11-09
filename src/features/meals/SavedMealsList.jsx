@@ -5,6 +5,7 @@ import Spinner from '../../components/Spinner';
 import EmptyState from '../../components/EmptyState';
 import { MealTypeChip, SuitableForChip } from './SafetyBadge';
 import { formatNaira } from '../../lib/format';
+import { ROUTES } from '../../lib/routes';
 
 /**
  * Displays a user's saved recipes with quick navigation and deletion.
@@ -30,7 +31,7 @@ export default function SavedMealsList({
         title="No saved recipes yet"
         description="Explore your meal recommendations and click Save Recipe on any meal to keep it here for quick access."
         action={
-          <Link to="/dashboard">
+          <Link to={ROUTES.customer.dashboard}>
             <Button className="text-xs min-h-9 px-4">Browse Meals</Button>
           </Link>
         }
@@ -77,7 +78,7 @@ export default function SavedMealsList({
             </div>
 
             <div className="mt-4 flex items-center justify-between border-t border-line pt-3">
-              <Link to={`/meal/${meal.id || id}`}>
+              <Link to={ROUTES.customer.meal(meal.id || id)}>
                 <Button variant="secondary" className="text-xs min-h-8 px-3">
                   View Recipe →
                 </Button>
@@ -99,4 +100,3 @@ export default function SavedMealsList({
     </div>
   );
 }
-

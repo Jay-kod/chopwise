@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { LogoMark } from "@/components/Logo";
 import {
 	Sidebar,
@@ -10,29 +12,41 @@ import {
 	SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { NavGroup } from "@/components/nav-group";
-import {
-	adminFooterNavLinks,
-	adminNavGroups,
-	userFooterNavLinks,
-	userNavGroups,
-} from "@/components/app-shared";
-import { Link } from "react-router-dom";
-import { SparklesIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { adminNavGroups, customerNavGroups } from "@/components/app-shared";
+import { SparklesIcon, LogOutIcon } from "lucide-react";
+import { useAuth } from "@/features/auth/useAuth";
+import ThemeToggle from "@/components/ThemeToggle";
+import ConfirmModal from "@/components/ConfirmModal";
+import { ROUTES } from "@/lib/routes";
 
 export function AppSidebar({
-    pathname = "/dashboard",
+    pathname = ROUTES.customer.dashboard,
     onRegenerate
 }) {
+	const navigate = useNavigate();
+	const { logout } = useAuth();
+	const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
 	const isAdminRoute = pathname?.startsWith("/admin");
-	const groups = isAdminRoute ? adminNavGroups : userNavGroups;
-	const footerLinks = isAdminRoute ? adminFooterNavLinks : userFooterNavLinks;
+	const groups = isAdminRoute ? adminNavGroups : customerNavGroups;
+
+	async function handleConfirmLogout() {
+		setShowLogoutConfirm(false);
+		try {
+			await logout();
+		} finally {
+			navigate(ROUTES.customer.login, { replace: true });
+		}
+	}
 
 	return (
 		<Sidebar collapsible="icon" variant="inset">
 			<SidebarHeader className="h-14 justify-center">
 				<SidebarMenuButton asChild>
-					<Link to="/dashboard" className="flex items-center gap-2">
+					<Link
+						to={isAdminRoute ? ROUTES.admin.dashboard : ROUTES.customer.dashboard}
+						className="flex items-center gap-2"
+					>
 						<LogoMark className="size-6" />
 						<span className="font-bold text-fg tracking-tight">
 							Chop<span className="text-primary">Wise</span>
@@ -63,34 +77,33 @@ export function AppSidebar({
 					/>
 				))}
 			</SidebarContent>
-			{footerLinks.length > 0 && (
-				<SidebarFooter>
-					<SidebarMenu className="mt-2">
-						{footerLinks.map((item) => {
-							const isActive = pathname === item.path || (item.path === '/admin' && pathname?.startsWith('/admin'));
-							return (
-								<SidebarMenuItem key={item.title}>
-									<SidebarMenuButton
-										asChild
-										isActive={isActive}
-										size="sm"
-										className={cn(
-											isActive
-												? "bg-primary text-on-primary font-semibold [&>svg]:text-on-primary hover:bg-primary-hover hover:text-on-primary data-active:bg-primary data-active:text-on-primary"
-												: "text-muted"
-										)}
-									>
-										<Link to={item.path}>
-											{item.icon}
-											<span>{item.title}</span>
-										</Link>
-									</SidebarMenuButton>
-								</SidebarMenuItem>
-							);
-						})}
-					</SidebarMenu>
-				</SidebarFooter>
-			)}
+			<SidebarFooter className="border-t border-line p-3 space-y-2">
+				<div className="flex items-center justify-between gap-2 px-1">
+					<span className="text-xs font-medium text-muted">Theme</span>
+					<ThemeToggle showLabel={true} className="w-auto h-8 text-xs" />
+				</div>
+				<SidebarMenu>
+					<SidebarMenuItem>
+						<SidebarMenuButton
+							onClick={() => setShowLogoutConfirm(true)}
+							className="w-full text-danger-fg hover:bg-danger-bg hover:text-danger-fg cursor-pointer flex items-center gap-2"
+						>
+							<LogOutIcon className="size-4 shrink-0 text-danger-fg" />
+							<span className="font-medium">Log out</span>
+						</SidebarMenuButton>
+					</SidebarMenuItem>
+				</SidebarMenu>
+				<ConfirmModal
+					isOpen={showLogoutConfirm}
+					onClose={() => setShowLogoutConfirm(false)}
+					onConfirm={handleConfirmLogout}
+					title="Log out of ChopWise?"
+					message="Are you sure you want to log out? You will need to sign in again to access your meal plans."
+					confirmText="Log out"
+					variant="danger"
+					icon="🚪"
+				/>
+			</SidebarFooter>
 		</Sidebar>
 	);
 }

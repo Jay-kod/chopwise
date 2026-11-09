@@ -20,6 +20,7 @@ import { useRecommendations } from '../features/meals/useRecommendations';
 import { useAuth } from '../features/auth/useAuth';
 import { formatNaira } from '../lib/format';
 import { apiClient } from '../lib/apiClient';
+import { ROUTES } from '../lib/routes';
 
 /**
  * User Dashboard page matching the responsive @efferd/dashboard-3 template.
@@ -97,7 +98,7 @@ export default function Dashboard() {
   ];
 
   return (
-    <AppShell pathname="/dashboard" onRegenerate={() => setShowRegenerateConfirm(true)}>
+    <AppShell pathname={ROUTES.customer.dashboard} onRegenerate={() => setShowRegenerateConfirm(true)}>
       {/* Top Heading & Actions */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-line pb-4">
         <div>

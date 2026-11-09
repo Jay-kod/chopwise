@@ -16,6 +16,7 @@ import { UserIcon, LogOutIcon } from "lucide-react";
 import { useAuth } from "@/features/auth/useAuth";
 import { useNavigate } from "react-router-dom";
 import ConfirmModal from "@/components/ConfirmModal";
+import { ROUTES } from "@/lib/routes";
 
 export function NavUser() {
 	const { user, logout } = useAuth();
@@ -30,7 +31,7 @@ export function NavUser() {
 		try {
 			await logout();
 		} finally {
-			navigate("/login", { replace: true });
+			navigate(ROUTES.customer.login, { replace: true });
 		}
 	}
 
@@ -68,7 +69,7 @@ export function NavUser() {
 					</DropdownMenuGroup>
 					<DropdownMenuSeparator />
 					<DropdownMenuGroup>
-						<DropdownMenuItem onClick={() => navigate("/profile")} className="cursor-pointer">
+						<DropdownMenuItem onClick={() => navigate(ROUTES.customer.profile)} className="cursor-pointer">
 							<UserIcon className="mr-2 size-4" />
 							Profile & Preferences
 						</DropdownMenuItem>

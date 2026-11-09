@@ -16,6 +16,7 @@ import {
   ShieldCheckIcon,
   LockIcon,
 } from '../features/auth/AuthIcons';
+import { ROUTES } from '../lib/routes';
 
 export default function Register() {
   const { register } = useAuth();
@@ -49,7 +50,7 @@ export default function Register() {
         setRegisteredEmail(email.trim());
         setNeedsVerification(true);
       } else {
-        navigate('/onboarding');
+        navigate(ROUTES.customer.onboarding);
       }
     } catch (err) {
       setError(getAuthErrorMessage(err));
@@ -203,7 +204,7 @@ export default function Register() {
                   <p className="text-xs sm:text-sm text-muted">
                     Already have an account?{' '}
                     <Link
-                      to="/login"
+                      to={ROUTES.customer.login}
                       className="font-semibold text-primary underline hover:text-primary-hover focus-visible:ring-2 focus-visible:ring-ring rounded"
                     >
                       Log in

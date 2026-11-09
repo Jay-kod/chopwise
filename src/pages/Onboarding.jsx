@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiClient } from '../lib/apiClient';
 import { useAuth } from '../features/auth/useAuth';
+import { ROUTES } from '../lib/routes';
 import Logo from '../components/Logo';
 import ThemeToggle from '../components/ThemeToggle';
 import Card from '../components/Card';
@@ -115,7 +116,7 @@ export default function Onboarding() {
         },
       });
 
-      navigate('/dashboard');
+      navigate(ROUTES.customer.dashboard);
     } catch (err) {
       setErrors({ form: err.message || 'Failed to save profile. Please try again.' });
     } finally {

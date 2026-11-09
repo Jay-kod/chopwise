@@ -10,6 +10,7 @@ import {
 	CheckSquareIcon,
 	FlaskConicalIcon,
 } from "lucide-react";
+import { ROUTES } from "@/lib/routes";
 
 export const customerNavGroups = [
 	{
@@ -17,17 +18,17 @@ export const customerNavGroups = [
 		items: [
 			{
 				title: "Dashboard",
-				path: "/dashboard",
+				path: ROUTES.customer.dashboard,
 				icon: <LayoutGridIcon className="size-4 shrink-0" />,
 			},
 			{
 				title: "Saved meals",
-				path: "/saved",
+				path: ROUTES.customer.saved,
 				icon: <BookmarkIcon className="size-4 shrink-0" />,
 			},
 			{
 				title: "My profile",
-				path: "/profile",
+				path: ROUTES.customer.profile,
 				icon: <UserIcon className="size-4 shrink-0" />,
 			},
 		],
@@ -40,47 +41,47 @@ export const adminNavGroups = [
 		items: [
 			{
 				title: "Admin Overview",
-				path: "/admin",
+				path: ROUTES.admin.dashboard,
 				icon: <ShieldAlertIcon className="size-4 shrink-0" />,
 			},
 			{
 				title: "Functions & APIs",
-				path: "/admin#functions",
+				path: `${ROUTES.admin.dashboard}#functions`,
 				icon: <ActivityIcon className="size-4 shrink-0" />,
 			},
 			{
 				title: "Gemini",
-				path: "/admin#gemini",
+				path: `${ROUTES.admin.dashboard}#gemini`,
 				icon: <SparklesIcon className="size-4 shrink-0" />,
 			},
 			{
 				title: "Edamam",
-				path: "/admin#edamam",
+				path: `${ROUTES.admin.dashboard}#edamam`,
 				icon: <ActivityIcon className="size-4 shrink-0" />,
 			},
 			{
 				title: "Recommendation settings",
-				path: "/admin#settings",
+				path: `${ROUTES.admin.dashboard}#settings`,
 				icon: <SlidersHorizontalIcon className="size-4 shrink-0" />,
 			},
 			{
 				title: "Safety thresholds",
-				path: "/admin#safety",
+				path: `${ROUTES.admin.dashboard}#safety`,
 				icon: <ShieldAlertIcon className="size-4 shrink-0" />,
 			},
 			{
 				title: "Ingredient prices",
-				path: "/admin#prices",
+				path: `${ROUTES.admin.dashboard}#prices`,
 				icon: <CoinsIcon className="size-4 shrink-0" />,
 			},
 			{
 				title: "Setup checklist",
-				path: "/admin#checklist",
+				path: `${ROUTES.admin.dashboard}#checklist`,
 				icon: <CheckSquareIcon className="size-4 shrink-0" />,
 			},
 			{
 				title: "Evaluation",
-				path: "/admin#evaluation",
+				path: `${ROUTES.admin.dashboard}#evaluation`,
 				icon: <FlaskConicalIcon className="size-4 shrink-0" />,
 			},
 		],
@@ -90,7 +91,7 @@ export const adminNavGroups = [
 		items: [
 			{
 				title: "Dashboard",
-				path: "/dashboard",
+				path: ROUTES.customer.dashboard,
 				icon: <LayoutGridIcon className="size-4 shrink-0" />,
 			},
 		],

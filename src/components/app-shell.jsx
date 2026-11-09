@@ -10,7 +10,7 @@ export function AppShell({
     onRegenerate
 }) {
 	const location = useLocation();
-	const activePath = pathname || (location.pathname + (location.search || ""));
+	const activePath = pathname || (location.pathname + (location.search || "") + (location.hash || ""));
 
 	return (
 		<TooltipProvider delayDuration={0}>

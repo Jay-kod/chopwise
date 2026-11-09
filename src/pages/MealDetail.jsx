@@ -13,6 +13,7 @@ import NutritionPanel from '../features/meals/NutritionPanel';
 import MealIngredientsAndSteps from '../features/meals/MealIngredientsAndSteps';
 import { formatNaira } from '../lib/format';
 import { useToast } from '../components/Toast';
+import { ROUTES } from '../lib/routes';
 
 export default function MealDetail() {
   const { id: mealId } = useParams();
@@ -97,7 +98,7 @@ export default function MealDetail() {
         <div className="mx-auto max-w-lg py-12">
           <ErrorState message={error || 'Meal not found.'} />
           <div className="mt-4 text-center">
-            <Link to="/dashboard">
+            <Link to={ROUTES.customer.dashboard}>
               <Button variant="secondary">Back to Dashboard</Button>
             </Link>
           </div>
@@ -112,7 +113,7 @@ export default function MealDetail() {
         {/* Navigation back bar */}
         <div className="flex items-center justify-between border-b border-line pb-3">
           <Link
-            to="/dashboard"
+            to={ROUTES.customer.dashboard}
             className="inline-flex items-center gap-1.5 text-xs font-medium text-primary underline hover:text-primary-hover"
           >
             ← Back to Meal Plan
@@ -198,4 +199,3 @@ export default function MealDetail() {
     </AppShell>
   );
 }
-

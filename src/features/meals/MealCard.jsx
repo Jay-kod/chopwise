@@ -3,6 +3,7 @@ import Card from '../../components/Card';
 import Badge from '../../components/Badge';
 import { formatNaira } from '../../lib/format';
 import SafetyBadge, { MealTypeChip, SuitableForChip } from './SafetyBadge';
+import { ROUTES } from '../../lib/routes';
 
 export default function MealCard({ meal, perMealCapNGN, isClickable = true }) {
   if (!meal) return null;
@@ -83,7 +84,7 @@ export default function MealCard({ meal, perMealCapNGN, isClickable = true }) {
   if (isClickable && meal.id) {
     return (
       <Link
-        to={`/meal/${meal.id}`}
+        to={ROUTES.customer.meal(meal.id)}
         className="block group rounded-xl transition-transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-ring"
         aria-label={`View recipe for ${meal.name}`}
       >

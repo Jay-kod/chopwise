@@ -1,6 +1,17 @@
 # CHANGELOG.md
 Add one line per task: date, task id, what changed, doc updates.
 
+## Dedicated Saved Meals Page, Full-Screen Onboarding, and Unified Sidebar (2026-11-09)
+- Isolated `/onboarding` as a full-screen, 4-step profile wizard with minimal header and no sidebar before profile completion.
+- Added dedicated `/saved` route and page (`src/pages/Saved.jsx`) for bookmarked Nigerian meals with search filter and removal confirmation dialog.
+- Configured customer sidebar navigation to contain: Dashboard (`/dashboard`), Saved meals (`/saved`), and My profile (`/profile`).
+- Configured admin sidebar navigation to include quick section jump anchors: Functions & APIs (`#functions`), Gemini (`#gemini`), Edamam (`#edamam`), Recommendation settings (`#settings`), Safety thresholds (`#safety`), Ingredient prices (`#prices`), Setup checklist (`#checklist`), and Evaluation (`#evaluation`).
+- Integrated Theme Toggle and Log Out (with `ConfirmModal`) directly into the sidebar footer across all dashboard views.
+
+## Strict Customer and Admin Route Namespaces (2026-11-09)
+- Moved customer pages under `/customer/<page-name>` and the admin console to `/admin/dashboard`, retaining `/admin/login`; updated route-aware navigation, sign-in redirects, guards, legacy URL redirects, and route documentation.
+- Updated docs/PROJECT_CONTEXT.md, docs/ADMIN_PAGE_SPEC.md, docs/ARCHITECTURE.md, docs/REQUIREMENTS.md, docs/DEPLOYMENT_GUIDE.md, docs/CHAPTER_3_DEVIATIONS.md, and docs/UI_GUIDELINES.md.
+
 ## Remove Admin Portal from User Sidebar & Contrast Fixes (2026-11-09)
 - Removed "Admin Portal" from the user dashboard sidebar by decoupling `userNavGroups` and `adminNavGroups` in `src/components/app-shared.jsx` and `src/components/app-sidebar.jsx`.
 - Removed `/admin` links from user footer navigation (`userFooterNavLinks = []`); admin links only render when navigating within `/admin`.

@@ -4,6 +4,7 @@ import Button from '../components/Button';
 import Card from '../components/Card';
 import { useAuth } from '../features/auth/useAuth';
 import { useAppConfig } from '../context/ConfigContext';
+import { ROUTES } from '../lib/routes';
 import {
   CONDITIONS,
   STEPS,
@@ -17,7 +18,7 @@ export default function Landing() {
   const name = appName || 'ChopWise';
   const heroImage = heroImageUrl || DEFAULT_HERO_IMAGE;
 
-  const ctaDestination = !user ? '/register' : profileComplete ? '/dashboard' : '/onboarding';
+  const ctaDestination = !user ? ROUTES.customer.register : profileComplete ? ROUTES.customer.dashboard : ROUTES.customer.onboarding;
   const ctaLabel = !user
     ? "Get started — it's free"
     : profileComplete

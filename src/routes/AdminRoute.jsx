@@ -4,9 +4,10 @@ import { useAuth } from '../features/auth/useAuth';
 import { apiClient } from '../lib/apiClient';
 import Spinner from '../components/Spinner';
 import NotFound from '../pages/NotFound';
+import { ROUTES } from '../lib/routes';
 
 /**
- * Route guard for /admin.
+ * Route guard for admin pages.
  * Authenticates user and checks server-side admin authority.
  * Non-admins are shown NotFound per docs/ADMIN_PAGE_SPEC.md.
  */
@@ -60,7 +61,7 @@ export default function AdminRoute() {
   }
 
   if (!user) {
-    return <Navigate to="/admin/login" replace state={{ from: location }} />;
+    return <Navigate to={ROUTES.admin.login} replace state={{ from: location }} />;
   }
 
   if (!isAdmin) {

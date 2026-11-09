@@ -7,7 +7,7 @@ Title: **Development of an (AI Based) Recipe System for Personalized Dietary Nee
 
 A responsive web app that generates personalised **Nigerian** meal recommendations from a user profile (age, gender, weight, medical conditions, dietary preferences, weekly food budget in naira), shows nutrition for each meal, and keeps suggestions inside the user's budget and health constraints.
 
-A single **Admin page** (`/admin`) holds every function and API integration in one place: status of each, how-to-get links, key entry, settings, tests.
+A single **Admin page** (`/admin/dashboard`) holds every function and API integration in one place: status of each, how-to-get links, key entry, settings, tests. All admin pages use `/admin/<page-name>`; all customer pages use `/customer/<page-name>`. The public landing page remains `/`.
 
 Deadline: 3 days. Target: working MVP deployed on Vercel.
 

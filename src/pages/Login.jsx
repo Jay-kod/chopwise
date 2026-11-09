@@ -11,6 +11,7 @@ import { useAuth } from '../features/auth/useAuth';
 import { getAuthErrorMessage } from '../features/auth/authErrors';
 import { useAppConfig } from '../context/ConfigContext';
 import { apiClient } from '../lib/apiClient';
+import { ROUTES } from '../lib/routes';
 import {
   PasswordToggle,
   ExclamationIcon,
@@ -38,7 +39,7 @@ export default function Login({ adminOnly = false }) {
 
   useEffect(() => {
     if (user && !loading && !redirecting && !adminOnly) {
-      const dest = location.state?.from?.pathname || (adminOnly ? '/admin' : (user.profileComplete ? '/dashboard' : '/onboarding'));
+      const dest = location.state?.from?.pathname || (adminOnly ? ROUTES.admin.dashboard : (user.profileComplete ? ROUTES.customer.dashboard : ROUTES.customer.onboarding));
       navigate(dest, { replace: true });
     }
   }, [user, loading, redirecting, adminOnly, location.state, navigate]);
@@ -65,7 +66,7 @@ export default function Login({ adminOnly = false }) {
         }
       }
       setRedirecting(true);
-      const dest = location.state?.from?.pathname || (adminOnly ? '/admin' : (loggedUser?.profileComplete ? '/dashboard' : '/onboarding'));
+      const dest = location.state?.from?.pathname || (adminOnly ? ROUTES.admin.dashboard : (loggedUser?.profileComplete ? ROUTES.customer.dashboard : ROUTES.customer.onboarding));
       navigate(dest, { replace: true });
     } catch (err) {
       if (adminOnly) await logout();
@@ -206,7 +207,7 @@ export default function Login({ adminOnly = false }) {
               {adminOnly ? (
                 <p className="text-xs sm:text-sm text-muted">
                   Not an administrator?{' '}
-                  <Link to="/login" className="font-semibold text-primary underline hover:text-primary-hover">
+                  <Link to={ROUTES.customer.login} className="font-semibold text-primary underline hover:text-primary-hover">
                     User sign in
                   </Link>
                 </p>
@@ -215,7 +216,7 @@ export default function Login({ adminOnly = false }) {
                   <p className="text-xs sm:text-sm text-muted">
                     Don't have an account?{' '}
                     <Link
-                      to="/register"
+                      to={ROUTES.customer.register}
                       className="font-semibold text-primary underline hover:text-primary-hover focus-visible:ring-2 focus-visible:ring-ring rounded"
                     >
                       Sign up
@@ -223,7 +224,7 @@ export default function Login({ adminOnly = false }) {
                   </p>
                   <p className="text-xs text-muted">
                     Administrator?{' '}
-                    <Link to="/admin/login" className="font-semibold text-primary underline hover:text-primary-hover">
+                    <Link to={ROUTES.admin.login} className="font-semibold text-primary underline hover:text-primary-hover">
                       Admin sign in
                     </Link>
                   </p>

@@ -9,6 +9,7 @@ import ConfirmModal from './ConfirmModal';
 import { useAppConfig } from '../context/ConfigContext';
 import { useAuth } from '../features/auth/useAuth';
 import { apiClient } from '../lib/apiClient';
+import { ROUTES } from '../lib/routes';
 
 /**
  * Standard application layout with sticky header, responsive navigation, mobile drawer, and footer.
@@ -59,7 +60,7 @@ export default function Layout({
       setLoggingOut(true);
       await logout();
       setShowLogoutConfirm(false);
-      navigate('/login');
+      navigate(ROUTES.customer.login);
     } catch {
       setShowLogoutConfirm(false);
     } finally {
@@ -70,19 +71,19 @@ export default function Layout({
   const desktopNavActions = user ? (
     <div className="hidden sm:flex items-center gap-3">
       <Link
-        to="/dashboard"
+        to={ROUTES.customer.dashboard}
         className="text-xs font-semibold text-header-fg hover:text-header-muted transition-colors"
       >
         Dashboard
       </Link>
       <Link
-        to="/profile"
+        to={ROUTES.customer.profile}
         className="text-xs font-semibold text-header-fg hover:text-header-muted transition-colors"
       >
         Profile
       </Link>
       {isAdmin && (
-        <Link to="/admin">
+        <Link to={ROUTES.admin.dashboard}>
           <Button
             variant="secondary"
             className="min-h-9 px-2.5 py-1 text-xs border-header-line bg-surface/10 text-header-fg hover:bg-surface/20"
@@ -108,7 +109,7 @@ export default function Layout({
     </div>
   ) : (
     <div className="flex items-center gap-2">
-      <Link to="/login">
+      <Link to={ROUTES.customer.login}>
         <Button
           variant="secondary"
           className="min-h-8 sm:min-h-9 px-3 sm:px-4 text-xs font-semibold border-header-line bg-surface/10 text-header-fg hover:bg-surface/20"

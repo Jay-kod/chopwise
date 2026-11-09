@@ -15,6 +15,7 @@ import Step2Conditions from '../features/onboarding/steps/Step2Conditions';
 import Step3Preferences from '../features/onboarding/steps/Step3Preferences';
 import Step4Budget from '../features/onboarding/steps/Step4Budget';
 import { profileSchema } from '../features/onboarding/schema';
+import { ROUTES } from '../lib/routes';
 
 export default function Profile() {
   const { user, userDoc, logout, refreshProfile } = useAuth();
@@ -121,7 +122,7 @@ export default function Profile() {
   async function handleLogout() {
     try {
       await logout();
-      navigate('/login');
+      navigate(ROUTES.customer.login);
     } catch {}
   }
 
@@ -242,4 +243,3 @@ export default function Profile() {
     </AppShell>
   );
 }
-

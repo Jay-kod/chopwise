@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import Button from '../../components/Button';
 import { MailIcon } from './AuthIcons';
+import { ROUTES } from '../../lib/routes';
 
 /**
  * Notice displayed after registration when email confirmation is required.
@@ -38,7 +39,7 @@ export default function VerificationNotice({ email, onReset }) {
       </div>
 
       <div className="space-y-2 pt-1">
-        <Link to="/login" className="block w-full">
+        <Link to={ROUTES.customer.login} className="block w-full">
           <Button type="button" className="w-full min-h-11 font-semibold text-sm">
             Go to Log in
           </Button>

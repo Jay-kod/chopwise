@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import ThemeToggle from './ThemeToggle';
 import Button from './Button';
 import { useAppConfig } from '../context/ConfigContext';
+import { ROUTES } from '../lib/routes';
 
 /**
  * Off-canvas mobile navigation sidebar that flows in from the right.
@@ -67,7 +68,7 @@ export default function MobileDrawer({
 
               <nav className="flex flex-col space-y-1">
                 <Link
-                  to="/dashboard"
+                  to={ROUTES.customer.dashboard}
                   onClick={onClose}
                   className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-fg hover:bg-surface-muted hover:text-primary transition-colors"
                 >
@@ -75,7 +76,7 @@ export default function MobileDrawer({
                   <span>Dashboard</span>
                 </Link>
                 <Link
-                  to="/profile"
+                  to={ROUTES.customer.profile}
                   onClick={onClose}
                   className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-fg hover:bg-surface-muted hover:text-primary transition-colors"
                 >
@@ -84,7 +85,7 @@ export default function MobileDrawer({
                 </Link>
                 {isAdmin && (
                   <Link
-                    to="/admin"
+                    to={ROUTES.admin.dashboard}
                     onClick={onClose}
                     className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-primary hover:bg-surface-muted transition-colors"
                   >
@@ -112,7 +113,7 @@ export default function MobileDrawer({
               <p className="text-xs text-muted leading-relaxed">
                 Log in to access your customized meal recommendations and saved recipes.
               </p>
-              <Link to="/login" onClick={onClose} className="block">
+              <Link to={ROUTES.customer.login} onClick={onClose} className="block">
                 <Button variant="secondary" className="w-full text-xs min-h-10 font-semibold">
                   Customer Log in
                 </Button>

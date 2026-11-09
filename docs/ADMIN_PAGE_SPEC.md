@@ -1,6 +1,6 @@
 # ADMIN_PAGE_SPEC.md — one page for every function and API
 
-Routes: `/admin/login` is the dedicated administrator sign-in page; `/admin` is the management page (sections stacked on mobile, two columns on wide screens). Both use the existing email/password authentication. The admin sign-in checks `POST /api/admin {action:"me"}` and refuses accounts the server does not recognize as admins. Signed-out visits to `/admin` go to `/admin/login`; authenticated non-admins see the NotFound page. Navbar link shows only when `POST /api/admin {action:"me"}` returns `isAdmin: true`. The server is the authority; the client check is only for UX.
+Routes: `/admin/login` is administrator sign-in and `/admin` is the single management page (sections stacked on mobile, two columns on wide screens). Both use email/password authentication. The admin sign-in checks `POST /api/admin {action:"me"}` and refuses accounts the server does not recognize as admins. Signed-out visits to `/admin` go to `/admin/login`; authenticated non-admins see the NotFound page. Navbar/sidebar link shows only when `POST /api/admin {action:"me"}` returns `isAdmin: true`. The server is the authority; the client check is only for UX.
 
 ## Access
 Admins are Firebase **UIDs** listed in env `ADMIN_UIDS` (comma-separated). UIDs, not emails: anyone can register an email address before the owner does, but nobody can choose their UID.
@@ -60,7 +60,7 @@ Steps:
 5. Generate `CONFIG_ENCRYPTION_KEY`: `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`.
 6. Register your own account in the app, then Firebase console -> Authentication -> Users -> copy your UID into `ADMIN_UIDS`.
 7. Set all variables in `.env.local` for `vercel dev` and in Vercel -> Project -> Settings -> Environment Variables; redeploy.
-8. Open `/admin`, add Gemini and Edamam keys, press Test all.
+8. Open `/admin/dashboard`, add Gemini and Edamam keys, press Test all.
 
 ## Link verification
 The implementing agent must open every URL above once in the browser. If a link is broken, find the correct official page, fix `integrations.js` and this doc, and say so in the report.

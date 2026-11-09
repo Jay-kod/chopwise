@@ -7,14 +7,15 @@ import { CustomSidebarTrigger } from "@/components/custom-sidebar-trigger";
 import { navLinks } from "@/components/app-shared";
 import { NavUser } from "@/components/nav-user";
 import ThemeToggle from "@/components/ThemeToggle";
+import { ROUTES } from "@/lib/routes";
 
 export function AppHeader({
-    pathname = "/dashboard"
+    pathname = ROUTES.customer.dashboard
 }) {
-	const cleanPath = (pathname || "").split("?")[0];
+	const cleanPath = (pathname || "").split("?")[0].split("#")[0];
 	const activeItem = navLinks.find((item) => item.path === pathname) ||
 		navLinks.find((item) => item.path === cleanPath) ||
-		(cleanPath.startsWith("/meal/")
+		(cleanPath.startsWith(ROUTES.customer.mealPrefix)
 			? { title: "Recipe Details" }
 			: { title: "Personalised Meal Plan" });
 	return (
