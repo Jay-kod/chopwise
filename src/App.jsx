@@ -8,7 +8,7 @@ import MealDetail from './pages/MealDetail';
 import Saved from './pages/Saved';
 import Profile from './pages/Profile';
 import AdminLayout from './pages/admin/AdminLayout';
-import AdminOverview from './pages/admin/AdminOverview';
+import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminFunctions from './pages/admin/AdminFunctions';
 import AdminGemini from './pages/admin/AdminGemini';
 import AdminEdamam from './pages/admin/AdminEdamam';
@@ -81,7 +81,7 @@ export default function App() {
           {/* Admin Management Portal */}
           <Route element={<AdminRoute />}>
             <Route element={<AdminLayout />}>
-              <Route path={ROUTES.admin.dashboard} element={<AdminOverview />} />
+              <Route path={ROUTES.admin.dashboard} element={<AdminDashboard />} />
               <Route path={ROUTES.admin.functions} element={<AdminFunctions />} />
               <Route path={ROUTES.admin.gemini} element={<AdminGemini />} />
               <Route path={ROUTES.admin.edamam} element={<AdminEdamam />} />

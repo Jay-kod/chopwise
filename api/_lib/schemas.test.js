@@ -6,6 +6,8 @@ import {
   pricesSchema,
   geminiIngredientSchema,
   enrichedMealSchema,
+  catalogRecipeSchema,
+  adminListSchema,
 } from './schemas.js';
 
 describe('api/_lib/schemas', () => {
@@ -129,6 +131,42 @@ describe('api/_lib/schemas', () => {
       };
       expect(enrichedMealSchema.safeParse(meal).success).toBe(true);
     });
+
+    describe('admin management schemas', () => {
+      it('validates catalogue recipes without customer-specific recommendation fields', () => {
+        const recipe = {
+          name: 'Beans and plantain',
+          mealType: 'lunch',
+          description: 'A balanced Nigerian meal.',
+          prepTimeMinutes: 40,
+          ingredients: [{ item: 'beans', quantity: 150, unit: 'g', estCostNGN: 300 }],
+          steps: ['Cook the beans until tender.'],
+          suitableFor: ['general'],
+          cautionNotes: '',
+          aiNutritionEstimate: {
+            calories: 500,
+            proteinG: 20,
+            carbsG: 70,
+            fatG: 12,
+            sodiumMg: 250,
+            sugarG: 10,
+          },
+          costNGN: 800,
+          costSource: 'table',
+        };
+        expect(catalogRecipeSchema.safeParse(recipe).success).toBe(true);
+        expect(catalogRecipeSchema.safeParse({ ...recipe, mealType: 'snack' }).success).toBe(false);
+      });
+
+      it('bounds admin list pagination and normalizes search text', () => {
+        expect(adminListSchema.parse({ search: '  rice  ' })).toMatchObject({
+          search: 'rice',
+          offset: 0,
+          limit: 25,
+        });
+        expect(adminListSchema.safeParse({ offset: -1 }).success).toBe(false);
+        expect(adminListSchema.safeParse({ limit: 101 }).success).toBe(false);
+      });
+    });
   });
 });
-

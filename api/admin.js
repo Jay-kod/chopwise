@@ -15,11 +15,17 @@ import { EVALUATION_PROFILES } from './_lib/data/evaluationProfiles.js';
 import { getRecommendations } from './_lib/services/recommendationService.js';
 import { getMealNutrition } from './_lib/services/nutritionService.js';
 import { listAvailableModels } from './_lib/clients/gemini.js';
+import { listCustomers, setCustomerActive, updateCustomerEmail } from './_lib/services/customerAdminService.js';
+import { grantAdmin, listAdmins, revokeAdmin } from './_lib/services/adminAccessService.js';
+import { createRecipe, deleteRecipe, listRecipes, updateRecipe } from './_lib/services/recipeCatalogService.js';
+import { listAdminActivity } from './_lib/services/adminAuditService.js';
+import { clearNutritionCache, resetRateLimits } from './_lib/services/adminMaintenanceService.js';
 
 async function handleStatus() {
   const bootstrap = {
     mysql: isMysqlConfigured(),
     adminUidsSet: Boolean(process.env.ADMIN_UIDS),
+    jwtSecretSet: Boolean(process.env.JWT_SECRET && Buffer.byteLength(process.env.JWT_SECRET, 'utf8') >= 32),
     encryptionKeySet: Boolean(process.env.CONFIG_ENCRYPTION_KEY),
   };
 
@@ -40,7 +46,7 @@ async function handleStatus() {
 
   const geminiConf = await getGeminiConfig();
   const edamamConf = await getEdamamConfig();
-  const dbTest = testResults.mysql || testResults.database || testResults.supabase || null;
+  const dbTest = testResults.mysql || null;
 
   const functions = [
     {
@@ -139,8 +145,8 @@ export default withHandler(async (req, res) => {
   if (!action) throw AppError.validation({ action: 'Action is required.' });
 
   if (action === 'me') {
-    const { uid, email } = await verifyRequest(req);
-    return res.status(200).json({ isAdmin: checkIsAdmin(uid) || checkIsAdmin(email) });
+    const { uid } = await verifyRequest(req);
+    return res.status(200).json({ isAdmin: await checkIsAdmin(uid) });
   }
 
   if (action === 'public-settings' || action === 'publicConfig') {
@@ -153,7 +159,7 @@ export default withHandler(async (req, res) => {
     });
   }
 
-  await requireAdmin(req);
+  const { uid: adminId } = await requireAdmin(req);
 
   if (action === 'status') {
     const statusData = await handleStatus();
@@ -189,6 +195,46 @@ export default withHandler(async (req, res) => {
   if (action === 'runEvaluationCase') {
     const evalResult = await handleEvaluationCase(body.index);
     return res.status(200).json(evalResult);
+  }
+
+  if (action === 'listCustomers') {
+    return res.status(200).json(await listCustomers(body));
+  }
+  if (action === 'updateCustomer') {
+    return res.status(200).json(await updateCustomerEmail(adminId, body));
+  }
+  if (action === 'setCustomerActive') {
+    return res.status(200).json(await setCustomerActive(adminId, body));
+  }
+  if (action === 'listAdmins') {
+    return res.status(200).json(await listAdmins());
+  }
+  if (action === 'grantAdmin') {
+    return res.status(200).json(await grantAdmin(adminId, body));
+  }
+  if (action === 'revokeAdmin') {
+    return res.status(200).json(await revokeAdmin(adminId, body));
+  }
+  if (action === 'listRecipes') {
+    return res.status(200).json(await listRecipes(body));
+  }
+  if (action === 'createRecipe') {
+    return res.status(200).json(await createRecipe(adminId, body));
+  }
+  if (action === 'updateRecipe') {
+    return res.status(200).json(await updateRecipe(adminId, body));
+  }
+  if (action === 'deleteRecipe') {
+    return res.status(200).json(await deleteRecipe(adminId, body));
+  }
+  if (action === 'listActivity') {
+    return res.status(200).json(await listAdminActivity(body));
+  }
+  if (action === 'clearNutritionCache') {
+    return res.status(200).json(await clearNutritionCache(adminId));
+  }
+  if (action === 'resetRateLimits') {
+    return res.status(200).json(await resetRateLimits(adminId));
   }
 
   throw AppError.validation({ action: `Unknown admin action: ${action}` });

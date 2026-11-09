@@ -13,7 +13,13 @@ export default function BootstrapChecklist({ bootstrap = {} }) {
       key: 'adminUidsSet',
       name: 'ADMIN_UIDS',
       present: Boolean(bootstrap.adminUidsSet),
-      desc: 'Comma-separated list of user UUIDs or emails authorized to access this /admin portal.',
+      desc: 'Comma-separated account IDs for protected bootstrap administrators.',
+    },
+    {
+      key: 'jwtSecretSet',
+      name: 'JWT_SECRET',
+      present: Boolean(bootstrap.jwtSecretSet),
+      desc: 'Unique server-side signing secret of at least 32 characters.',
     },
     {
       key: 'encryptionKeySet',
@@ -69,7 +75,10 @@ export default function BootstrapChecklist({ bootstrap = {} }) {
             <strong>Database Schema:</strong> ChopWise automatically bootstraps the <code>chopwise</code> database and tables on startup (or you can run <code>mysql/schema.sql</code> in phpMyAdmin).
           </li>
           <li>
-            <strong>Admin Access:</strong> Add your email address or user ID to <code>ADMIN_UIDS</code> in <code>.env</code> (e.g. <code>ADMIN_UIDS=admin@example.com</code>).
+            <strong>Admin Access:</strong> Register your account, then add its account ID to <code>ADMIN_UIDS</code> in the server environment.
+          </li>
+          <li>
+            <strong>JWT_SECRET:</strong> Configure a unique random signing secret of at least 32 characters on the server.
           </li>
           <li>
             <strong>API Keys:</strong> You can configure Gemini and Edamam keys directly from the Integration Cards below.

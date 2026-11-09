@@ -63,6 +63,9 @@ export default withHandler(async (req, res) => {
     }
 
     const row = rows[0];
+    if (!Boolean(row.is_active)) {
+      throw AppError.unauthorized('This account has been disabled. Contact support for assistance.');
+    }
     let profile = {};
     try {
       profile = typeof row.profile === 'string' ? JSON.parse(row.profile || '{}') : row.profile || {};
@@ -108,7 +111,7 @@ export default withHandler(async (req, res) => {
       profile,
     };
 
-    return res.status(200).json({ user, isAdmin: checkIsAdmin(row.id) || checkIsAdmin(row.email) });
+    return res.status(200).json({ user, isAdmin: await checkIsAdmin(row.id) });
   }
 
   // 4. Action: update-profile

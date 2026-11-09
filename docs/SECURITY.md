@@ -8,7 +8,13 @@
 | Admin takeover | Admin = UID in `ADMIN_UIDS` (not email); `requireAdmin` on every admin action except `me`; client check is UX only |
 | Test login shortcuts | Public user/admin sign-in shortcuts prefill the shared test password in the browser; authentication plus the server-side admin allowlist check remain required. These credentials are public, so use disposable test accounts only and store no sensitive data in them |
 | Unauthenticated API use | Verify Firebase ID token on every function call |
-| Data access | Firestore rules in DATABASE.md; deny by default; `adminConfig`, `nutritionCache`, `rateLimits` server-only |
+| Data access | MySQL prepared statements; customer records are scoped by authenticated account ID; admin tables are server-only |
+| Account disable | `is_active` is checked at login and on every authenticated request, invalidating existing sessions after disable |
+| Admin roles | Protected bootstrap IDs in `ADMIN_UIDS`; additional roles in MySQL `admin_roles`; every privileged request rechecks the current role |
+| Customer privacy | Admin account pages expose email/account metadata only; never expose or modify health profiles or password hashes |
+| Catalogue access | Admin writes require `requireAdmin`; signed-in customers can read only the validated shared catalogue |
+| Audit integrity | `admin_activity` is append-only through application APIs; admin UI is read-only and records exclude secrets and health profiles |
+| Maintenance | Only explicit nutrition-cache clearing and rate-limit reset are available; never purge user data |
 | Input abuse | zod on every request body and on the profile read from Firestore; size limits (`avoidText` <= 100) |
 | Prompt injection | User text only inside a delimited JSON data block; truncated and stripped; AI output validated against schema |
 | XSS | React escapes output; AI text rendered as plain text; never `dangerouslySetInnerHTML` |
@@ -21,10 +27,13 @@
 | CORS | Same-origin; no CORS headers |
 
 ## Pre-deploy checklist
-- [ ] `firestore.rules` published; two test accounts cannot read each other's `users/{uid}`
+- [ ] Two test accounts cannot read each other's account profile through any API
 - [ ] A non-admin account gets 403 on every admin action except `me`
 - [ ] No key/secret strings in `dist/` or the repo (`git log -p` spot check)
-- [ ] Unauthenticated calls to all three functions return 401
+- [ ] Unauthenticated calls to protected API actions return 401
+- [ ] Disabled account tokens fail on the next authenticated request
+- [ ] A non-admin cannot access admin management actions; bootstrap admin roles cannot be revoked
+- [ ] Audit events are written for every successful privileged mutation and are not editable through the app
 - [ ] Admin responses never contain a full secret
 - [ ] Rate limit returns 429 on the (limit+1)th request
 - [ ] Service-account JSON deleted from local disk and not in git history

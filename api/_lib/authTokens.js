@@ -1,9 +1,13 @@
 import crypto from 'node:crypto';
+import { AppError } from './http.js';
 
-const JWT_SECRET =
-  process.env.JWT_SECRET ||
-  process.env.CONFIG_ENCRYPTION_KEY ||
-  'chopwise-xampp-mysql-local-secret-key-32chars';
+function getJwtSecret() {
+  const secret = process.env.JWT_SECRET;
+  if (!secret || Buffer.byteLength(secret, 'utf8') < 32) {
+    throw AppError.notConfigured(['JWT_SECRET'], 'Authentication is not configured on the server.');
+  }
+  return secret;
+}
 
 /**
  * Hash a plain password using scrypt with a random 16-byte salt.
@@ -46,7 +50,7 @@ export function signToken(payload, expiresInSeconds = 7 * 24 * 3600) {
   const b64Header = Buffer.from(JSON.stringify(header)).toString('base64url');
   const b64Body = Buffer.from(JSON.stringify(body)).toString('base64url');
   const signature = crypto
-    .createHmac('sha256', JWT_SECRET)
+    .createHmac('sha256', getJwtSecret())
     .update(`${b64Header}.${b64Body}`)
     .digest('base64url');
 
@@ -66,7 +70,7 @@ export function verifyToken(token) {
   const [b64Header, b64Body, signature] = parts;
 
   const expectedSig = crypto
-    .createHmac('sha256', JWT_SECRET)
+    .createHmac('sha256', getJwtSecret())
     .update(`${b64Header}.${b64Body}`)
     .digest('base64url');
 
@@ -88,4 +92,3 @@ export function verifyToken(token) {
     return null;
   }
 }
-

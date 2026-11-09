@@ -21,7 +21,8 @@ import { ROUTES } from "@/lib/routes";
 
 export function AppSidebar({
     pathname = ROUTES.customer.dashboard,
-    onRegenerate
+    onRegenerate,
+    onAdminAction,
 }) {
 	const navigate = useNavigate();
 	const { logout } = useAuth();
@@ -35,7 +36,7 @@ export function AppSidebar({
 		try {
 			await logout();
 		} finally {
-			navigate(ROUTES.customer.login, { replace: true });
+			navigate(isAdminRoute ? ROUTES.admin.login : ROUTES.customer.login, { replace: true });
 		}
 	}
 
@@ -55,7 +56,7 @@ export function AppSidebar({
 				</SidebarMenuButton>
 			</SidebarHeader>
 			<SidebarContent>
-				{onRegenerate && (
+				{onRegenerate && !isAdminRoute && (
 					<SidebarGroup>
 						<SidebarMenuItem className="flex items-center gap-2">
 							<SidebarMenuButton
@@ -65,6 +66,20 @@ export function AppSidebar({
 							>
 								<SparklesIcon className="size-4 shrink-0 text-on-primary" />
 								<span className="text-on-primary font-semibold">⚡ Regenerate Plan</span>
+							</SidebarMenuButton>
+						</SidebarMenuItem>
+					</SidebarGroup>
+				)}
+				{isAdminRoute && onAdminAction && (
+					<SidebarGroup>
+						<SidebarMenuItem className="flex items-center gap-2">
+							<SidebarMenuButton
+								onClick={onAdminAction}
+								className="min-w-8 bg-primary text-on-primary duration-200 ease-linear hover:bg-primary-hover hover:text-on-primary active:bg-primary-hover active:text-on-primary cursor-pointer [&>span]:text-on-primary [&>svg]:text-on-primary"
+								tooltip="Run Health Check"
+							>
+								<SparklesIcon className="size-4 shrink-0 text-on-primary" />
+								<span className="text-on-primary font-semibold">⚡ Run Health Check</span>
 							</SidebarMenuButton>
 						</SidebarMenuItem>
 					</SidebarGroup>

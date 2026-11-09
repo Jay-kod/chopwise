@@ -1,13 +1,6 @@
 import { useState, useEffect } from 'react';
 import { AppShell } from '@/components/app-shell';
 import { DashboardStats } from '@/components/stats';
-import { ConversationVolumeChart } from '@/components/conversation-volume-chart';
-import { ChannelBreakdownChart } from '@/components/channel-breakdown-chart';
-import { CsatResponsesChart } from '@/components/csat-responses-chart';
-import { FirstReplyTimeChart } from '@/components/first-reply-time-chart';
-import { TeamOnDuty } from '@/components/team-on-duty';
-import { RecentConversations } from '@/components/recent-conversations';
-import { SupportActivity } from '@/components/support-activity';
 import Button from '../components/Button';
 import Spinner from '../components/Spinner';
 import Card from '../components/Card';
@@ -147,16 +140,9 @@ export default function Dashboard() {
       {/* Error State */}
       <DashboardError error={error} isAdmin={isAdmin} onRetry={refresh} />
 
-      {/* Complete @efferd/dashboard-3 Analytics & Metrics Grid */}
+      {/* Customer Meal Profile Metrics Grid */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <DashboardStats items={statsItems} />
-        <ConversationVolumeChart />
-        <ChannelBreakdownChart />
-        <CsatResponsesChart />
-        <FirstReplyTimeChart />
-        <TeamOnDuty />
-        <RecentConversations />
-        <SupportActivity />
       </div>
 
       {/* Personalised Meals Recommendations Section */}

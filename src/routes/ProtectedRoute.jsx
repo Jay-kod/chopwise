@@ -19,5 +19,9 @@ export default function ProtectedRoute() {
     return <Navigate to={ROUTES.customer.login} replace state={{ from: location }} />;
   }
 
+  if (user.isAdmin) {
+    return <Navigate to={ROUTES.admin.dashboard} replace />;
+  }
+
   return <Outlet />;
 }

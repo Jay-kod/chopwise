@@ -10,6 +10,7 @@ export const ROUTES = {
     meal: (id) => `/customer/meal/${encodeURIComponent(id)}`,
     saved: '/customer/saved',
     profile: '/customer/profile',
+    recipes: '/customer/recipes',
   },
   admin: {
     login: '/admin/login',
@@ -22,5 +23,10 @@ export const ROUTES = {
     prices: '/admin/prices',
     checklist: '/admin/checklist',
     evaluation: '/admin/evaluation',
+    customers: '/admin/customers',
+    recipes: '/admin/recipes',
+    activity: '/admin/activity',
+    access: '/admin/access',
+    maintenance: '/admin/maintenance',
   },
 };

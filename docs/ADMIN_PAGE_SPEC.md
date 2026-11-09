@@ -10,14 +10,19 @@ Routes: `/admin/login` is administrator sign-in. `/admin` and `/admin/dashboard`
 - `/admin/prices` — Nigerian ingredient market price table
 - `/admin/checklist` — Bootstrap readiness checklist
 - `/admin/evaluation` — Automated recommendation test suite (Chapter 4)
+- `/admin/customers` — Customer account metadata and active status
+- `/admin/recipes` — Shared recipe catalogue management
+- `/admin/activity` — Read-only admin activity history
+- `/admin/access` — Additional administrator access management
+- `/admin/maintenance` — Bounded database maintenance actions
 
 Both use email/password authentication. The admin sign-in checks `POST /api/admin {action:"me"}` and refuses accounts the server does not recognize as admins. Signed-out visits to `/admin` go to `/admin/login`; authenticated non-admins see the NotFound page. Navbar/sidebar link shows only when `POST /api/admin {action:"me"}` returns `isAdmin: true`. The server is the authority; the client check is only for UX.
 
 ## Access
-Admins are Firebase **UIDs** listed in env `ADMIN_UIDS` (comma-separated). UIDs, not emails: anyone can register an email address before the owner does, but nobody can choose their UID.
+Bootstrap admins are account **IDs** listed in server env `ADMIN_UIDS` (comma-separated). They cannot be removed or disabled through the app. Additional administrators are existing active accounts managed through the Admin Access page and stored in MySQL `admin_roles`.
 
 ## Sections (top to bottom)
-**A. Functions & APIs** — table, one row per registered item: title, type (integration/function), status badge (`not_configured` grey, `untested` amber, `ok` green, `failing` red), last test message + time, **Test** button, **Setup guide** link (scrolls to its card). Rows: Firestore (Admin SDK), Gemini API, Edamam API, Recommendation pipeline, Nutrition pipeline. A "Test all" button runs them sequentially.
+**A. Functions & APIs** (`/admin/functions`) — table, one row per registered item: title, type (integration/function), status badge (`not_configured` grey, `untested` amber, `ok` green, `failing` red), last test message + time, **Test** button, **Setup guide** link (scrolls to its card). Rows: MySQL/MariaDB, Gemini API, Edamam API, Recommendation pipeline, Nutrition pipeline. A "Test all" button runs them sequentially.
 
 **B. Integration cards** (Gemini, Edamam), rendered generically from `status.integrations`:
 - Title, one-line description, status badge.
@@ -31,9 +36,19 @@ Admins are Firebase **UIDs** listed in env `ADMIN_UIDS` (comma-separated). UIDs,
 
 **E. Ingredient price table** — editable rows (item, unit select `100g|100ml|piece`, price ₦), add/remove row, search box, counter "N of M priced", warning banner when any price is empty. Save + Reset to seed list.
 
-**F. Bootstrap checklist** — detected/missing indicators for `FIREBASE_SERVICE_ACCOUNT_B64`, `ADMIN_UIDS`, `CONFIG_ENCRYPTION_KEY` (booleans only, never values), with numbered setup steps and links (below).
+**F. Bootstrap checklist** — detected/missing indicators for MySQL connectivity, `ADMIN_UIDS`, `JWT_SECRET`, and `CONFIG_ENCRYPTION_KEY` (booleans only, never values), with setup steps.
 
-**G. Evaluation runner (AR9, optional)** — Run button; loops `runEvaluationCase` index 0..9 one request at a time with a progress bar; table of results; summary metrics (% meals within budget, % passing safety, Edamam success vs fallback %, median latency); Download CSV.
+**G. Evaluation runner (AR9, optional)** (`/admin/evaluation`) — Run button; loops `runEvaluationCase` index 0..9 one request at a time with a progress bar; table of results; summary metrics (% meals within budget, % passing safety, Edamam success vs fallback %, median latency); Download CSV.
+
+**H. Customer accounts** (`/admin/customers`) — search/list account ID, email, creation date, profile-complete and active status; update email; reversibly disable/enable. Never show health profiles, passwords or password hashes. Account creation and permanent deletion are unavailable. Bootstrap admins cannot be disabled.
+
+**I. Recipe catalogue** (`/admin/recipes`) — add, edit and permanently remove validated shared recipes. Catalogue entries are visible to signed-in customers at `/customer/recipes`; they do not alter personalized recommendations.
+
+**J. Activity history** (`/admin/activity`) — paginated, read-only append-only audit events for admin changes and maintenance. Do not log secrets, passwords, JWTs, customer health profiles, or editable customer data.
+
+**K. Administrator access** (`/admin/access`) — list bootstrap and database-managed admins; grant access to existing active accounts and revoke additional admin roles. Bootstrap IDs from `ADMIN_UIDS` are protected and cannot be revoked. Role changes are checked on every admin request.
+
+**L. Maintenance** (`/admin/maintenance`) — clear `nutrition_cache` or reset `rate_limits`, each with confirmation and result count. Never expose a general delete/purge operation for customer data.
 
 ## Behaviour rules
 - Secrets are never rendered, logged or returned. Not even masked beyond last 4 chars.
@@ -43,7 +58,7 @@ Admins are Firebase **UIDs** listed in env `ADMIN_UIDS` (comma-separated). UIDs,
 - Mobile-friendly: cards stack, tables scroll horizontally inside their container.
 
 ## Test semantics (`api/_lib/integrations.js` + services)
-- `firestore`: read `adminConfig/settings` and write/read a temporary `adminConfig/_healthcheck` document.
+- `mysql`: execute a harmless database read and write/read/remove a temporary health-check row.
 - `gemini`: tiny JSON-mode prompt through the real client with the saved key/model; pass when valid JSON returns.
 - `edamam`: analyse one simple line (e.g. "1 cup rice") through the real client; pass on 2xx with calories.
 - `recommend`: run the real recommendation service with a built-in sample profile; pass when the expected number of schema-valid meals returns; show latency and over-budget count. Saves nothing to any user.
@@ -61,17 +76,15 @@ Links: Developer portal https://developer.edamam.com/ | FAQ https://developer.ed
 Steps: 1) Create an account at developer.edamam.com. 2) Dashboard -> Applications -> Create New Application. 3) Choose the **Nutrition Analysis API** with the free Developer plan. 4) Copy the Application ID and Application Key. 5) Paste both, switch Enabled on, Save, then Test.
 Notes: credentials are per API; keys from Recipe Search will return 401. If the View button for the key is missing you picked a paid plan without a card on file. Attribution ("Powered by Edamam" linking to developer.edamam.com) is required by Edamam.
 
-### Bootstrap (Firebase + Vercel; env vars, shown in checklist F)
-Links: Firebase console https://console.firebase.google.com/ | Web app config https://firebase.google.com/docs/web/setup | Admin SDK / service account https://firebase.google.com/docs/admin/setup | Verify ID tokens https://firebase.google.com/docs/auth/admin/verify-id-tokens | Vercel env vars https://vercel.com/docs/environment-variables
+### Bootstrap (MySQL/MariaDB + Vercel; env vars, shown in checklist F)
 Steps:
-1. Firebase console -> Add project. Build -> Authentication -> Sign-in method -> enable Email/Password.
-2. Build -> Firestore Database -> Create database (production mode). Rules tab -> paste `firestore.rules` -> Publish.
-3. Project settings -> General -> Your apps -> Web (`</>`) -> register app -> copy the config values into `VITE_FIREBASE_*`.
-4. Project settings -> Service accounts -> Generate new private key (downloads JSON). Base64-encode it (Linux `base64 -w0 key.json`; macOS `base64 -i key.json`; PowerShell `[Convert]::ToBase64String([IO.File]::ReadAllBytes("key.json"))`) and set `FIREBASE_SERVICE_ACCOUNT_B64`. Delete the JSON afterwards; never commit it.
-5. Generate `CONFIG_ENCRYPTION_KEY`: `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`.
-6. Register your own account in the app, then Firebase console -> Authentication -> Users -> copy your UID into `ADMIN_UIDS`.
-7. Set all variables in `.env.local` for `vercel dev` and in Vercel -> Project -> Settings -> Environment Variables; redeploy.
-8. Open `/admin/dashboard`, add Gemini and Edamam keys, press Test all.
+1. Start MySQL/MariaDB (XAMPP locally); the app creates the `chopwise` database and required tables.
+2. Set `MYSQL_*` connection variables if the local defaults are not suitable.
+3. Set `JWT_SECRET` to a unique random value of at least 32 characters.
+4. Generate `CONFIG_ENCRYPTION_KEY`: `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`.
+5. Register your account, then add its account ID to `ADMIN_UIDS` in the server environment.
+6. Configure server-only variables locally and in Vercel project settings; never put server-only values in `VITE_*` variables.
+7. Open `/admin/dashboard`, add Gemini and Edamam keys, then press Test all.
 
 ## Link verification
 The implementing agent must open every URL above once in the browser. If a link is broken, find the correct official page, fix `integrations.js` and this doc, and say so in the report.

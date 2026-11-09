@@ -1,23 +1,29 @@
 import { verifyToken } from './authTokens.js';
 import { AppError } from './http.js';
+import { query } from './mysql.js';
 
-/**
- * Check whether a user UID or email is present in the ADMIN_UIDS environment list.
- * @param {string} identifier - User UUID or email
- * @returns {boolean}
- */
-export function checkIsAdmin(identifier) {
-  if (!identifier) return false;
+export function getBootstrapAdminIds() {
   const adminUidsRaw = process.env.ADMIN_UIDS || '';
-  const adminUids = adminUidsRaw
+  return adminUidsRaw
     .split(',')
     .map((s) => s.trim().toLowerCase())
     .filter(Boolean);
-  const idLower = String(identifier).toLowerCase();
-  if (idLower === 'adminchop@test.com' || idLower === 'test-admin-001') {
-    return true;
-  }
-  return adminUids.includes(idLower);
+}
+
+export function isBootstrapAdmin(userId) {
+  return Boolean(userId) && getBootstrapAdminIds().includes(String(userId).toLowerCase());
+}
+
+export async function checkIsAdmin(userId) {
+  if (!userId) return false;
+  if (isBootstrapAdmin(userId)) return true;
+  const rows = await query(
+    `SELECT ar.user_id FROM admin_roles ar
+     JOIN users u ON u.id = ar.user_id
+     WHERE ar.user_id = ? AND u.is_active = 1 LIMIT 1`,
+    [userId]
+  );
+  return rows.length > 0;
 }
 
 /**
@@ -42,6 +48,10 @@ export async function verifyRequest(req) {
   if (!payload || !payload.uid) {
     throw AppError.unauthorized('Invalid or expired authentication token. Please log in.');
   }
+  const accounts = await query('SELECT is_active FROM users WHERE id = ? LIMIT 1', [payload.uid]);
+  if (!accounts.length || !Boolean(accounts[0].is_active)) {
+    throw AppError.unauthorized('This account is unavailable. Please contact support.');
+  }
 
   return {
     uid: payload.uid,
@@ -57,7 +67,7 @@ export async function verifyRequest(req) {
  */
 export async function requireAdmin(req) {
   const { uid, email } = await verifyRequest(req);
-  if (!checkIsAdmin(uid) && !checkIsAdmin(email)) {
+  if (!(await checkIsAdmin(uid))) {
     throw AppError.forbidden('Admin access required.');
   }
   return { uid, email, isAdmin: true };

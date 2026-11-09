@@ -40,7 +40,7 @@ export const adminNavGroups = [
 		label: "Admin Portal",
 		items: [
 			{
-				title: "Overview",
+				title: "Dashboard",
 				path: ROUTES.admin.dashboard,
 				icon: <LayoutGridIcon className="size-4 shrink-0" />,
 			},

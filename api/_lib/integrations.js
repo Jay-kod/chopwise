@@ -99,7 +99,7 @@ async function testNutritionPipeline(start) {
 export async function runHealthCheck(target) {
   const start = Date.now();
   let result;
-  if (['mysql', 'database', 'supabase', 'firestore'].includes(target)) {
+  if (target === 'mysql') {
     result = await testDatabase(start);
   } else if (target === 'gemini') {
     result = await testGemini(start);

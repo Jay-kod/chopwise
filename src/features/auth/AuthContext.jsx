@@ -20,11 +20,13 @@ export function AuthProvider({ children }) {
     try {
       const res = await apiClient('/api/auth', { action: 'me' });
       if (res?.user) {
-        setUser(res.user);
-        setUserDoc({
+        const enrichedUser = {
           ...res.user,
+          isAdmin: Boolean(res.isAdmin),
           profileComplete: Boolean(res.user.profileComplete),
-        });
+        };
+        setUser(enrichedUser);
+        setUserDoc(enrichedUser);
       } else {
         localStorage.removeItem('chopwise_token');
         setUser(null);
@@ -76,14 +78,20 @@ export function AuthProvider({ children }) {
 
     if (res?.token) {
       localStorage.setItem('chopwise_token', res.token);
-      setUser(res.user);
-      setUserDoc({
+      let isAdmin = false;
+      try {
+        const meRes = await apiClient('/api/auth', { action: 'me' });
+        isAdmin = Boolean(meRes?.isAdmin);
+      } catch {}
+      const enrichedUser = {
         ...res.user,
-        profileComplete: Boolean(res.user.profileComplete),
-      });
+        isAdmin,
+        profileComplete: Boolean(res.user?.profileComplete),
+      };
+      setUser(enrichedUser);
+      setUserDoc(enrichedUser);
+      return enrichedUser;
     }
-
-    return res.user;
   }
 
   async function logout() {

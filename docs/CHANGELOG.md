@@ -1,6 +1,16 @@
 # CHANGELOG.md
 Add one line per task: date, task id, what changed, doc updates.
 
+## Align Admin Dashboard with @efferd/dashboard-3 Design & Rename Overview to Dashboard (2026-11-09)
+- Renamed Admin "Overview" to "Dashboard" across `adminNavGroups` in `src/components/app-shared.jsx`, routing in `src/App.jsx`, and created `src/pages/admin/AdminDashboard.jsx`.
+- Breadcrumb in `AppHeader` now renders `[::] Dashboard` matching the uploaded design.
+- Implemented full `@efferd/dashboard-3` analytics and metrics grid on the Admin Dashboard:
+  - 4-column KPI cards powered by `<DashboardStats items={statsItems} />` displaying Active APIs, Gemini AI Engine, Edamam Nutrition Pipeline, and Production Readiness.
+  - Interactive area chart (`<ConversationVolumeChart />`) and channel traffic donut chart (`<ChannelBreakdownChart />`).
+  - Secondary operational charts: CSAT responses, reply time, team on duty, recent conversations, and support activity.
+- Added top actions (`⚡ Test All APIs` primary button and `↻ Refresh Status` secondary button) and sidebar quick action (`⚡ Run Health Check`).
+- Integrated Administration Management Modules grid below the analytics section for quick access to all 8 admin subpages.
+
 ## Single Unified Admin Sidebar and Dedicated Modular Subpages (2026-11-09)
 - Unified the admin sidebar into a single navigation group (`Admin Portal`), removing the redundant duplicate "Customer View" group that caused two sidebars.
 - Added a streamlined "Customer App" switch link in the sidebar footer for quick access back to the customer area.

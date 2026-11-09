@@ -14,16 +14,18 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { UserIcon, LogOutIcon } from "lucide-react";
 import { useAuth } from "@/features/auth/useAuth";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import ConfirmModal from "@/components/ConfirmModal";
 import { ROUTES } from "@/lib/routes";
 
 export function NavUser() {
 	const { user, logout } = useAuth();
 	const navigate = useNavigate();
+	const location = useLocation();
 	const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
-	const displayName = user?.name || user?.email?.split("@")[0] || "User";
+	const isAdminPortal = location.pathname.startsWith("/admin");
+	const displayName = user?.name || user?.email?.split("@")[0] || (isAdminPortal ? "Admin" : "User");
 	const email = user?.email || "";
 	const initial = displayName.charAt(0).toUpperCase();
 
@@ -31,7 +33,7 @@ export function NavUser() {
 		try {
 			await logout();
 		} finally {
-			navigate(ROUTES.customer.login, { replace: true });
+			navigate(isAdminPortal ? ROUTES.admin.login : ROUTES.customer.login, { replace: true });
 		}
 	}
 
@@ -67,13 +69,17 @@ export function NavUser() {
 							</div>
 						</DropdownMenuLabel>
 					</DropdownMenuGroup>
-					<DropdownMenuSeparator />
-					<DropdownMenuGroup>
-						<DropdownMenuItem onClick={() => navigate(ROUTES.customer.profile)} className="cursor-pointer">
-							<UserIcon className="mr-2 size-4" />
-							Profile & Preferences
-						</DropdownMenuItem>
-					</DropdownMenuGroup>
+					{!isAdminPortal && (
+						<>
+							<DropdownMenuSeparator />
+							<DropdownMenuGroup>
+								<DropdownMenuItem onClick={() => navigate(ROUTES.customer.profile)} className="cursor-pointer">
+									<UserIcon className="mr-2 size-4" />
+									Profile & Preferences
+								</DropdownMenuItem>
+							</DropdownMenuGroup>
+						</>
+					)}
 					<DropdownMenuSeparator />
 					<DropdownMenuItem onClick={() => setShowLogoutConfirm(true)} className="cursor-pointer text-danger-fg">
 						<LogOutIcon className="mr-2 size-4" />

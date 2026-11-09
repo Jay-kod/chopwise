@@ -18,12 +18,6 @@ import {
   LockIcon,
 } from '../features/auth/AuthIcons';
 
-const TEST_ACCOUNTS = {
-  user: [{ label: 'Test User', email: 'chop1@test.com' }],
-  admin: [{ label: 'Test Admin', email: 'adminchop@test.com' }],
-};
-const TEST_PASSWORD = 'password1';
-
 export default function Login({ adminOnly = false }) {
   const { user, login, logout } = useAuth();
   const { appName, appTagline } = useAppConfig();
@@ -38,9 +32,19 @@ export default function Login({ adminOnly = false }) {
   const [redirecting, setRedirecting] = useState(false);
 
   useEffect(() => {
-    if (user && !loading && !redirecting && !adminOnly) {
-      const dest = location.state?.from?.pathname || (adminOnly ? ROUTES.admin.dashboard : (user.profileComplete ? ROUTES.customer.dashboard : ROUTES.customer.onboarding));
-      navigate(dest, { replace: true });
+    if (user && !loading && !redirecting) {
+      if (adminOnly) {
+        if (user.isAdmin) {
+          navigate(ROUTES.admin.dashboard, { replace: true });
+        }
+      } else {
+        if (user.isAdmin) {
+          navigate(ROUTES.admin.dashboard, { replace: true });
+        } else {
+          const dest = location.state?.from?.pathname || (user.profileComplete ? ROUTES.customer.dashboard : ROUTES.customer.onboarding);
+          navigate(dest, { replace: true });
+        }
+      }
     }
   }, [user, loading, redirecting, adminOnly, location.state, navigate]);
 
@@ -64,21 +68,25 @@ export default function Login({ adminOnly = false }) {
           setLoading(false);
           return;
         }
+        setRedirecting(true);
+        navigate(ROUTES.admin.dashboard, { replace: true });
+        return;
       }
+
+      if (loggedUser?.isAdmin) {
+        setRedirecting(true);
+        navigate(ROUTES.admin.dashboard, { replace: true });
+        return;
+      }
+
       setRedirecting(true);
-      const dest = location.state?.from?.pathname || (adminOnly ? ROUTES.admin.dashboard : (loggedUser?.profileComplete ? ROUTES.customer.dashboard : ROUTES.customer.onboarding));
+      const dest = location.state?.from?.pathname || (loggedUser?.profileComplete ? ROUTES.customer.dashboard : ROUTES.customer.onboarding);
       navigate(dest, { replace: true });
     } catch (err) {
       if (adminOnly) await logout();
       setError(getAuthErrorMessage(err));
       setLoading(false);
     }
-  }
-
-  function selectTestAccount(email) {
-    setEmail(email);
-    setPassword(TEST_PASSWORD);
-    setError('');
   }
 
   return (
@@ -180,28 +188,6 @@ export default function Login({ adminOnly = false }) {
                 )}
               </Button>
             </form>
-
-            <section className="mt-5 border-t border-line pt-4" aria-labelledby="test-login-heading">
-              <h2 id="test-login-heading" className="text-sm font-semibold text-fg">
-                {adminOnly ? 'Administrator testing account' : 'User testing account'}
-              </h2>
-              <p className="mt-1 text-xs text-muted">
-                Choose the test account to fill its email and password.
-              </p>
-              <div className="mt-3 grid gap-2">
-                {TEST_ACCOUNTS[adminOnly ? 'admin' : 'user'].map((account) => (
-                  <Button
-                    key={account.email}
-                    type="button"
-                    variant="secondary"
-                    className="w-full justify-start"
-                    onClick={() => selectTestAccount(account.email)}
-                  >
-                    {account.label} · {account.email}
-                  </Button>
-                ))}
-              </div>
-            </section>
 
             <div className="mt-6 pt-5 border-t border-line text-center space-y-3">
               {adminOnly ? (

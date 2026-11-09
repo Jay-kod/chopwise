@@ -95,3 +95,47 @@ export const enrichedMealSchema = geminiMealItemSchema.extend({
   safetyFlags: z.array(z.string()).default([]),
 });
 
+export const catalogRecipeSchema = geminiMealItemSchema.extend({
+  costNGN: z.number().nonnegative(),
+  costSource: z.enum(['table', 'mixed', 'ai']),
+});
+
+export const ADMIN_PAGE_SIZE = 25;
+export const MAX_ADMIN_PAGE_SIZE = 100;
+export const MAX_ADMIN_OFFSET = 1000000;
+
+export const adminListSchema = z.object({
+  search: z.string().trim().max(100).default(''),
+  offset: z.number().int().min(0).max(MAX_ADMIN_OFFSET).default(0),
+  limit: z.number().int().min(1).max(MAX_ADMIN_PAGE_SIZE).default(ADMIN_PAGE_SIZE),
+});
+
+export const catalogListSchema = adminListSchema;
+
+export const accountIdSchema = z.object({
+  userId: z.string().uuid(),
+});
+
+export const updateCustomerSchema = accountIdSchema.extend({
+  email: z.string().trim().email().max(255),
+});
+
+export const customerActiveSchema = accountIdSchema.extend({
+  active: z.boolean(),
+});
+
+export const grantAdminSchema = z.object({
+  email: z.string().trim().email().max(255),
+});
+
+export const recipeIdSchema = z.object({
+  id: z.string().uuid(),
+});
+
+export const recipeMutationSchema = z.object({
+  recipe: catalogRecipeSchema,
+});
+
+export const recipeUpdateSchema = recipeIdSchema.extend({
+  recipe: catalogRecipeSchema,
+});
