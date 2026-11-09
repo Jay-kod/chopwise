@@ -2,39 +2,33 @@ import {
 	LayoutGridIcon,
 	BookmarkIcon,
 	UserIcon,
-	SlidersHorizontalIcon,
 	ShieldAlertIcon,
 	ActivityIcon,
+	SparklesIcon,
+	SlidersHorizontalIcon,
+	CoinsIcon,
+	CheckSquareIcon,
+	FlaskConicalIcon,
 } from "lucide-react";
 
-export const userNavGroups = [
+export const customerNavGroups = [
 	{
-		label: "Meal Planning",
+		label: "Menu",
 		items: [
 			{
-				title: "Meal Recommendations",
+				title: "Dashboard",
 				path: "/dashboard",
 				icon: <LayoutGridIcon className="size-4 shrink-0" />,
 			},
 			{
-				title: "Saved Recipes",
-				path: "/profile?tab=saved",
+				title: "Saved meals",
+				path: "/saved",
 				icon: <BookmarkIcon className="size-4 shrink-0" />,
 			},
-		],
-	},
-	{
-		label: "Health & Preferences",
-		items: [
 			{
-				title: "Dietary Profile",
+				title: "My profile",
 				path: "/profile",
 				icon: <UserIcon className="size-4 shrink-0" />,
-			},
-			{
-				title: "Update Food Budget",
-				path: "/onboarding",
-				icon: <SlidersHorizontalIcon className="size-4 shrink-0" />,
 			},
 		],
 	},
@@ -42,7 +36,7 @@ export const userNavGroups = [
 
 export const adminNavGroups = [
 	{
-		label: "Admin Controls",
+		label: "Admin Portal",
 		items: [
 			{
 				title: "Admin Overview",
@@ -50,17 +44,52 @@ export const adminNavGroups = [
 				icon: <ShieldAlertIcon className="size-4 shrink-0" />,
 			},
 			{
-				title: "API Integrations",
-				path: "/admin#integrations",
+				title: "Functions & APIs",
+				path: "/admin#functions",
 				icon: <ActivityIcon className="size-4 shrink-0" />,
+			},
+			{
+				title: "Gemini",
+				path: "/admin#gemini",
+				icon: <SparklesIcon className="size-4 shrink-0" />,
+			},
+			{
+				title: "Edamam",
+				path: "/admin#edamam",
+				icon: <ActivityIcon className="size-4 shrink-0" />,
+			},
+			{
+				title: "Recommendation settings",
+				path: "/admin#settings",
+				icon: <SlidersHorizontalIcon className="size-4 shrink-0" />,
+			},
+			{
+				title: "Safety thresholds",
+				path: "/admin#safety",
+				icon: <ShieldAlertIcon className="size-4 shrink-0" />,
+			},
+			{
+				title: "Ingredient prices",
+				path: "/admin#prices",
+				icon: <CoinsIcon className="size-4 shrink-0" />,
+			},
+			{
+				title: "Setup checklist",
+				path: "/admin#checklist",
+				icon: <CheckSquareIcon className="size-4 shrink-0" />,
+			},
+			{
+				title: "Evaluation",
+				path: "/admin#evaluation",
+				icon: <FlaskConicalIcon className="size-4 shrink-0" />,
 			},
 		],
 	},
 	{
-		label: "Navigation",
+		label: "Customer View",
 		items: [
 			{
-				title: "User Dashboard",
+				title: "Dashboard",
 				path: "/dashboard",
 				icon: <LayoutGridIcon className="size-4 shrink-0" />,
 			},
@@ -68,30 +97,14 @@ export const adminNavGroups = [
 	},
 ];
 
-// navGroups defaults to userNavGroups so the user sidebar never contains Admin Portal
-export const navGroups = userNavGroups;
+export const userNavGroups = customerNavGroups;
+export const navGroups = customerNavGroups;
 
 export const userFooterNavLinks = [];
-
-export const adminFooterNavLinks = [
-	{
-		title: "User Dashboard",
-		path: "/dashboard",
-		icon: <LayoutGridIcon className="size-4 shrink-0" />,
-	},
-];
-
-export const footerNavLinks = userFooterNavLinks;
+export const adminFooterNavLinks = [];
+export const footerNavLinks = [];
 
 export const navLinks = [
-	...userNavGroups.flatMap((group) =>
-		group.items.flatMap((item) =>
-			item.subItems?.length ? [item, ...item.subItems] : [item]
-		)
-	),
-	...adminNavGroups.flatMap((group) =>
-		group.items.flatMap((item) =>
-			item.subItems?.length ? [item, ...item.subItems] : [item]
-		)
-	),
+	...customerNavGroups.flatMap((group) => group.items),
+	...adminNavGroups.flatMap((group) => group.items),
 ];
