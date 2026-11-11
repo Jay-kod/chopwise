@@ -2,6 +2,22 @@
 
 Follow these exact steps to link, configure, and deploy ChopWise to Vercel with Cloud Firestore and Firebase Auth.
 
+## Temporary Docker testing link
+
+The project also supports a temporary Docker-based public link for testing. Docker runs the existing Vite middleware (including `/api` handlers) and a local MySQL database; Cloudflare Quick Tunnels provides a temporary `trycloudflare.com` URL without requiring a Cloudflare account or domain.
+
+From the project root in PowerShell:
+
+```powershell
+.\scripts\Initialize-DockerShare.ps1
+docker compose --env-file docker.test.env up --build -d
+docker compose logs -f tunnel
+```
+
+Share the URL printed by the `tunnel` service. Anyone with that URL can reach the app, and the URL changes after the tunnel stops. Stop the app with `docker compose down`; the named MySQL volume is preserved. Use disposable test data only, and do not seed the public test-admin account or enter real health information. The generated `docker.test.env` is local-only and Git-ignored. Gemini is not configured unless its key is added to that file.
+
+Cloudflare Quick Tunnels are for testing and development, have no uptime guarantee, and stop working when the tunnel stops. See [Cloudflare Quick Tunnels](https://developers.cloudflare.com/tunnel/get-started/quick-tunnels/).
+
 ---
 
 ## 1. Prerequisites
@@ -36,7 +52,7 @@ Run this in PowerShell or terminal to generate a fresh AES-256-GCM encryption ke
 ```bash
 node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 ```
-Keep this key secure. It encrypts your Gemini and Edamam API keys in Firestore.
+Keep this key secure. It encrypts your Gemini and USDA API keys in the server-side MySQL configuration.
 
 ### B. Firebase Service Account (`FIREBASE_SERVICE_ACCOUNT_B64`)
 1. In Firebase Console: Project Settings -> **Service accounts** tab.
@@ -81,7 +97,7 @@ Set the following environment variables in Vercel (**Project Settings -> Environ
 | `ADMIN_UIDS` | Comma-separated Firebase Auth UIDs granted admin access |
 | `CONFIG_ENCRYPTION_KEY` | 32-byte base64 string generated in step 3A |
 
-*(Note: API keys for Google Gemini and Edamam do NOT need to be in Vercel env vars; you will paste them directly into the encrypted Admin page at `/admin/dashboard`).*
+*(Note: the USDA API key does NOT belong in a Vercel environment variable; paste it into the encrypted Admin page at `/admin/usda`. Gemini can be configured through its Admin integration card.)*
 
 ---
 
@@ -115,7 +131,7 @@ The project `vercel.json` defines `"maxDuration": 30` for `api/*.js` to permit G
 4. Open `/admin/dashboard` as an authorized Admin UID:
    - Check the **Bootstrap Checklist** (all green).
    - Enter your **Google Gemini API Key** and model name.
-   - Enter your **Edamam Application ID** and **Application Key**.
+   - Open `/admin/usda` and enter the USDA data.gov API key, then enable and test the integration.
    - Click **Test all** in Section A (Functions Table) and verify all rows turn green.
 5. Return to `/customer/dashboard` and click **⚡ Regenerate Plan** to generate personalized Nigerian meal recommendations!
 

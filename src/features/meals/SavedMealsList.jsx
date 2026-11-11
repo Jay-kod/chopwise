@@ -54,8 +54,9 @@ export default function SavedMealsList({
             <div className="space-y-2">
               <div className="flex items-center justify-between gap-2">
                 <MealTypeChip type={meal.mealType} />
-                <span className="text-sm font-bold text-primary">
-                  {formatNaira(meal.costNGN)}
+                <span className="text-right">
+                  <span className="block text-sm font-bold text-primary">{formatNaira(meal.costNGN)}</span>
+                  <span className="block text-[10px] text-muted">Estimated ingredient cost</span>
                 </span>
               </div>
 

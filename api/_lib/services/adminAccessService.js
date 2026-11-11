@@ -1,14 +1,20 @@
 import { AppError } from '../http.js';
 import { query } from '../mysql.js';
 import { accountIdSchema, grantAdminSchema } from '../schemas.js';
-import { getBootstrapAdminIds, isBootstrapAdmin } from '../auth.js';
+import { getBootstrapAdminIds, isBootstrapAdmin, setDynamicBootstrapAdminIds } from '../auth.js';
+import { loadDoc, saveDoc } from '../configBase.js';
 import { runAuditedAdminMutation } from './adminAuditService.js';
 
 /**
  * Lists protected bootstrap admins and active database-managed admins.
- * @returns {Promise<{items: object[]}>}
+ * @returns {Promise<{items: object[], bootstrapUids: string, bootstrapSource: string}>}
  */
 export async function listAdmins() {
+  const doc = await loadDoc('bootstrap');
+  if (doc?.adminUids) {
+    setDynamicBootstrapAdminIds(doc.adminUids);
+  }
+
   const bootstrapIds = getBootstrapAdminIds();
   const bootstrapAccounts = bootstrapIds.length
     ? await query(
@@ -28,7 +34,16 @@ export async function listAdmins() {
     bootstrap: true,
   }));
   items.push(...managed.map((account) => ({ ...account, bootstrap: false })));
-  return { items };
+
+  const envUids = (process.env.ADMIN_UIDS || '').trim();
+  const dbUids = (doc?.adminUids || '').trim();
+  const bootstrapSource = envUids && dbUids ? 'both' : envUids ? 'environment' : dbUids ? 'database' : 'none';
+
+  return {
+    items,
+    bootstrapUids: bootstrapIds.join(', '),
+    bootstrapSource,
+  };
 }
 
 /**
@@ -40,7 +55,7 @@ export async function listAdmins() {
 export async function grantAdmin(actorId, input) {
   const { email } = grantAdminSchema.parse(input);
   const normalizedEmail = email.toLowerCase();
-  return runAuditedAdminMutation(actorId, 'admin.access.granted', 'admin', normalizedEmail, async (connection) => {
+  return runAuditedAdminMutation(actorId, 'admin.access.granted', 'admin', null, async (connection) => {
     const [accounts] = await connection.execute(
       'SELECT id, is_active FROM users WHERE email = ? LIMIT 1 FOR UPDATE',
       [normalizedEmail]
@@ -56,7 +71,7 @@ export async function grantAdmin(actorId, input) {
       'INSERT INTO admin_roles (user_id, granted_by) VALUES (?, ?) ON DUPLICATE KEY UPDATE user_id = VALUES(user_id)',
       [userId, actorId]
     );
-    return { result: { ok: true }, auditDetails: { granted: true } };
+    return { result: { ok: true }, auditEntityId: userId, auditDetails: { granted: true } };
   });
 }
 
@@ -76,5 +91,30 @@ export async function revokeAdmin(actorId, input) {
     if (!admins.length) throw AppError.notFound('Managed administrator not found.');
     await connection.execute('DELETE FROM admin_roles WHERE user_id = ?', [userId]);
     return { result: { ok: true }, auditDetails: { revoked: true } };
+  });
+}
+
+/**
+ * Saves bootstrap administrator IDs in the database configuration.
+ * @param {string} actorId
+ * @param {object} input
+ * @returns {Promise<{ok: true, adminUids: string}>}
+ */
+export async function saveBootstrapAdminIds(actorId, input) {
+  const uidsRaw = typeof input?.uids === 'string' ? input.uids : '';
+  const uids = uidsRaw
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  const formattedUids = uids.join(',');
+  await saveDoc('bootstrap', { adminUids: formattedUids, updatedAt: new Date().toISOString() });
+  setDynamicBootstrapAdminIds(uids);
+
+  return runAuditedAdminMutation(actorId, 'admin.bootstrap.updated', 'admin', null, async () => {
+    return {
+      result: { ok: true, adminUids: formattedUids },
+      auditDetails: { count: uids.length, uids: formattedUids },
+    };
   });
 }

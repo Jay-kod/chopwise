@@ -19,6 +19,7 @@ export const profileSchema = z.object({
     .default([]),
   avoidText: z.string().max(100).default(''),
   weeklyBudgetNGN: z.number().int().min(1000).max(500000),
+  avatar: z.string().optional(),
   updatedAt: z.string().optional(),
 });
 
@@ -138,4 +139,34 @@ export const recipeMutationSchema = z.object({
 
 export const recipeUpdateSchema = recipeIdSchema.extend({
   recipe: catalogRecipeSchema,
+});
+
+export const draftRecipeSchema = z.object({
+  mealName: z.string().trim().min(2).max(100),
+  mealType: z.enum(['breakfast', 'lunch', 'dinner']).optional(),
+});
+
+export const analyzeRecipeNutritionSchema = z.object({
+  title: z.string().trim().min(1).max(100),
+  ingredients: z
+    .array(
+      z.object({
+        item: z.string().trim().min(1),
+        quantity: z.number().positive(),
+        unit: z.string().trim().min(1),
+      })
+    )
+    .min(1),
+});
+
+export const nutritionRequestSchema = z.object({
+  mealId: z.string().trim().min(1),
+  action: z.enum(['nutrition', 'refresh-usda', 'ai-feedback']).default('nutrition'),
+});
+
+export const mealFeedbackSchema = z.object({
+  summary: z.string().trim().min(1).max(400),
+  strengths: z.array(z.string().trim().min(1).max(180)).max(4),
+  cautions: z.array(z.string().trim().min(1).max(180)).max(4),
+  improvements: z.array(z.string().trim().min(1).max(180)).max(4),
 });

@@ -122,6 +122,10 @@ const SAMPLE_MEALS_USER = [
 ];
 
 async function seed() {
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('Test accounts cannot be seeded in production.');
+  }
+
   console.log('Seeding test user and admin accounts into MySQL...');
   await ensureDatabaseAndTables();
 
@@ -167,6 +171,14 @@ async function seed() {
   );
   console.log(`✓ Seeded Admin: ${TEST_ADMIN.email} (password: ${TEST_PASSWORD})`);
 
+  await query(
+    `INSERT INTO admin_roles (user_id, granted_by)
+     VALUES (?, ?)
+     ON DUPLICATE KEY UPDATE granted_by = VALUES(granted_by)`,
+    [TEST_ADMIN.id, TEST_ADMIN.id]
+  );
+  console.log(`✓ Granted administrator access to ${TEST_ADMIN.email}`);
+
   // 3. Seed latest recommendations cache for user
   const userProfileHash = computeProfileHash(TEST_USER.profile);
   await query(
@@ -199,4 +211,3 @@ seed().catch((err) => {
   console.error('Seeding failed:', err);
   process.exit(1);
 });
-

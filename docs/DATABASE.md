@@ -7,7 +7,7 @@ The canonical schema is `mysql/schema.sql`; the server also creates/migrates tab
 | `users` | Customer/admin accounts, scrypt password hash, consent timestamp, profile JSON, completion and active flags |
 | `saved_meals` | Per-user saved recipe snapshots |
 | `latest_recs` | Per-user personalized recommendation cache |
-| `nutrition_cache` | Server-side Edamam/AI nutrition cache |
+| `nutrition_cache` | Server-side USDA/AI nutrition cache |
 | `rate_limits` | Per-user recommendation limits |
 | `admin_config` | Server-only integration credentials and system configuration |
 | `admin_roles` | Additional administrator grants; bootstrap admins remain in `ADMIN_UIDS` |
@@ -16,11 +16,13 @@ The canonical schema is `mysql/schema.sql`; the server also creates/migrates tab
 
 `admin_config` sections (`integrations`, `settings`, `safety`, `prices`, `testResults`) are server-only. Encrypted values use `v1:<iv>:<tag>:<ciphertext>` (base64 parts) with AES-256-GCM.
 
+The integration config stores the USDA API key encrypted under `integrations.usda`. Startup migration removes only legacy Edamam settings and health-test results, plus cached nutrition rows whose source is `edamam`; other integration settings and nutrition data are preserved.
+
 Admin customer views expose only account metadata: ID, email, creation date, profile-complete and active status. Health profiles and password hashes are never returned by admin endpoints. Customer removal is a soft-disable (`users.is_active = 0`); existing sessions are rejected on the next API request. Admin-created customer accounts are not supported.
 
 Only active registered users can be granted an additional admin role. `ADMIN_UIDS` entries are protected bootstrap admins and cannot be revoked or disabled through the app. Role changes are checked against the database for every admin request.
 
-Catalogue recipes are validated server-side against the recipe schema. Customers can browse recipes but catalogue entries do not replace or influence their personalized Gemini recommendation pipeline. Admin activity is read-only and has no edit/delete action.
+Catalogue recipes are validated server-side against the recipe schema. `ingredients[].estCostNGN` stores estimated costs per ingredient, and `costNGN` is the estimated total ingredient cost for the recipe. These are budgeting estimates, not selling prices or charges. Customers can browse recipes but catalogue entries do not replace or influence their personalized Gemini recommendation pipeline. Admin activity is read-only and has no edit/delete action.
 
 Maintenance actions are limited to clearing `nutrition_cache` and resetting `rate_limits`; neither action deletes customer data.
 

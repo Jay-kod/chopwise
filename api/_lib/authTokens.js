@@ -2,8 +2,15 @@ import crypto from 'node:crypto';
 import { AppError } from './http.js';
 
 function getJwtSecret() {
-  const secret = process.env.JWT_SECRET;
+  const secret =
+    process.env.JWT_SECRET ||
+    (process.env.CONFIG_ENCRYPTION_KEY
+      ? crypto.createHash('sha256').update(process.env.CONFIG_ENCRYPTION_KEY + ':jwt_secret').digest('hex')
+      : null);
   if (!secret || Buffer.byteLength(secret, 'utf8') < 32) {
+    if (process.env.NODE_ENV !== 'production') {
+      return 'chopwise-xampp-mysql-local-secret-key-32chars';
+    }
     throw AppError.notConfigured(['JWT_SECRET'], 'Authentication is not configured on the server.');
   }
   return secret;

@@ -1,8 +1,8 @@
 import { useTheme } from '../lib/useTheme';
 
-const LABELS = { system: 'System', light: 'Light', dark: 'Dark' };
+export const LABELS = { system: 'System', light: 'Light', dark: 'Dark' };
 
-function ThemeIcon({ theme }) {
+export function ThemeIcon({ theme }) {
   const common = {
     width: 16,
     height: 16,

@@ -20,21 +20,18 @@ This document catalogs all architectural enhancements and design adjustments mad
 
 ## 3. Security Architecture: Serverless Proxy Pattern
 * **Chapter 3 Proposal**: Client application communicating directly with external AI and nutrition APIs (Figure 3.4).
-* **Implementation Reality**: Client-side API calls would expose Google Gemini API keys and Edamam credentials in browser network traffic.
+* **Implementation Reality**: Client-side API calls would expose Google Gemini and USDA API keys in browser network traffic.
 * **Enhancement**: Implemented a secure 3-endpoint serverless backend deployed on Vercel Functions:
   - `POST /api/recommend`: Validates Firebase ID tokens, checks atomic Firestore rate limits, constructs sanitized prompts, queries Gemini, and reconciles ingredient pricing.
-  - `POST /api/nutrition`: Resolves meal ingredients strictly on the server by `mealId`, performs hash lookup in `nutritionCache`, calls Edamam, and falls back to AI estimates.
+  - `POST /api/nutrition`: Resolves meal ingredients strictly on the server by `mealId`, performs hash lookup in `nutrition_cache`, queries USDA FoodData Central, and falls back to AI estimates.
   - `POST /api/admin`: Authenticates admin UIDs from `ADMIN_UIDS`, manages encrypted secrets with AES-256-GCM, and executes diagnostic health checks.
 
 ---
 
-## 4. Nutrition Engine: Indigenous Ingredient Fallback Architecture
-* **Chapter 3 Proposal**: Edamam Nutrition Analysis API specified as the sole provider of verified nutritional data.
-* **Implementation Reality**: The preliminary API probe revealed that Edamam's NLP parser frequently rejects indigenous Nigerian ingredients (`ogbono`, `garri`, `ugu leaves`, `crayfish`, `waterleaf`) with HTTP 555 or omits them from nutrient sums.
-* **Enhancement**: Designed a two-tier resilience pipeline:
-  1. The server attempts Edamam Nutrition Analysis using formatted ingredient lines (`buildIngredientLines`).
-  2. On any non-2xx status, timeout, or unparseable payload, the system falls back seamlessly to Gemini's structured `aiNutritionEstimate` with `source: 'ai-estimate'` and empty vitamins array.
-  3. Where Edamam data succeeds, mandatory "Powered by Edamam" attribution is rendered with appropriate contrast tokens.
+## 4. Nutrition Engine: USDA Food-Composition Lookup and AI Fallback
+* **Chapter 3 Proposal**: Edamam Nutrition Analysis API specified as the nutrition provider.
+* **Implementation Reality**: USDA FoodData Central provides food-composition records, not recipe parsing. Ingredient names may not have a usable match, and current recipes can use non-gram units for which a safe weight conversion is unavailable.
+* **Enhancement**: The server searches each ingredient and calculates USDA totals only when every ingredient has a usable match and gram quantity. Disabled/unconfigured USDA, unmatched ingredients, unsupported units, timeouts, rate limits, or other upstream errors use Gemini's structured `aiNutritionEstimate` with `source: 'ai-estimate'` and empty vitamins. Successful responses use `source: 'usda'` and show USDA attribution.
 
 ---
 
@@ -43,7 +40,7 @@ This document catalogs all architectural enhancements and design adjustments mad
 * **Implementation Reality**: Repeated AI calls incur financial quota costs and response latencies (3–6 seconds).
 * **Enhancement**:
   - `profileHash`: SHA-1 hash of canonical user profile JSON cached at `users/{uid}/latestRecs/current`. Repeated visits return cached plans in < 150 ms; editing the profile alters the hash and automatically triggers fresh recommendations.
-  - `ingredientsHash`: SHA-1 hash of sorted ingredient lines cached at `nutritionCache/{hash}` in Firestore to prevent duplicate Edamam quota consumption.
+  - `ingredientsHash`: SHA-1 hash of normalized ingredient lines cached in MySQL `nutrition_cache` to avoid duplicate USDA lookups.
 
 ---
 
@@ -63,4 +60,4 @@ This document catalogs all architectural enhancements and design adjustments mad
 
 ## 8. Automated Evidence Suite: Evaluation Runner (P14 / AR9)
 * **Chapter 3 Proposal**: Manual data collection for Chapter 4 results.
-* **Enhancement**: Integrated an automated batch test runner in `/admin/dashboard` (Section G) that runs 10 clinical profiles sequentially through the live AI pipelines, generating budget adherence percentages, safety flag totals, Edamam vs. AI fallback ratios, and downloadable CSV evidence (`chopwise_chapter4_evaluation.csv`).
+* **Enhancement**: Integrated an automated batch test runner in `/admin/evaluation` that runs 10 profiles sequentially through the live AI pipelines, generating budget adherence percentages, safety flag totals, USDA vs. AI fallback ratios, and downloadable CSV evidence (`chopwise_chapter4_evaluation.csv`).

@@ -15,7 +15,7 @@ Deadline: 3 days. Target: working MVP deployed on Vercel.
 Examiners will ask "why not just ask Gemini directly?" Answers built into the product:
 1. Persistent structured profile; the user never re-types it.
 2. Naira budget enforced **in code** (price table + cost recomputation), not just in the prompt.
-3. Nutrition verified through Edamam where it can parse the ingredients; clearly labelled "AI estimate" otherwise.
+3. Nutrition calculated from USDA FoodData Central records when every ingredient has a match and a gram quantity; clearly labelled "AI estimate" otherwise.
 4. Deterministic safety check flags meals unsuitable for declared conditions.
 5. Admin page: configurable, observable, testable system.
 
@@ -23,27 +23,27 @@ Examiners will ask "why not just ask Gemini directly?" Answers built into the pr
 Busy workers; people managing hypertension, diabetes, obesity or ulcers; NSUK students on tight budgets. Two actors: **User** and **Admin** (Admin is new vs Chapter 3's single actor; see section 7).
 
 ## 4. Scope
-In scope: functional and admin requirements in `docs/REQUIREMENTS.md`, plus Save meal.
-Out of scope (do NOT build): chat UI, meal calendar, grocery lists, image upload/recognition, social login, forgot-password flow, PWA/offline, payments, push notifications, multi-language, analytics dashboards, custom ML training, microservices.
+In scope: functional and admin requirements in `docs/REQUIREMENTS.md`, plus Save meal and a shared browse-only recipe catalogue.
+Out of scope (do NOT build): chat UI, meal calendar, grocery lists, image upload/recognition, social login, forgot-password flow, PWA/offline, subscriptions, push notifications, multi-language, customer-usage analytics dashboards, custom ML training, microservices. Meal analysis and admin integration diagnostics are in scope; do not turn them into usage analytics.
 
 ## 5. Locked stack
 - Frontend: React (Vite, JavaScript), Tailwind CSS, React Router.
 - Auth + DB: MySQL/MariaDB email/password accounts, scrypt password hashes, and server-issued HMAC-SHA256 JWTs.
 - Server: Vercel serverless functions in `/api` (Node, ES modules), `mysql2`, `zod`.
 - AI: Google Gemini API via the official Google Gen AI JS SDK (verify current package name in the Gemini SDK docs). JSON mode with response schema.
-- Nutrition: Edamam Nutrition Analysis API (verify endpoint and plan limits in Edamam docs).
+- Nutrition: USDA FoodData Central API (the server searches food-composition records; it is not a recipe text parser).
 - Tests: Vitest for pure logic.
-- Hosting: Vercel. Local dev: `vercel dev`.
+- Hosting: Vercel. Local dev: `npm run dev` with Vite API middleware; use `vercel dev` to test the Vercel runtime.
 
 ## 6. Document map
 See the table in `AGENTS.md`. Each fact lives in exactly one doc; other docs link to it instead of repeating it.
 
 ## 7. Deviations from Chapter 3 (reconcile in the write-up)
-1. Server-side proxy (Vercel functions) for Gemini and Edamam instead of browser calls, to protect keys.
+1. Server-side proxy (Vercel functions) for Gemini and USDA instead of browser calls, to protect keys.
 2. Gender field added to onboarding (Section 2.1.1 of the thesis cites different calorie needs by sex).
 3. Save meal added (data layer lists "saved meals" but no FR creates them).
-4. Edamam is called when a meal is opened (matches DFD Process 4.0); Figure 3.4 says per meal on generation, update it.
-5. Safety flags and AI-estimate fallback added; Chapter 3 should state Edamam may not parse every Nigerian ingredient.
+4. USDA lookups run when nutrition is requested for a meal (matches DFD Process 4.0); nutrition is calculated only when every ingredient matches and has a gram quantity.
+5. Safety flags and AI-estimate fallback added; unmatched ingredients and non-gram quantities use the meal's AI estimate.
 6. Admin actor + Admin page added (update use-case diagram, Figure 3.2).
 7. MySQL/MariaDB and server-issued JWTs are used for persistence and authentication.
 8. Consent checkbox at registration for storing health information.
@@ -52,6 +52,6 @@ See the table in `AGENTS.md`. Each fact lives in exactly one doc; other docs lin
 
 ## 8. Glossary
 - **Bootstrap env vars**: the few environment variables that must exist before the app can start (MySQL connection, JWT signing secret, bootstrap admin UIDs, encryption key). Cannot be managed from the Admin page.
-- **Admin-managed config**: Gemini key/model, Edamam keys, settings, safety thresholds, and price table, stored in the MySQL `admin_config` table; secret values are encrypted.
+- **Admin-managed config**: Gemini key/model, USDA API key, settings, safety thresholds, and price table, stored in the MySQL `admin_config` table; secret values are encrypted.
 - **perMealCapNGN**: weekly budget divided by budgetDivisor (default 21).
 - **Pipeline test**: Admin test that runs the real recommendation or nutrition code with a built-in sample.

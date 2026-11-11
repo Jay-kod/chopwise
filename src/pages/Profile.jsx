@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { apiClient } from '../lib/apiClient';
 import { useAuth } from '../features/auth/useAuth';
 import { useToast } from '../components/Toast';
+import { useNotifications } from '../features/notifications/NotificationContext';
 import { AppShell } from '@/components/app-shell';
 import Card from '../components/Card';
 import Button from '../components/Button';
@@ -10,6 +11,7 @@ import Spinner from '../components/Spinner';
 import Disclaimer from '../components/Disclaimer';
 import ConfirmModal from '../components/ConfirmModal';
 import SavedMealsList from '../features/meals/SavedMealsList';
+import ProfileOverviewCard from '../features/profile/ProfileOverviewCard';
 import Step1Demographics from '../features/onboarding/steps/Step1Demographics';
 import Step2Conditions from '../features/onboarding/steps/Step2Conditions';
 import Step3Preferences from '../features/onboarding/steps/Step3Preferences';
@@ -20,13 +22,10 @@ import { ROUTES } from '../lib/routes';
 export default function Profile() {
   const { user, userDoc, logout, refreshProfile } = useAuth();
   const addToast = useToast();
+  const { addNotification } = useNotifications();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = searchParams.get('tab') === 'saved' ? 'saved' : 'profile';
-
-  function handleTabChange(tab) {
-    setSearchParams(tab === 'saved' ? { tab: 'saved' } : {});
-  }
 
   const [formData, setFormData] = useState(null);
   const [errors, setErrors] = useState({});
@@ -37,7 +36,6 @@ export default function Profile() {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [mealToRemove, setMealToRemove] = useState(null);
 
-  // Sync profile data from userDoc
   useEffect(() => {
     if (userDoc?.profile) {
       const p = userDoc.profile;
@@ -45,6 +43,7 @@ export default function Profile() {
         age: p.age ?? '', gender: p.gender ?? '', weightKg: p.weightKg ?? '',
         conditions: p.conditions ?? [], preferences: p.preferences ?? [],
         avoidText: p.avoidText ?? '', weeklyBudgetNGN: p.weeklyBudgetNGN ?? '',
+        avatar: userDoc.avatar || p.avatar || '',
       });
     }
   }, [userDoc]);
@@ -84,23 +83,24 @@ export default function Profile() {
     }
     try {
       setSaving(true);
-      const now = new Date().toISOString();
       await apiClient('/api/auth', {
         action: 'update-profile',
-        profile: { ...result.data, updatedAt: now },
+        profile: { ...result.data, avatar: user?.avatar || userDoc?.avatar || undefined, updatedAt: new Date().toISOString() },
       });
       await refreshProfile();
       addToast('Profile updated! Your next meal plan will use these settings.', 'ok');
+      addNotification({
+        type: 'profile',
+        title: 'Profile Updated',
+        message: 'Your dietary preferences and budget settings were saved.',
+        href: '/customer/profile',
+        icon: '👤',
+      });
     } catch (err) {
       addToast(err?.message || 'Failed to update profile.', 'error');
     } finally {
       setSaving(false);
     }
-  }
-
-  function promptRemoveSaved(mealId) {
-    const target = savedMeals.find((s) => s.id === mealId || s.meal?.id === mealId);
-    setMealToRemove(target || { id: mealId, meal: { name: 'this recipe' } });
   }
 
   async function confirmRemoveSaved() {
@@ -111,6 +111,13 @@ export default function Profile() {
       await apiClient('/api/auth', { action: 'delete-saved-meal', mealId });
       setSavedMeals((prev) => prev.filter((s) => s.id !== mealId && s.meal?.id !== mealId));
       addToast('Recipe removed from saved list.', 'ok');
+      addNotification({
+        type: 'favourite',
+        title: 'Removed from Saved Meals',
+        message: `"${mealToRemove.name || 'Recipe'}" was removed from your collection.`,
+        href: '/customer/saved',
+        icon: '💔',
+      });
     } catch (err) {
       addToast(err?.message || 'Failed to remove saved recipe.', 'error');
     } finally {
@@ -119,79 +126,74 @@ export default function Profile() {
     }
   }
 
-  async function handleLogout() {
-    try {
-      await logout();
-      navigate(ROUTES.customer.login);
-    } catch {}
-  }
-
   return (
-    <AppShell>
+    <AppShell pathname={ROUTES.customer.profile}>
       <div className="space-y-6">
-        {/* Header with Account Summary and Logout */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-line pb-4">
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-fg">My Profile</h1>
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-fg">My Profile &amp; Settings</h1>
             <p className="mt-0.5 text-xs text-muted">
-              Edit your details, weekly budget, health conditions and food preferences.
+              Configure your body metrics, budget caps, health conditions, and food preferences.
             </p>
           </div>
-          <Button variant="secondary" onClick={() => setShowLogoutConfirm(true)} className="text-xs min-h-9 px-3">
+          <Button variant="secondary" onClick={() => setShowLogoutConfirm(true)} className="text-xs min-h-9 px-3.5">
             Log out
           </Button>
         </div>
 
-        {/* Tab Navigation */}
+        <ProfileOverviewCard user={user} formData={formData} savedCount={savedMeals.length} />
+
         <div className="flex border-b border-line">
           <button
             type="button"
-            onClick={() => handleTabChange('profile')}
-            className={`border-b-2 px-4 py-2 text-xs font-semibold transition-colors ${
-              activeTab === 'profile'
-                ? 'border-primary text-primary'
-                : 'border-transparent text-muted hover:text-fg'
+            onClick={() => setSearchParams({})}
+            className={`border-b-2 px-4 py-2.5 text-xs font-semibold transition-colors flex items-center gap-2 ${
+              activeTab === 'profile' ? 'border-primary text-primary' : 'border-transparent text-muted hover:text-fg'
             }`}
           >
-            Health &amp; Budget Profile
+            <span>⚙️</span>
+            <span>Health &amp; Budget Settings</span>
           </button>
           <button
             type="button"
-            onClick={() => handleTabChange('saved')}
-            className={`border-b-2 px-4 py-2 text-xs font-semibold transition-colors ${
-              activeTab === 'saved'
-                ? 'border-primary text-primary'
-                : 'border-transparent text-muted hover:text-fg'
+            onClick={() => setSearchParams({ tab: 'saved' })}
+            className={`border-b-2 px-4 py-2.5 text-xs font-semibold transition-colors flex items-center gap-2 ${
+              activeTab === 'saved' ? 'border-primary text-primary' : 'border-transparent text-muted hover:text-fg'
             }`}
           >
-            Saved Recipes ({savedMeals.length})
+            <span>🔖</span>
+            <span>Saved Recipes ({savedMeals.length})</span>
           </button>
         </div>
 
-        {/* Tab 1: Profile Editor */}
         {activeTab === 'profile' && (
           <div>
             {!formData ? (
-              <div className="flex justify-center py-12">
-                <Spinner label="Loading profile data…" />
-              </div>
+              <div className="flex justify-center py-12"><Spinner label="Loading profile data…" /></div>
             ) : (
               <form onSubmit={handleSaveProfile} className="space-y-6">
-                <Card className="p-5 space-y-6">
-                  <Step1Demographics data={formData} errors={errors} onChange={handleFieldChange} />
-                  <div className="border-t border-line pt-6">
-                    <Step2Conditions data={formData} errors={errors} onChange={handleFieldChange} />
-                  </div>
-                  <div className="border-t border-line pt-6">
-                    <Step3Preferences data={formData} errors={errors} onChange={handleFieldChange} />
-                  </div>
-                  <div className="border-t border-line pt-6">
+                <div className="grid gap-6 md:grid-cols-2">
+                  <Card className="p-5 space-y-4">
+                    <Step1Demographics data={formData} errors={errors} onChange={handleFieldChange} />
+                  </Card>
+                  <Card className="p-5 space-y-4">
                     <Step4Budget data={formData} errors={errors} onChange={handleFieldChange} />
-                  </div>
+                  </Card>
+                </div>
+
+                <Card className="p-5 space-y-4">
+                  <Step2Conditions data={formData} errors={errors} onChange={handleFieldChange} />
                 </Card>
 
-                <div className="flex justify-end gap-3">
-                  <Button type="submit" disabled={saving} className="text-xs min-h-10 px-5">
+                <Card className="p-5 space-y-4">
+                  <Step3Preferences data={formData} errors={errors} onChange={handleFieldChange} />
+                </Card>
+
+                <div className="rounded-xl border border-line bg-surface-muted p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <p className="text-xs text-muted">
+                    Changes take effect on your next meal plan recommendation.
+                  </p>
+                  <Button type="submit" disabled={saving} className="text-xs min-h-10 px-6 sm:w-auto w-full">
                     {saving ? <Spinner label="Saving…" /> : 'Save Profile Changes'}
                   </Button>
                 </div>
@@ -200,25 +202,24 @@ export default function Profile() {
           </div>
         )}
 
-        {/* Tab 2: Saved Meals */}
         {activeTab === 'saved' && (
           <SavedMealsList
             savedMeals={savedMeals}
             loading={loadingSaved}
-            onRemove={promptRemoveSaved}
+            onRemove={(id) => {
+              const target = savedMeals.find((s) => s.id === id || s.meal?.id === id);
+              setMealToRemove(target || { id, meal: { name: 'this recipe' } });
+            }}
             removingId={removingId}
           />
         )}
 
-        <div className="pt-4">
-          <Disclaimer />
-        </div>
+        <div className="pt-2"><Disclaimer /></div>
 
-        {/* Logout Confirmation */}
         <ConfirmModal
           isOpen={showLogoutConfirm}
           onClose={() => setShowLogoutConfirm(false)}
-          onConfirm={handleLogout}
+          onConfirm={async () => { await logout(); navigate(ROUTES.customer.login); }}
           title="Log out of ChopWise?"
           message="Are you sure you want to log out of your account?"
           confirmText="Log out"
@@ -226,7 +227,6 @@ export default function Profile() {
           icon="🚪"
         />
 
-        {/* Remove Saved Recipe Confirmation */}
         <ConfirmModal
           isOpen={Boolean(mealToRemove)}
           onClose={() => setMealToRemove(null)}

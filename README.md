@@ -10,7 +10,7 @@ ChopWise is an AI-based Nigerian recipe recommendation web app. It generates per
 - **Auth & DB:** Firebase Auth (Email/Password), Cloud Firestore
 - **Server:** Vercel Serverless Functions (`/api`), Node.js, `firebase-admin`, `zod`
 - **AI:** Google Gemini API (structured JSON mode via `@google/genai`)
-- **Nutrition:** Edamam Nutrition Analysis API (with AI-estimate fallback)
+- **Nutrition:** USDA FoodData Central food-composition lookup (with AI-estimate fallback)
 - **Testing:** Vitest
 
 ## Getting Started
@@ -43,9 +43,25 @@ ChopWise is an AI-based Nigerian recipe recommendation web app. It generates per
 
 4. Run locally:
    ```bash
-   vercel dev
+   npm run dev
    ```
-   > **Note:** Plain `npm run dev` serves only the Vite frontend. Use `vercel dev` to run the `/api` serverless functions alongside the frontend.
+   > **Note:** Vite middleware serves the `/api` handlers locally. Use `vercel dev` when you need to test the Vercel runtime.
+
+### Temporary Docker share link
+
+For a temporary public testing URL, use the Docker Compose setup. It runs the Vite app and its `/api` handlers with a local MySQL container, then exposes the app through a Cloudflare Quick Tunnel. The link is temporary and changes when the tunnel restarts.
+
+In PowerShell from the project root:
+
+```powershell
+.\scripts\Initialize-DockerShare.ps1
+docker compose --env-file docker.test.env up --build -d
+docker compose logs -f tunnel
+```
+
+Open the `trycloudflare.com` URL printed in the tunnel logs and share it with testers. Stop the logs with Ctrl+C; stop the app and tunnel with `docker compose down`. The MySQL data volume is preserved when stopped.
+
+Anyone with the URL can reach the app. Use disposable test data only; do not seed the public test-admin account or enter real health information. The local Docker config is ignored by Git and contains generated local-only secrets. Gemini features remain unconfigured unless a key is added to that private config file.
 
 ### Testing & Verification
 
@@ -53,4 +69,3 @@ ChopWise is an AI-based Nigerian recipe recommendation web app. It generates per
 - Color audit: `npm run check:colors`
 - Full check (colors + tests + build): `npm run verify`
 - Production build: `npm run build`
-

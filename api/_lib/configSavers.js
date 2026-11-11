@@ -4,14 +4,26 @@ import seedPrices from './data/seedPrices.json' with { type: 'json' };
 import { settingsSchema, safetySchema, pricesSchema } from './schemas.js';
 import { AppError } from './http.js';
 import { loadDoc, saveDoc, clearConfigCache } from './configBase.js';
-import { getGeminiConfig, getEdamamConfig } from './configStore.js';
+import { getGeminiConfig, getUsdaConfig } from './configStore.js';
+
+function requireConfigEncryptionKey() {
+  const key = process.env.CONFIG_ENCRYPTION_KEY;
+  if (!key || Buffer.from(key, 'base64').length !== 32) {
+    throw AppError.notConfigured(
+      ['CONFIG_ENCRYPTION_KEY'],
+      'Cannot save integration credentials: configure CONFIG_ENCRYPTION_KEY as a valid 32-byte base64 key in the server environment, then restart the API.'
+    );
+  }
+}
 
 export async function saveConfig(section, values) {
   const now = new Date().toISOString();
 
   if (section === 'gemini') {
+    const enteredApiKey = values.apiKey ? String(values.apiKey).trim() : '';
+    if (enteredApiKey) requireConfigEncryptionKey();
     const existing = await getGeminiConfig();
-    const apiKey = values.apiKey ? String(values.apiKey).trim() : existing.apiKey;
+    const apiKey = enteredApiKey || existing.apiKey;
     const model = values.model ? String(values.model).trim() : existing.model;
     const dataToSave = { model, updatedAt: now };
     if (apiKey) dataToSave.apiKeyEnc = encrypt(apiKey);
@@ -22,18 +34,18 @@ export async function saveConfig(section, values) {
     return;
   }
 
-  if (section === 'edamam') {
-    const existing = await getEdamamConfig();
-    const appId = values.appId ? String(values.appId).trim() : existing.appId;
-    const appKey = values.appKey ? String(values.appKey).trim() : existing.appKey;
+  if (section === 'usda') {
+    const enteredApiKey = values.apiKey ? String(values.apiKey).trim() : '';
+    if (enteredApiKey) requireConfigEncryptionKey();
+    const existing = await getUsdaConfig();
+    const apiKey = enteredApiKey || existing.apiKey;
     const enabled = values.enabled !== undefined ? Boolean(values.enabled) : existing.enabled;
     const dataToSave = { enabled, updatedAt: now };
-    if (appId) dataToSave.appIdEnc = encrypt(appId);
-    if (appKey) dataToSave.appKeyEnc = encrypt(appKey);
+    if (apiKey) dataToSave.apiKeyEnc = encrypt(apiKey);
 
     const doc = (await loadDoc('integrations')) || {};
-    await saveDoc('integrations', { ...doc, edamam: { ...(doc.edamam || {}), ...dataToSave } });
-    clearConfigCache('edamam');
+    await saveDoc('integrations', { ...doc, usda: { ...(doc.usda || {}), ...dataToSave } });
+    clearConfigCache('usda');
     return;
   }
 

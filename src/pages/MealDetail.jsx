@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { HeartIcon } from 'lucide-react';
 import { apiClient } from '../lib/apiClient';
 import { useAuth } from '../features/auth/useAuth';
 import { AppShell } from '@/components/app-shell';
@@ -13,12 +14,14 @@ import NutritionPanel from '../features/meals/NutritionPanel';
 import MealIngredientsAndSteps from '../features/meals/MealIngredientsAndSteps';
 import { formatNaira } from '../lib/format';
 import { useToast } from '../components/Toast';
+import { useNotifications } from '../features/notifications/NotificationContext';
 import { ROUTES } from '../lib/routes';
 
 export default function MealDetail() {
   const { id: mealId } = useParams();
   const { user } = useAuth();
   const addToast = useToast();
+  const { addNotification } = useNotifications();
 
   const [meal, setMeal] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -69,14 +72,16 @@ export default function MealDetail() {
       if (isSaved) {
         await apiClient('/api/auth', { action: 'delete-saved-meal', mealId: meal.id });
         setIsSaved(false);
-        addToast(`Removed "${meal.name}" from saved recipes.`, 'ok');
+        addToast(`Removed "${meal.name}" from favourite meals.`, 'ok');
+        addNotification({ type: 'favourite', title: 'Removed from Favourites', message: `"${meal.name}" was removed.`, href: '/customer/saved', icon: '💔' });
       } else {
         await apiClient('/api/auth', { action: 'save-meal', meal });
         setIsSaved(true);
-        addToast(`Saved "${meal.name}" to your profile!`, 'ok');
+        addToast(`Added "${meal.name}" to favourite meals!`, 'ok');
+        addNotification({ type: 'favourite', title: 'Saved to Favourites', message: `"${meal.name}" saved to favourites.`, href: '/customer/saved', icon: '❤️' });
       }
     } catch (err) {
-      addToast(err?.message || 'Failed to update saved recipe.', 'error');
+      addToast(err?.message || 'Failed to update favourite meals.', 'error');
     } finally {
       setSavingAction(false);
     }
@@ -84,7 +89,7 @@ export default function MealDetail() {
 
   if (loading) {
     return (
-      <AppShell>
+      <AppShell pathname={ROUTES.customer.dashboard}>
         <div className="flex min-h-[60vh] items-center justify-center">
           <Spinner label="Loading recipe details…" />
         </div>
@@ -94,7 +99,7 @@ export default function MealDetail() {
 
   if (error || !meal) {
     return (
-      <AppShell>
+      <AppShell pathname={ROUTES.customer.dashboard}>
         <div className="mx-auto max-w-lg py-12">
           <ErrorState message={error || 'Meal not found.'} />
           <div className="mt-4 text-center">
@@ -108,7 +113,7 @@ export default function MealDetail() {
   }
 
   return (
-    <AppShell>
+    <AppShell pathname={ROUTES.customer.dashboard}>
       <div className="space-y-6">
         {/* Navigation back bar */}
         <div className="flex items-center justify-between border-b border-line pb-3">
@@ -123,14 +128,20 @@ export default function MealDetail() {
             variant={isSaved ? 'secondary' : 'primary'}
             onClick={handleToggleSave}
             disabled={savingAction}
-            className="text-xs min-h-9 px-3.5"
+            className="text-xs min-h-9 px-3.5 inline-flex items-center gap-1.5"
           >
             {savingAction ? (
               <Spinner label="Updating…" />
             ) : isSaved ? (
-              '★ Saved Recipe'
+              <>
+                <HeartIcon className="size-3.5 fill-primary text-primary" />
+                <span>In Favourites</span>
+              </>
             ) : (
-              '☆ Save Recipe'
+              <>
+                <HeartIcon className="size-3.5" />
+                <span>Add to Favourites</span>
+              </>
             )}
           </Button>
         </div>
@@ -154,7 +165,7 @@ export default function MealDetail() {
               <span className="text-2xl font-extrabold text-primary">
                 {formatNaira(meal.costNGN)}
               </span>
-              <span className="ml-1 text-xs text-muted">total estimate</span>
+              <span className="ml-1 text-xs text-muted">estimated ingredient cost</span>
             </div>
           </div>
 
@@ -173,11 +184,14 @@ export default function MealDetail() {
           </div>
         </div>
 
-        {/* Caution Notes (if present) */}
+        {/* Health Recommendation Tip & Guidance (Thesis Claim B4) */}
         {meal.cautionNotes && (
-          <div className="rounded-xl border border-line bg-surface-muted p-4 text-xs text-fg">
-            <span className="font-semibold text-fg">Preparation note: </span>
-            <span className="text-muted">{meal.cautionNotes}</span>
+          <div className="rounded-xl border border-line bg-surface-muted p-4 text-xs">
+            <div className="flex items-center gap-2 font-bold text-fg mb-1">
+              <span aria-hidden="true">💡</span>
+              <span>Health Recommendation & Dietary Guidance</span>
+            </div>
+            <p className="text-muted leading-relaxed">{meal.cautionNotes}</p>
           </div>
         )}
 

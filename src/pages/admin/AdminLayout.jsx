@@ -28,7 +28,7 @@ export default function AdminLayout() {
   }
 
   return (
-    <AppShell pathname={location.pathname} onAdminAction={() => adminApi.testAll()}>
+    <AppShell pathname={location.pathname}>
       <Outlet context={adminApi} />
     </AppShell>
   );

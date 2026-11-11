@@ -1,5 +1,7 @@
+import { Link } from 'react-router-dom';
 import Card from '../../components/Card';
 import Badge from '../../components/Badge';
+import { ROUTES } from '@/lib/routes';
 
 export default function BootstrapChecklist({ bootstrap = {} }) {
   const items = [
@@ -56,10 +58,18 @@ export default function BootstrapChecklist({ bootstrap = {} }) {
               <div className="font-mono text-xs font-bold text-fg">{item.name}</div>
               <div className="text-[11px] text-muted">{item.desc}</div>
             </div>
-            <div>
+            <div className="flex items-center gap-2">
               <Badge variant={item.present ? 'ok' : 'warning'}>
                 {item.present ? 'Configured' : 'Missing'}
               </Badge>
+              {item.key === 'adminUidsSet' && (
+                <Link
+                  to={ROUTES.admin.access}
+                  className="inline-flex items-center gap-1 rounded-lg border border-field-line bg-surface px-2.5 py-1 text-xs font-semibold text-fg shadow-2xs hover:bg-surface-muted transition-colors"
+                >
+                  <span>{item.present ? 'Manage' : 'Configure in Frontend'} →</span>
+                </Link>
+              )}
             </div>
           </div>
         ))}
@@ -75,13 +85,13 @@ export default function BootstrapChecklist({ bootstrap = {} }) {
             <strong>Database Schema:</strong> ChopWise automatically bootstraps the <code>chopwise</code> database and tables on startup (or you can run <code>mysql/schema.sql</code> in phpMyAdmin).
           </li>
           <li>
-            <strong>Admin Access:</strong> Register your account, then add its account ID to <code>ADMIN_UIDS</code> in the server environment.
+            <strong>Admin Access:</strong> Configure bootstrap IDs directly on the <Link to={ROUTES.admin.access} className="font-semibold text-fg underline underline-offset-2 hover:text-primary">Administrator Access</Link> page in the frontend, or set <code>ADMIN_UIDS</code> in the server environment.
           </li>
           <li>
             <strong>JWT_SECRET:</strong> Configure a unique random signing secret of at least 32 characters on the server.
           </li>
           <li>
-            <strong>API Keys:</strong> You can configure Gemini and Edamam keys directly from the Integration Cards below.
+            <strong>API Keys:</strong> Configure Gemini and USDA FoodData Central keys on their Admin integration pages.
           </li>
         </ol>
       </div>

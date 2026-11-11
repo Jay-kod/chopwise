@@ -83,7 +83,7 @@ export default function Footer() {
         <div className="mt-8 flex flex-col gap-3 border-t border-line pt-6 text-center text-xs text-muted sm:flex-row sm:items-center sm:justify-between sm:text-left">
           <p>© {currentYear} {name}. All rights reserved.</p>
           <p className="text-[11px]">
-            AI nutrition powered by Gemini &amp; Edamam where supported by standard food taxonomies.
+            Nutrition estimates use Gemini, with USDA FoodData Central data where ingredients match.
           </p>
         </div>
       </div>

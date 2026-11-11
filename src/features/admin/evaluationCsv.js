@@ -14,7 +14,7 @@ export function downloadEvaluationCsv(results) {
     'Meals Count',
     'Within Budget Count',
     'Safety Flag Count',
-    'Edamam Count',
+    'USDA Count',
     'AI Estimate Count',
     'Latency (ms)',
   ];
@@ -28,7 +28,7 @@ export function downloadEvaluationCsv(results) {
     r.mealsCount,
     r.withinBudgetCount,
     r.safetyFlagCounts,
-    r.edamamCount,
+    r.usdaCount,
     r.aiEstimateCount,
     r.latencyMs,
   ]);
@@ -45,4 +45,3 @@ export function downloadEvaluationCsv(results) {
   link.click();
   document.body.removeChild(link);
 }
-

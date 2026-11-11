@@ -55,11 +55,12 @@ function getConnectionConfig() {
   const database = process.env.MYSQL_DATABASE || 'chopwise';
   if (!/^[A-Za-z0-9_]+$/.test(database)) throw new Error('MYSQL_DATABASE has an invalid name.');
   return {
-    host: process.env.MYSQL_HOST || 'localhost',
+    host: process.env.MYSQL_HOST || '127.0.0.1',
     port: Number(process.env.MYSQL_PORT) || 3306,
     user: process.env.MYSQL_USER || 'root',
     password: process.env.MYSQL_PASSWORD || '',
     database,
+    connectTimeout: 4000,
   };
 }
 
@@ -70,6 +71,7 @@ export function getPool() {
       waitForConnections: true,
       connectionLimit: 10,
       queueLimit: 0,
+      connectTimeout: 4000,
       enableKeepAlive: true,
       keepAliveInitialDelay: 0,
     });
@@ -92,6 +94,32 @@ async function addActiveAccountMigration(connection) {
   }
 }
 
+async function addAvatarColumnMigration(connection) {
+  const [columns] = await connection.query("SHOW COLUMNS FROM users LIKE 'avatar'");
+  if (columns.length === 0) {
+    await connection.query('ALTER TABLE users ADD COLUMN avatar LONGTEXT NULL AFTER profile');
+  }
+}
+
+async function removeLegacyEdamamConfig(connection) {
+  for (const section of ['integrations', 'testResults']) {
+    const [rows] = await connection.execute(
+      'SELECT config FROM admin_config WHERE section = ? LIMIT 1',
+      [section]
+    );
+    if (!rows.length) continue;
+
+    const stored = typeof rows[0].config === 'string' ? JSON.parse(rows[0].config) : rows[0].config;
+    if (!stored || !Object.hasOwn(stored, 'edamam')) continue;
+    delete stored.edamam;
+    await connection.execute(
+      'UPDATE admin_config SET config = ?, updated_at = NOW() WHERE section = ?',
+      [JSON.stringify(stored), section]
+    );
+  }
+  await connection.execute("DELETE FROM nutrition_cache WHERE source = 'edamam'");
+}
+
 export async function ensureDatabaseAndTables() {
   if (tablesEnsured) return;
   if (!tablesEnsurePromise) {
@@ -106,7 +134,10 @@ export async function ensureDatabaseAndTables() {
 async function initializeDatabase() {
   const config = getConnectionConfig();
   const { database, ...connectionConfig } = config;
-  const connection = await mysql.createConnection(connectionConfig);
+  const connection = await mysql.createConnection({
+    ...connectionConfig,
+    connectTimeout: 4000,
+  });
   try {
     await connection.query(
       `CREATE DATABASE IF NOT EXISTS \`${database}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`
@@ -114,6 +145,8 @@ async function initializeDatabase() {
     await connection.query(`USE \`${database}\``);
     for (const statement of TABLES) await connection.query(statement);
     await addActiveAccountMigration(connection);
+    await addAvatarColumnMigration(connection);
+    await removeLegacyEdamamConfig(connection);
     tablesEnsured = true;
   } finally {
     await connection.end();

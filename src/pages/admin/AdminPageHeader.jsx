@@ -5,7 +5,7 @@ export default function AdminPageHeader({ title, description, badge, actions }) 
         <div className="flex items-center gap-2">
           <h1 className="text-2xl font-bold tracking-tight text-fg">{title}</h1>
           {badge && (
-            <span className="rounded-full bg-surface-muted px-2.5 py-0.5 text-xs font-semibold text-primary">
+            <span className="rounded-full border border-line bg-surface-muted px-2.5 py-0.5 text-xs font-semibold text-primary shadow-2xs">
               {badge}
             </span>
           )}

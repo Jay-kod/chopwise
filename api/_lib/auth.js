@@ -2,12 +2,28 @@ import { verifyToken } from './authTokens.js';
 import { AppError } from './http.js';
 import { query } from './mysql.js';
 
+let dynamicBootstrapUids = [];
+
+export function setDynamicBootstrapAdminIds(uids = []) {
+  if (typeof uids === 'string') {
+    dynamicBootstrapUids = uids
+      .split(',')
+      .map((s) => s.trim().toLowerCase())
+      .filter(Boolean);
+  } else if (Array.isArray(uids)) {
+    dynamicBootstrapUids = uids
+      .map((s) => String(s).trim().toLowerCase())
+      .filter(Boolean);
+  }
+}
+
 export function getBootstrapAdminIds() {
   const adminUidsRaw = process.env.ADMIN_UIDS || '';
-  return adminUidsRaw
+  const fromEnv = adminUidsRaw
     .split(',')
     .map((s) => s.trim().toLowerCase())
     .filter(Boolean);
+  return Array.from(new Set([...fromEnv, ...dynamicBootstrapUids]));
 }
 
 export function isBootstrapAdmin(userId) {

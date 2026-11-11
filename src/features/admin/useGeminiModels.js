@@ -47,9 +47,15 @@ export function useGeminiModels({
         lastFetchedKeyRef.current = trimmed;
 
         if (list.length > 0) {
-          const exists = list.some((m) => m.id === currentModel);
+          const exists = list.some((m) => m.id === currentModel && !m.id.toLowerCase().includes('argon'));
           if (!currentModel || !exists) {
-            onModelChange(list[0].id);
+            const preferred =
+              list.find((m) => m.id === 'gemini-3.5-flash-lite') ||
+              list.find((m) => m.id === 'gemini-3.5-flash') ||
+              list.find((m) => m.id === 'gemini-3.1-flash-lite') ||
+              list.find((m) => m.id === 'gemini-3.6-flash') ||
+              list[0];
+            onModelChange(preferred.id);
           }
         }
       } catch (err) {

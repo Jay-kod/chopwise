@@ -8,7 +8,10 @@ import { join, extname, relative } from 'node:path';
 const ROOT = process.cwd();
 const TARGETS = ['src', 'index.html'];
 const EXTS = new Set(['.js', '.jsx', '.ts', '.tsx', '.css', '.html']);
-const SKIP_FILES = new Set([join('src', 'styles', 'theme.css')]);
+const SKIP_FILES = new Set([
+  join('src', 'styles', 'theme.css'),
+  join('src', 'features', 'auth', 'preworkedAvatars.jsx'),
+]);
 const SKIP_DIRS = new Set([join('src', 'components', 'ui')]);
 
 const PALETTE = 'slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose';

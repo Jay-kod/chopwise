@@ -69,24 +69,36 @@ export function useAdminApi() {
   );
 
   const runTest = useCallback(
-    async (target) => {
+    async (target, values = null) => {
       try {
         setTestingTarget(target);
-        const result = await apiClient('/api/admin', {
+        const payload = {
           action: 'test',
           target,
-        });
-        if (result.ok) {
-          addToast(`Test passed for ${target}: ${result.message}`, 'ok');
-        } else {
-          addToast(`Test failed for ${target}: ${result.message}`, 'error');
+        };
+        if (values && typeof values === 'object') {
+          payload.values = values;
         }
-        await fetchStatus();
-        return result;
+
+        const result = await apiClient('/api/admin', payload);
+        const formatted = {
+          ...result,
+          testedAt: result.testedAt || new Date().toISOString(),
+        };
+
+        if (formatted.ok) {
+          addToast(`Test passed for ${target}: ${formatted.message}`, 'ok');
+        } else {
+          addToast(`Test failed for ${target}: ${formatted.message}`, 'error');
+        }
+
+        // Background sync to update status cache
+        fetchStatus().catch(() => {});
+        return formatted;
       } catch (err) {
         const msg = err.message || `Test failed for ${target}.`;
         addToast(msg, 'error');
-        return { ok: false, message: msg };
+        return { ok: false, message: msg, testedAt: new Date().toISOString() };
       } finally {
         setTestingTarget(null);
       }
@@ -107,11 +119,13 @@ export function useAdminApi() {
         if (!res?.ok) allPassed = false;
       }
 
+      await fetchStatus();
+
       if (allPassed) {
         addToast('All healthcheck tests passed successfully!', 'ok');
       }
     },
-    [status, runTest, addToast]
+    [status, runTest, fetchStatus, addToast]
   );
 
   return {

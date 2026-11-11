@@ -1,6 +1,6 @@
 # API.md
 
-Three Vercel functions. All: JSON in/out, header `Authorization: Bearer <Firebase ID token>`, same-origin only (no CORS headers).
+Five Vercel functions. All: JSON in/out, header `Authorization: Bearer <Firebase ID token>`, same-origin only (no CORS headers).
 
 ## Error envelope
 ```json
@@ -46,14 +46,15 @@ Response 200:
 The Gemini response schema contains the fields up to `aiNutritionEstimate` plus `estimatedCostNGN`; the server adds `costNGN`, `costSource`, `overBudget`, `safetyFlags` and the id suffix. See AI_AND_NUTRITION_SPEC.md.
 
 ## POST /api/nutrition
-Request: `{ "mealId": "string" }`. The server loads the meal from `latest_recs` or `saved_meals` for the authenticated user (so users cannot spend Edamam quota on arbitrary text).
+Request: `{ "mealId": "string", "action?": "nutrition|refresh-usda|ai-feedback" }`. The default `nutrition` action preserves the automatic nutrition lookup. `refresh-usda` bypasses the nutrition cache and performs a fresh USDA lookup. `ai-feedback` asks Gemini for general, non-medical food feedback. The server loads the meal from `latest_recs` or `saved_meals` for the authenticated user (or a published catalogue recipe); callers cannot submit arbitrary ingredients for analysis.
 Response 200:
 ```json
 { "nutrition": { "calories": 0, "proteinG": 0, "carbsG": 0, "fatG": 0, "sodiumMg": 0, "sugarG": 0,
                  "vitamins": [{ "name": "Vitamin C", "amount": 0, "unit": "mg" }] },
-  "source": "edamam|ai-estimate", "safetyFlags": [], "cached": false }
+  "source": "usda|ai-estimate", "sourceMessage?": "string", "safetyFlags": [], "cached": false }
 ```
 AI-estimate responses have `vitamins: []`.
+For `action: "ai-feedback"`, response is `{ "feedback": { "summary": "string", "strengths": ["string"], "cautions": ["string"], "improvements": ["string"] } }`. Feedback is general food information, not medical advice, and does not include the customer's profile.
 
 ## POST /api/admin
 Body always `{ "action": "...", ... }`. `me` is open to any signed-in user; every other action requires an active admin. Admin access is rechecked on each request against protected `ADMIN_UIDS` bootstrap IDs or `admin_roles`.
@@ -61,9 +62,9 @@ Body always `{ "action": "...", ... }`. `me` is open to any signed-in user; ever
 |--------|------|----------|
 | me | none | `{ "isAdmin": boolean }` |
 | status | none | `{ bootstrap, functions, integrations, settings, safety, prices }` (below) |
-| saveConfig | `{ "section": "gemini|edamam|settings|safety|prices", "values": {...} }` | `{ "ok": true }` plus fresh section status |
+| saveConfig | `{ "section": "gemini|usda|settings|safety|prices", "values": {...} }` | `{ "ok": true }` plus fresh section status |
 | resetSection | `{ "section": "settings|safety|prices" }` | `{ "ok": true }` |
-| test | `{ "target": "mysql|gemini|edamam|recommend|nutrition" }` | `{ "ok", "message", "latencyMs", "testedAt", "details?" }` |
+| test | `{ "target": "mysql|gemini|usda|recommend|nutrition" }` | `{ "ok", "message", "latencyMs", "testedAt", "details?" }` |
 | runEvaluationCase (AR9) | `{ "index": 0 }` | metrics for one fixed profile |
 | listCustomers | `{ "search": "", "offset": 0, "limit": 25 }` | `{ "items": [{ "id", "email", "createdAt", "profileComplete", "active" }], "total" }` |
 | updateCustomer | `{ "userId": "uuid", "email": "new@example.com" }` | `{ "ok": true }`; account metadata only |
@@ -75,16 +76,18 @@ Body always `{ "action": "...", ... }`. `me` is open to any signed-in user; ever
 | createRecipe | `{ "recipe": Recipe }` | `{ "ok": true, "item": CatalogItem }` |
 | updateRecipe | `{ "id": "uuid", "recipe": Recipe }` | `{ "ok": true, "item": CatalogItem }` |
 | deleteRecipe | `{ "id": "uuid" }` | `{ "ok": true }` |
+| draftRecipeWithAi | `{ "mealName": "...", "mealType?": "breakfast|lunch|dinner" }` | `{ "ok": true, "recipe": Recipe }` (uses Gemini AI & Nigerian price table) |
+| analyzeRecipeNutrition | `{ "title": "...", "ingredients": [{ "item", "quantity", "unit" }] }` | `{ "ok": true, "source": "usda", "nutrition": {...} }` (requires gram quantities) |
 | listActivity | `{ "offset": 0, "limit": 25 }` | `{ "items": [{ "id", "actorId", "action", "entityType", "entityId", "createdAt", "details" }], "total" }` |
 | clearNutritionCache | none | `{ "ok": true, "deletedCount": 0 }` |
 | resetRateLimits | none | `{ "ok": true, "deletedCount": 0 }` |
 
 Admin mutation actions append to the read-only `admin_activity` log. It contains no health profile, password, JWT, or API-key values. Customer administration never returns or edits health profiles. Customer creation and permanent deletion are unavailable; deactivation is reversible. `ADMIN_UIDS` bootstrap IDs cannot be disabled or revoked through the API.
 
-`Recipe` fields: `name`, `mealType`, `description`, `prepTimeMinutes`, `ingredients`, `steps`, `suitableFor`, `cautionNotes`, `aiNutritionEstimate`, `costNGN`, and `costSource`. The server validates each recipe with `catalogRecipeSchema` and generates the catalogue ID.
+`Recipe` fields: `name`, `mealType`, `description`, `prepTimeMinutes`, `ingredients` (each ingredient has an estimated cost), `steps`, `suitableFor`, `cautionNotes`, `aiNutritionEstimate`, `costNGN` (estimated total ingredient cost, not a selling price), and `costSource`. The server validates each recipe with `catalogRecipeSchema` and generates the catalogue ID.
 
 ## POST /api/catalog
-Requires an active signed-in customer. Body: `{ "action": "list", "search": "", "offset": 0, "limit": 24 }`. Returns only shared recipe catalogue entries; pagination is bounded. This catalogue is browse-only and does not change personalized recommendations.
+Requires an active signed-in customer. Body: `{ "action": "list", "search": "", "offset": 0, "limit": 25 }`. Returns full shared recipe catalogue entries. Ingredient costs and recipe totals are estimates for budgeting, not prices charged to customers. This catalogue does not change personalized recommendations.
 
 **status shape**
 ```json
@@ -100,4 +103,4 @@ Requires an active signed-in customer. Body: `{ "action": "list", "search": "", 
 }
 ```
 Rules: secret fields never return a value, only `configured` and `masked` (last 4 chars). On `saveConfig`, an empty or omitted secret keeps the stored value. The `integrations` array (metadata, links, steps) comes from `api/_lib/integrations.js`, so the UI renders generically and adding an integration means adding one registry entry.
-Functions list is built from the registry plus the pipeline functions that exist (`recommend`, `nutrition`). Do not list what is not built.
+Functions list is built from the registry plus the pipeline functions that exist (`recommend`, `nutrition`).

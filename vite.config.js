@@ -25,6 +25,10 @@ function viteApiServer() {
           return next();
         }
 
+        // Keep local process.env in sync with .env.local during development
+        const freshEnv = loadEnv('development', process.cwd(), '');
+        Object.assign(process.env, freshEnv);
+
         // Buffer and parse request body for POST requests
         if (req.method === 'POST') {
           const buffers = [];
@@ -55,6 +59,10 @@ function viteApiServer() {
           }
           if (endpoint === 'admin') {
             const mod = await server.ssrLoadModule('/api/admin.js');
+            return await mod.default(req, res);
+          }
+          if (endpoint === 'catalog') {
+            const mod = await server.ssrLoadModule('/api/catalog.js');
             return await mod.default(req, res);
           }
         } catch (err) {

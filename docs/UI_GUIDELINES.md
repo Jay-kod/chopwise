@@ -12,13 +12,13 @@ Single source: `src/styles/theme.css` (Tailwind v4 `@theme static` for light val
 ### Tokens (use these utilities, nothing else)
 | Token | Utilities | Light | Dark | Use |
 |---|---|---|---|---|
-| page | `bg-page` | #FFFFFF | #0B1410 | App background |
+| page | `bg-page` | #F6F9F7 | #0B1410 | App background (crisp separation from white cards) |
 | surface | `bg-surface` | #FFFFFF | #12201A | Cards, inputs, popovers |
-| surface-muted | `bg-surface-muted` | #F0FAF4 | #182B22 | Hover, stripes, neutral badges |
-| line | `border-line` | #BFD8C9 | #2E4B3C | Card borders, dividers |
-| field-line | `border-field-line` | #6B8A78 | #5E8571 | Input and button borders |
-| fg | `text-fg` | #0F2A1D | #FFFFFF | Main text |
-| muted | `text-muted` | #41584B | #B8D9C8 | Secondary text, placeholders |
+| surface-muted | `bg-surface-muted` | #EAF5EF | #182B22 | Hover, stripes, neutral badges |
+| line | `border-line` | #C6DDD0 | #2D4C3C | Card borders, dividers |
+| field-line | `border-field-line` | #4D755F | #5E8571 | Input and button borders (>= 3.5:1 contrast) |
+| fg | `text-fg` | #0A2117 | #FFFFFF | Main text |
+| muted | `text-muted` | #2A4838 | #B8D9C8 | Secondary text, placeholders (>= 9:1 AAA contrast) |
 | primary | `bg-primary` `text-primary` | #047857 | #059669 | Brand: buttons, links, active |
 | primary-hover | `bg-primary-hover` | #065F46 | #10B981 | Hover on primary |
 | on-primary | `text-on-primary` | #FFFFFF | #FFFFFF | Text on primary |
@@ -26,9 +26,14 @@ Single source: `src/styles/theme.css` (Tailwind v4 `@theme static` for light val
 | warn-bg / warn-fg / warn-line | `bg-warn-bg` `text-warn-fg` `border-warn-line` | #FEF3C7 / #78350F / #B45309 | #3B2A0B / #FCD34D / #D97706 | Over budget, safety flags, untested |
 | danger-bg / danger-fg / danger-line | `bg-danger-bg` `text-danger-fg` `border-danger-line` | #FEE2E2 / #7F1D1D / #B91C1C | #3F1414 / #FCA5A5 / #EF4444 | Errors, failing tests |
 | ring | `ring-ring` (focus outline set globally) | #047857 | #6EE7B7 | Keyboard focus |
-| chip | `bg-chip` | #FFFFFF | #FFFFFF | Theme-constant white chip (e.g. Edamam badge) |
+| chip | `bg-chip` | #FFFFFF | #FFFFFF | Theme-constant white chip (e.g. USDA badge) |
+| cat-planning-fg/bg/line/dot | `text-cat-planning-fg` `bg-cat-planning-bg` `border-cat-planning-line` `bg-cat-planning-dot` | #0369A1 / #E0F2FE / #BAE6FD / #0284C7 | #38BDF8 / #0C2B42 / #15476B / #38BDF8 | Sidebar: Planning & Insights / Overview & Monitoring |
+| cat-meals-fg/bg/line/dot | `text-cat-meals-fg` `bg-cat-meals-bg` `border-cat-meals-line` `bg-cat-meals-dot` | #92400E / #FEF3C7 / #FDE68A / #D97706 | #FBBF24 / #36200A / #58350F / #F59E0B | Sidebar: Meals & Recipes / Food & User Operations |
+| cat-health-fg/bg/line/dot | `text-cat-health-fg` `bg-cat-health-bg` `border-cat-health-line` `bg-cat-health-dot` | #065F46 / #D1FAE5 / #A7F3D0 / #059669 | #34D399 / #0B281E / #134E39 / #10B981 | Sidebar: Account & Health |
+| cat-engine-fg/bg/line/dot | `text-cat-engine-fg` `bg-cat-engine-bg` `border-cat-engine-line` `bg-cat-engine-dot` | #6D28D9 / #F3E8FF / #DDD6FE / #7C3AED | #C084FC / #261445 / #432174 / #A855F7 | Sidebar: AI & Clinical Engine |
+| cat-governance-fg/bg/line/dot | `text-cat-governance-fg` `bg-cat-governance-bg` `border-cat-governance-line` `bg-cat-governance-dot` | #9F1239 / #FFE4E6 / #FECDD3 / #E11D48 | #FB7185 / #3E101D / #661A30 / #F43F5E | Sidebar: Governance & Tools |
 
-Contrast (WCAG, computed): all text pairs >= 5.4:1 light and >= 7.3:1 dark (AA needs 4.5); on-primary on primary 5.5:1 light / 7.7:1 dark; input borders (field-line) >= 3.5:1 on their backgrounds in both themes; warn/danger lines >= 4.2:1 on their backgrounds. Re-check if you change a value.
+Contrast (WCAG, computed): all text pairs >= 9.0:1 light (AAA) and >= 11.0:1 dark (AAA); on-primary on primary 5.4:1 light / 7.7:1 dark; input borders (field-line) >= 3.5:1 on their backgrounds in both themes; warn/danger lines >= 4.2:1 on their backgrounds. Re-check if you change a value.
 
 ### Rules (enforced by `npm run check:colors`, part of `npm run verify`)
 1. Components use semantic utilities from the table only. No raw palette classes (`bg-emerald-600`, `text-gray-500`), no `bg-white`/`text-black`, no hex/rgb/hsl, no inline colour styles.
@@ -64,12 +69,16 @@ Green means "good/brand" only. Flagged or over-budget meals are never shown in g
 - Components in `src/components`: Button, Card, Input, Select, Badge, Spinner, ErrorState, EmptyState, Disclaimer, Toast, Logo, ThemeToggle. Reuse them; do not restyle per page.
 - Naira format everywhere: `₦1,200` (use `format.js`).
 - Every form field has a visible label, inline validation message and correct input type; buttons and tap targets >= 44 px (`min-h-11`).
-- Meal card: name, ₦ cost, short description, meal-type chip, badges (Over budget, safety flags, AI estimate where relevant).
-- Meal detail: cost breakdown, ingredients, numbered steps, nutrition panel, Save button, disclaimer, Edamam attribution when Edamam data is shown (place it on `bg-chip` so the badge is legible in both themes).
+- Meal card: name, estimated ingredient cost in ₦, short description, meal-type chip, badges (Over budget, safety flags, AI estimate where relevant).
+- Recipe catalogue: show full recipes; label the ₦ amount as estimated ingredient cost, not a selling price.
+- Meal detail: cost breakdown, ingredients, numbered steps, nutrition panel, Save button, disclaimer, USDA attribution when USDA data is shown.
 - States: skeleton/spinner while loading, friendly error with Retry, helpful empty states (e.g. no meals match filters -> Regenerate).
 - Disclaimer (dashboard + detail): "General guidance only, not medical advice. Consult a doctor or dietitian for medical conditions."
-- Footer: privacy note about storing health information; Edamam attribution where applicable.
+- Footer: privacy note about storing health information.
 - Copy tone: plain, short, friendly; no jargon ("weekly food budget", not "budget cap").
 - Navigation: any action reachable within 3 clicks from the dashboard.
+- Active dashboard sidebar destinations use a compact, mildly rounded (`rounded-md`) surface-muted row, a narrow primary marker at the left edge, emphasized foreground text/icon, and a trailing chevron. Apply the same active treatment in customer, admin, and mobile navigation; identify the current route with `aria-current="page"`.
+- The admin sidebar shows administrator destinations only. Customer-app navigation belongs on the main welcome page, and the health-check action belongs on `/admin/dashboard`, not in the sidebar.
 - Route namespaces are strict: every customer page route uses `/customer/<page-name>` and every admin page route uses `/admin/<page-name>`. `/` is public landing only; old unprefixed page URLs may only redirect to their canonical namespaced route.
 - Motion: minimal; reduced-motion respected (set in theme.css).
+- Scrollbars: modern thin 6px pill scrollbars across the application with transparent tracks, no bulky buttons, and themed line/field-line tokens in light and dark modes.

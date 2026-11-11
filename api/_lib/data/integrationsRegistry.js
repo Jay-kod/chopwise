@@ -3,7 +3,7 @@ export const INTEGRATIONS_REGISTRY = [
     id: 'gemini',
     title: 'Google Gemini API',
     description:
-      'Powers structured Nigerian meal recommendations and initial calorie/macronutrient estimations.',
+      'Powers Nigerian meal recommendations, nutrition estimates, and general food feedback on customer meal details.',
     helpLinks: [
       { label: 'Get API Key (Docs)', url: 'https://ai.google.dev/gemini-api/docs/api-key' },
       { label: 'Google AI Studio', url: 'https://aistudio.google.com/' },
@@ -38,48 +38,38 @@ export const INTEGRATIONS_REGISTRY = [
     ],
   },
   {
-    id: 'edamam',
-    title: 'Edamam Nutrition Analysis API',
+    id: 'usda',
+    title: 'USDA FoodData Central',
     description:
-      'Performs ingredient-level dietary analysis and calculates vitamins/minerals for recipe details.',
+      'Powers customer meal-detail nutrition lookups using USDA food-composition records for ingredients measured in grams.',
     helpLinks: [
-      { label: 'Developer Portal', url: 'https://developer.edamam.com/' },
-      { label: 'API FAQ', url: 'https://developer.edamam.com/api/faq' },
-      { label: 'Sign-up Guide', url: 'https://edamamhelp.zendesk.com/hc/en-us/articles/4422823511959-Signing-Up-For-an-API-Without-an-Account' },
-      { label: 'Nutrition API Documentation', url: 'https://developer.edamam.com/edamam-docs-nutrition-api' },
+      { label: 'FoodData Central API guide', url: 'https://fdc.nal.usda.gov/api-guide' },
+      { label: 'Get a free API key', url: 'https://fdc.nal.usda.gov/api-key-signup' },
     ],
     steps: [
-      'Create a developer account at developer.edamam.com.',
-      'In Dashboard > Applications, select "Create New Application".',
-      'Choose the "Nutrition Analysis API" with the free Developer plan.',
-      'Copy your Application ID and Application Key.',
-      'Paste both fields below, toggle Enabled to On, click Save, and run Test.',
+      'Request a free data.gov API key using the USDA key sign-up link.',
+      'Copy the API key from the data.gov confirmation.',
+      'Paste the key below, switch Enabled on, click Save, and run Test.',
     ],
     notes: [
-      'Keys from the Recipe Search API will fail with 401; you must use the Nutrition Analysis API.',
-      'When Edamam cannot parse an indigenous Nigerian ingredient, ChopWise automatically falls back to AI estimates.',
-      'Edamam requires visible attribution ("Powered by Edamam") wherever its data is shown.',
+      'FoodData Central is a food-composition database, not a natural-language recipe parser. ChopWise searches each ingredient and only computes a result when every ingredient has a USDA match and a gram quantity.',
+      'Unmatched ingredients or non-gram quantities use the meal’s AI nutrition estimate instead.',
+      'USDA FoodData Central data is public domain; display source attribution wherever USDA data is shown.',
+      'Keep the API key private. USDA documents a default limit of 1,000 requests per hour per IP address.',
     ],
     fields: [
       {
-        key: 'appId',
-        label: 'Application ID',
+        key: 'apiKey',
+        label: 'USDA API Key',
         type: 'secret',
-        help: 'Found on your Edamam developer dashboard.',
-      },
-      {
-        key: 'appKey',
-        label: 'Application Key',
-        type: 'secret',
-        help: 'Found on your Edamam developer dashboard.',
+        help: 'Free data.gov key used only by the server; stored encrypted.',
       },
       {
         key: 'enabled',
-        label: 'Enable Edamam Nutrition',
+        label: 'Enable USDA Nutrition',
         type: 'toggle',
         help: 'When disabled, ChopWise relies entirely on Gemini nutrition estimates.',
       },
     ],
   },
 ];
-

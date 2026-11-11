@@ -12,10 +12,12 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { UserIcon, LogOutIcon } from "lucide-react";
+import { UserIcon, LogOutIcon, SparklesIcon } from "lucide-react";
 import { useAuth } from "@/features/auth/useAuth";
 import { useNavigate, useLocation } from "react-router-dom";
 import ConfirmModal from "@/components/ConfirmModal";
+import AvatarPickerModal from "@/features/auth/AvatarPickerModal";
+import { AvatarDisplay } from "@/features/auth/preworkedAvatars";
 import { ROUTES } from "@/lib/routes";
 
 export function NavUser() {
@@ -23,6 +25,7 @@ export function NavUser() {
 	const navigate = useNavigate();
 	const location = useLocation();
 	const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+	const [showAvatarModal, setShowAvatarModal] = useState(false);
 
 	const isAdminPortal = location.pathname.startsWith("/admin");
 	const displayName = user?.name || user?.email?.split("@")[0] || (isAdminPortal ? "Admin" : "User");
@@ -46,9 +49,9 @@ export function NavUser() {
 						aria-label="User menu"
 						className="flex items-center gap-2 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
 					>
-						<Avatar className="size-8">
-							<AvatarFallback className="bg-primary text-on-primary font-semibold text-xs">
-								{initial}
+						<Avatar className="size-8 overflow-hidden">
+							<AvatarFallback className="bg-primary text-on-primary font-semibold text-xs overflow-hidden">
+								<AvatarDisplay avatarId={user?.avatar || user?.profile?.avatar} className="size-8" fallback={initial} />
 							</AvatarFallback>
 						</Avatar>
 					</button>
@@ -56,9 +59,9 @@ export function NavUser() {
 				<DropdownMenuContent align="end" className="w-56">
 					<DropdownMenuGroup>
 						<DropdownMenuLabel className="pointer-events-none flex items-center gap-2">
-							<Avatar className="size-8">
-								<AvatarFallback className="bg-primary text-on-primary font-semibold text-xs">
-									{initial}
+							<Avatar className="size-8 overflow-hidden">
+								<AvatarFallback className="bg-primary text-on-primary font-semibold text-xs overflow-hidden">
+									<AvatarDisplay avatarId={user?.avatar || user?.profile?.avatar} className="size-8" fallback={initial} />
 								</AvatarFallback>
 							</Avatar>
 							<div className="min-w-0">
@@ -73,6 +76,10 @@ export function NavUser() {
 						<>
 							<DropdownMenuSeparator />
 							<DropdownMenuGroup>
+								<DropdownMenuItem onClick={() => setShowAvatarModal(true)} className="cursor-pointer">
+									<SparklesIcon className="mr-2 size-4 text-primary" />
+									Change Profile Picture
+								</DropdownMenuItem>
 								<DropdownMenuItem onClick={() => navigate(ROUTES.customer.profile)} className="cursor-pointer">
 									<UserIcon className="mr-2 size-4" />
 									Profile & Preferences
@@ -87,6 +94,11 @@ export function NavUser() {
 					</DropdownMenuItem>
 				</DropdownMenuContent>
 			</DropdownMenu>
+
+			<AvatarPickerModal
+				isOpen={showAvatarModal}
+				onClose={() => setShowAvatarModal(false)}
+			/>
 
 			<ConfirmModal
 				isOpen={showLogoutConfirm}

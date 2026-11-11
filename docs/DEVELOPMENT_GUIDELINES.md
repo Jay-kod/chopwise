@@ -4,7 +4,7 @@
 - ES modules everywhere. JavaScript (no TypeScript unless already configured).
 - React function components + hooks. Pages are thin; logic in `src/features/*`; shared UI in `src/components/*`.
 - API handlers are thin (method, auth, call service, respond). Logic in `api/_lib/services/*`; third-party calls only in `api/_lib/clients/*`.
-- Validate at every boundary with zod (requests, config sections, AI output, profile read from Firestore).
+- Validate at every boundary with zod (requests, config sections, AI output, profile read from MySQL).
 - Names: components PascalCase; hooks `useX`; functions camelCase verbs; constants UPPER_SNAKE in `constants.js`/`defaults.js`; no magic numbers.
 - Size: functions <= 40 lines, files <= 250 lines, one responsibility per file.
 - JSDoc on every exported service function (params, returns, throws).

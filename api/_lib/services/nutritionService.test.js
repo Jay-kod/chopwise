@@ -1,12 +1,46 @@
-import { describe, it, expect } from 'vitest';
+import { beforeEach, describe, it, expect, vi } from 'vitest';
+
+const mocks = vi.hoisted(() => ({
+  query: vi.fn(),
+  getUsdaConfig: vi.fn(),
+  getSafetyConfig: vi.fn(),
+  analyzeIngredients: vi.fn(),
+}));
+
+vi.mock('../mysql.js', () => ({ query: mocks.query }));
+vi.mock('../configStore.js', () => ({
+  getUsdaConfig: mocks.getUsdaConfig,
+  getSafetyConfig: mocks.getSafetyConfig,
+}));
+vi.mock('../clients/usda.js', () => ({ analyzeIngredients: mocks.analyzeIngredients }));
+
 import {
   buildIngredientLines,
   computeIngredientsHash,
   formatAiEstimateNutrients,
-  extractNutrientsFromEdamam,
+  getMealNutrition,
 } from './nutritionService.js';
 
 describe('api/_lib/services/nutritionService', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.query.mockResolvedValue([]);
+    mocks.getUsdaConfig.mockResolvedValue({ enabled: true, apiKey: 'test-key' });
+    mocks.getSafetyConfig.mockResolvedValue({});
+    mocks.analyzeIngredients.mockResolvedValue({
+      source: 'usda',
+      nutrition: {
+        calories: 300,
+        proteinG: 12,
+        carbsG: 40,
+        fatG: 8,
+        sodiumMg: 250,
+        sugarG: 5,
+        vitamins: [],
+      },
+    });
+  });
+
   describe('buildIngredientLines', () => {
     it('formats metric and volumetric ingredients with units', () => {
       const ingrs = [
@@ -71,35 +105,40 @@ describe('api/_lib/services/nutritionService', () => {
     });
   });
 
-  describe('extractNutrientsFromEdamam', () => {
-    it('extracts calories, macronutrients, and vitamins from Edamam response payload', () => {
-      const edamamData = {
-        calories: 620,
-        totalNutrients: {
-          PROCNT: { quantity: 35.4, unit: 'g' },
-          CHOCDF: { quantity: 72.1, unit: 'g' },
-          FAT: { quantity: 20.8, unit: 'g' },
-          NA: { quantity: 510.3, unit: 'mg' },
-          SUGAR: { quantity: 6.2, unit: 'g' },
-          VITC: { quantity: 18.5, unit: 'mg' },
-          FE: { quantity: 4.2, unit: 'mg' },
-        },
-      };
+  it('bypasses the cache when a fresh USDA lookup is requested', async () => {
+    const result = await getMealNutrition('user-1', null, {
+      sampleMeal: {
+        ingredients: [{ item: 'rice', quantity: 100, unit: 'g' }],
+        aiNutritionEstimate: { calories: 400 },
+      },
+      forceRefresh: true,
+    });
 
-      const result = extractNutrientsFromEdamam(edamamData);
-      expect(result.calories).toBe(620);
-      expect(result.proteinG).toBe(35);
-      expect(result.carbsG).toBe(72);
-      expect(result.fatG).toBe(21);
-      expect(result.sodiumMg).toBe(510);
-      expect(result.sugarG).toBe(6);
+    expect(mocks.analyzeIngredients).toHaveBeenCalledOnce();
+    expect(mocks.query).toHaveBeenCalledOnce();
+    expect(mocks.query.mock.calls[0][0]).toContain('INSERT INTO nutrition_cache');
+    expect(result.source).toBe('usda');
+  });
 
-      expect(result.vitamins).toHaveLength(2);
-      const vitC = result.vitamins.find((v) => v.name === 'Vitamin C');
-      expect(vitC).toBeDefined();
-      expect(vitC.amount).toBe(18.5);
-      expect(vitC.unit).toBe('mg');
+  it('returns the AI estimate and a reason when USDA cannot use the ingredient units', async () => {
+    const unitError = Object.assign(new Error('unsupported unit'), {
+      code: 'VALIDATION_ERROR',
+      details: { ingredients: 'USDA requires gram amounts for rice.' },
+    });
+    mocks.analyzeIngredients.mockRejectedValue(unitError);
+
+    const result = await getMealNutrition('user-1', null, {
+      sampleMeal: {
+        ingredients: [{ item: 'rice', quantity: 1, unit: 'cup' }],
+        aiNutritionEstimate: { calories: 400 },
+      },
+      forceRefresh: true,
+    });
+
+    expect(result).toMatchObject({
+      source: 'ai-estimate',
+      sourceMessage: 'USDA requires gram amounts for rice.',
+      nutrition: { calories: 400 },
     });
   });
 });
-

@@ -45,6 +45,15 @@ export default class ErrorBoundary extends React.Component {
               An unexpected application error occurred. We have contained the problem to protect your session.
             </p>
 
+            {this.state.error?.message && (
+              <div className="mt-4 rounded-xl border border-danger-line bg-surface-muted p-3 text-left">
+                <span className="text-[11px] font-semibold text-danger-fg block mb-1">Error Diagnostic:</span>
+                <p className="text-xs text-muted font-mono break-words leading-relaxed">
+                  {this.state.error.message}
+                </p>
+              </div>
+            )}
+
             <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center">
               <Button onClick={this.handleReload} className="text-xs min-h-10 px-4">
                 Reload Application

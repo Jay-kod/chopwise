@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
 import { AppShell } from '@/components/app-shell';
-import { DashboardStats } from '@/components/stats';
 import Button from '../components/Button';
-import Spinner from '../components/Spinner';
 import Card from '../components/Card';
 import Disclaimer from '../components/Disclaimer';
 import ConfirmModal from '../components/ConfirmModal';
@@ -11,31 +9,30 @@ import FilterBar from '../features/meals/FilterBar';
 import DashboardError from '../features/meals/DashboardError';
 import MealCardSkeleton from '../features/meals/MealCardSkeleton';
 import { DashboardSkeleton } from '@/components/dashboard-skeleton';
+import DashboardHero from '../features/dashboard/DashboardHero';
+import DashboardMetrics from '../features/dashboard/DashboardMetrics';
+import HealthAdvisoryBanner from '../features/dashboard/HealthAdvisoryBanner';
+import DashboardMealTabs from '../features/dashboard/DashboardMealTabs';
 import { useRecommendations } from '../features/meals/useRecommendations';
 import { useAuth } from '../features/auth/useAuth';
-import { formatNaira } from '../lib/format';
+import { useToast } from '../components/Toast';
+import { useNotifications } from '../features/notifications/NotificationContext';
 import { apiClient } from '../lib/apiClient';
 import { ROUTES } from '../lib/routes';
 
-/**
- * User Dashboard page matching the responsive @efferd/dashboard-3 template.
- */
 export default function Dashboard() {
   const { user } = useAuth();
-  const {
-    meals,
-    perMealCapNGN,
-    fromCache,
-    loading,
-    error,
-    refresh,
-    regenerate,
-  } = useRecommendations();
+  const addToast = useToast();
+  const { addNotification } = useNotifications();
+  const { meals, perMealCapNGN, fromCache, loading, error, refresh, regenerate } = useRecommendations();
 
-  const [filters, setFilters] = useState({ mealType: 'all', condition: 'all', budget: 'all' });
+  const [filters, setFilters] = useState({ mealType: 'all', condition: 'all', budget: 'all', prepTime: 'all' });
+  const [showFilters, setShowFilters] = useState(false);
   const [showRegenerateConfirm, setShowRegenerateConfirm] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [savedMealIds, setSavedMealIds] = useState(new Set());
+  const [savingMealId, setSavingMealId] = useState(null);
 
   useEffect(() => {
     let active = true;
@@ -43,15 +40,47 @@ export default function Dashboard() {
       apiClient('/api/admin', { action: 'me' })
         .then((res) => { if (active) setIsAdmin(Boolean(res?.isAdmin)); })
         .catch(() => { if (active) setIsAdmin(false); });
+
+      apiClient('/api/auth', { action: 'get-saved-meals' })
+        .then((res) => {
+          if (!active) return;
+          const ids = new Set((res?.savedMeals || []).map((s) => s.meal?.id || s.id));
+          setSavedMealIds(ids);
+        })
+        .catch(() => {});
     }
     return () => { active = false; };
   }, [user]);
+
+  async function handleToggleSave(meal, e) {
+    if (!user || !meal?.id) return;
+    const isSaved = savedMealIds.has(meal.id);
+    try {
+      setSavingMealId(meal.id);
+      if (isSaved) {
+        await apiClient('/api/auth', { action: 'delete-saved-meal', mealId: meal.id });
+        setSavedMealIds((prev) => { const n = new Set(prev); n.delete(meal.id); return n; });
+        addToast(`Removed "${meal.name}" from favourite meals.`, 'ok');
+        addNotification({ type: 'favourite', title: 'Removed from Favourites', message: `"${meal.name}" was removed.`, href: '/customer/saved', icon: '💔' });
+      } else {
+        await apiClient('/api/auth', { action: 'save-meal', meal });
+        setSavedMealIds((prev) => new Set(prev).add(meal.id));
+        addToast(`Added "${meal.name}" to favourite meals!`, 'ok');
+        addNotification({ type: 'favourite', title: 'Saved to Favourites', message: `"${meal.name}" added to saved meals.`, href: '/customer/saved', icon: '❤️' });
+      }
+    } catch (err) {
+      addToast(err?.message || 'Failed to update favourite meals.', 'error');
+    } finally {
+      setSavingMealId(null);
+    }
+  }
 
   async function handleConfirmRegenerate() {
     setShowRegenerateConfirm(false);
     setRegenerating(true);
     await regenerate();
     setRegenerating(false);
+    addNotification({ type: 'plan', title: 'Meal Plan Generated', message: 'New Nigerian recipes generated matching your profile.', href: '/customer/dashboard', icon: '⚡' });
   }
 
   const filteredMeals = meals.filter((m) => {
@@ -59,38 +88,13 @@ export default function Dashboard() {
     if (filters.condition !== 'all' && !m.suitableFor?.includes(filters.condition)) return false;
     if (filters.budget === 'under-cap' && m.costNGN > perMealCapNGN) return false;
     if (filters.budget === 'over-cap' && m.costNGN <= perMealCapNGN) return false;
+    if (filters.prepTime === 'quick' && (m.prepTimeMinutes || 45) > 30) return false;
+    if (filters.prepTime === 'standard' && (m.prepTimeMinutes || 45) <= 30) return false;
     return true;
   });
 
   const weeklyBudget = user?.profile?.weeklyBudgetNGN || 21000;
   const conditions = user?.profile?.conditions || [];
-
-  const statsItems = [
-    {
-      label: 'Target per meal',
-      value: perMealCapNGN > 0 ? formatNaira(perMealCapNGN) : '—',
-      delta: 2.5,
-      footnote: 'weekly budget / 21',
-    },
-    {
-      label: 'Weekly budget',
-      value: formatNaira(weeklyBudget),
-      delta: 0,
-      footnote: 'enforced in plan',
-    },
-    {
-      label: 'Recommended meals',
-      value: `${meals.length}`,
-      delta: 1.0,
-      footnote: fromCache ? 'Saved plan' : 'Freshly generated',
-    },
-    {
-      label: 'Tracked conditions',
-      value: `${conditions.length} active`,
-      delta: 0,
-      footnote: conditions.join(', ') || 'No restrictions',
-    },
-  ];
 
   if (loading && meals.length === 0 && !error) {
     return (
@@ -101,106 +105,111 @@ export default function Dashboard() {
   }
 
   return (
-    <AppShell pathname={ROUTES.customer.dashboard} onRegenerate={() => setShowRegenerateConfirm(true)}>
-      {/* Top Heading & Actions */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-line pb-4">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-fg">
-            Personalised Nigerian Meal Plan
-          </h1>
-          <p className="mt-0.5 text-xs text-muted">
-            Nutritious meals tailored to your health profile and wallet.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="primary"
-            onClick={() => setShowRegenerateConfirm(true)}
-            disabled={loading || regenerating}
-            className="text-xs min-h-9 px-3.5"
-          >
-            {regenerating ? <Spinner label="Generating…" /> : '⚡ Regenerate Plan'}
-          </Button>
-        </div>
-      </div>
-
-      <ConfirmModal
-        isOpen={showRegenerateConfirm}
-        onClose={() => setShowRegenerateConfirm(false)}
-        onConfirm={handleConfirmRegenerate}
-        title="Generate new meal plan?"
-        message="Regenerating will call Gemini for new Nigerian recipes and count toward your hourly request limit."
-        confirmText="Yes, Regenerate"
-        cancelText="Keep Current Plan"
-        variant="primary"
-        loading={regenerating}
-        icon="⚡"
-      />
-
-      {/* Error State */}
-      <DashboardError error={error} isAdmin={isAdmin} onRetry={refresh} />
-
-      {/* Customer Meal Profile Metrics Grid */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <DashboardStats items={statsItems} />
-      </div>
-
-      {/* Personalised Meals Recommendations Section */}
-      <section className="space-y-4 pt-4 border-t border-line">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="text-lg font-bold text-fg">Your Recommended Nigerian Meals</h2>
-            <p className="text-xs text-muted">Click any meal to view ingredients, cost breakdown and nutrition</p>
-          </div>
-          {fromCache && (
-            <span className="text-xs text-muted">✓ Plan loaded from your saved profile</span>
-          )}
-        </div>
-
-        <FilterBar
-          filters={filters}
-          onChange={setFilters}
+    <AppShell pathname={ROUTES.customer.dashboard}>
+      <div className="space-y-6">
+        <DashboardHero
+          userName={user?.email}
+          userAvatar={user?.avatar || user?.profile?.avatar}
+          weeklyBudget={weeklyBudget}
           perMealCapNGN={perMealCapNGN}
-          totalCount={meals.length}
-          filteredCount={filteredMeals.length}
+          onRegenerate={() => setShowRegenerateConfirm(true)}
+          regenerating={regenerating}
+          loading={loading}
         />
 
-        {loading && (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {[1, 2, 3, 4, 5, 6].map((idx) => (
-              <MealCardSkeleton key={idx} />
-            ))}
-          </div>
-        )}
+        <ConfirmModal
+          isOpen={showRegenerateConfirm}
+          onClose={() => setShowRegenerateConfirm(false)}
+          onConfirm={handleConfirmRegenerate}
+          title="Regenerate Personalised Meal Plan?"
+          message="Regenerating calls Gemini for 6 fresh Nigerian recipes tailored to your profile and counts toward your hourly request quota."
+          confirmText="Yes, Regenerate"
+          cancelText="Keep Current Plan"
+          variant="primary"
+          loading={regenerating}
+          icon="⚡"
+        />
 
-        {!loading && filteredMeals.length > 0 && (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {filteredMeals.map((meal) => (
-              <MealCard key={meal.id} meal={meal} perMealCapNGN={perMealCapNGN} isClickable={true} />
-            ))}
-          </div>
-        )}
+        <DashboardError error={error} isAdmin={isAdmin} onRetry={refresh} />
 
-        {!loading && filteredMeals.length === 0 && meals.length > 0 && (
-          <Card className="p-8 text-center space-y-3">
-            <span className="text-3xl" aria-hidden="true">🔍</span>
-            <h3 className="text-base font-bold text-fg">No meals match active filters</h3>
-            <div className="flex justify-center gap-2 pt-2">
-              <Button
-                variant="secondary"
-                onClick={() => setFilters({ mealType: 'all', condition: 'all', budget: 'all' })}
-                className="text-xs min-h-9 px-3"
-              >
-                Clear filters
-              </Button>
+        <DashboardMetrics
+          perMealCapNGN={perMealCapNGN}
+          weeklyBudget={weeklyBudget}
+          mealCount={meals.length}
+          meals={meals}
+          fromCache={fromCache}
+          conditions={conditions}
+        />
+
+        <HealthAdvisoryBanner conditions={conditions} />
+
+        <section className="space-y-4 pt-2">
+          <DashboardMealTabs
+            meals={meals}
+            activeMealType={filters.mealType}
+            onSelectMealType={(id) => setFilters((f) => ({ ...f, mealType: id }))}
+            showFilters={showFilters}
+            onToggleShowFilters={() => setShowFilters((s) => !s)}
+            filteredCount={filteredMeals.length}
+          />
+
+          {showFilters && (
+            <FilterBar
+              filters={filters}
+              onChange={setFilters}
+              perMealCapNGN={perMealCapNGN}
+              totalCount={meals.length}
+              filteredCount={filteredMeals.length}
+            />
+          )}
+
+          {loading && (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {[1, 2, 3, 4, 5, 6].map((idx) => (
+                <MealCardSkeleton key={idx} />
+              ))}
             </div>
-          </Card>
-        )}
-      </section>
+          )}
 
-      {/* Medical Disclaimer */}
-      <div className="pt-2">
-        <Disclaimer />
+          {!loading && filteredMeals.length > 0 && (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {filteredMeals.map((meal) => (
+                <MealCard
+                  key={meal.id}
+                  meal={meal}
+                  perMealCapNGN={perMealCapNGN}
+                  isClickable={true}
+                  isSaved={savedMealIds.has(meal.id)}
+                  onToggleSave={handleToggleSave}
+                  isSaving={savingMealId === meal.id}
+                />
+              ))}
+            </div>
+          )}
+
+          {!loading && filteredMeals.length === 0 && meals.length > 0 && (
+            <Card className="p-8 text-center space-y-3">
+              <span className="text-3xl" aria-hidden="true">🔍</span>
+              <h3 className="text-base font-bold text-fg">No meals match active filters</h3>
+              <p className="text-xs text-muted max-w-sm mx-auto">
+                Try resetting your filters or switching meal periods to view available dishes.
+              </p>
+              <div className="flex justify-center gap-2 pt-2">
+                <Button
+                  variant="secondary"
+                  onClick={() => setFilters({ mealType: 'all', condition: 'all', budget: 'all', prepTime: 'all' })}
+                  className="text-xs min-h-9 px-3"
+                >
+                  Clear all filters
+                </Button>
+              </div>
+            </Card>
+          )}
+        </section>
+
+        <div className="pt-2">
+          <Disclaimer />
+        </div>
       </div>
     </AppShell>
   );

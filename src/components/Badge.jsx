@@ -7,7 +7,7 @@ export default function Badge({ variant = 'neutral', children, className = '' })
     ok: 'bg-primary-soft text-on-primary-soft',
     warning: 'bg-warn-bg text-warn-fg border border-warn-line',
     error: 'bg-danger-bg text-danger-fg border border-danger-line',
-    neutral: 'bg-surface-muted text-muted border border-line',
+    neutral: 'bg-surface-muted text-fg border border-line font-medium',
   };
 
   const icons = {

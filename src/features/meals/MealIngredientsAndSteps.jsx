@@ -21,7 +21,7 @@ export default function MealIngredientsAndSteps({ meal }) {
               <tr className="border-b border-line text-muted">
                 <th className="pb-2 font-medium">Ingredient</th>
                 <th className="pb-2 font-medium">Quantity</th>
-                <th className="pb-2 font-medium">Est. Cost</th>
+                <th className="pb-2 font-medium">Estimated ingredient cost</th>
                 <th className="pb-2 text-right font-medium">Source</th>
               </tr>
             </thead>
@@ -44,7 +44,7 @@ export default function MealIngredientsAndSteps({ meal }) {
             <tfoot>
               <tr className="border-t border-line font-bold">
                 <td colSpan="2" className="pt-3 text-fg">
-                  Total Estimated Cost
+                  Total Estimated Ingredient Cost
                 </td>
                 <td colSpan="2" className="pt-3 text-right text-base text-primary">
                   {formatNaira(meal.costNGN)}
@@ -71,4 +71,3 @@ export default function MealIngredientsAndSteps({ meal }) {
     </div>
   );
 }
-

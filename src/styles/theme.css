@@ -10,13 +10,13 @@
 
 /* LIGHT values. `static` makes Tailwind always emit these variables so the .dark overrides below can replace them. */
 @theme static {
-  --color-page: #FFFFFF;             /* app background */
-  --color-surface: #FFFFFF;          /* cards, inputs, popovers */
-  --color-surface-muted: #F0FAF4;    /* subtle green-tinted areas, table stripes, hovers */
-  --color-line: #BFD8C9;             /* decorative borders and dividers */
-  --color-field-line: #6B8A78;       /* borders of inputs/buttons (>= 3:1 contrast) */
-  --color-fg: #0F2A1D;               /* main text */
-  --color-muted: #41584B;            /* secondary text */
+  --color-page: #F6F9F7;             /* soft modern off-white canvas with faint mint undertone */
+  --color-surface: #FFFFFF;          /* crisp pure white cards, inputs, popovers */
+  --color-surface-muted: #EAF5EF;    /* subtle green-tinted areas, table stripes, hovers */
+  --color-line: #C6DDD0;             /* crisp card borders and dividers */
+  --color-field-line: #4D755F;       /* borders of inputs/buttons (>= 3.5:1 contrast) */
+  --color-fg: #0A2117;               /* deep, crisp high-contrast main text */
+  --color-muted: #2A4838;            /* sharp, easily readable secondary text */
   --color-primary: #047857;          /* brand green: buttons, links, active states */
   --color-primary-hover: #065F46;
   --color-on-primary: #FFFFFF;       /* text/icons on primary */
@@ -29,13 +29,40 @@
   --color-danger-fg: #7F1D1D;
   --color-danger-line: #B91C1C;
   --color-ring: #047857;             /* keyboard focus ring */
-  --color-chip: #FFFFFF;             /* theme-constant white chip (e.g. Edamam attribution badge) */
+  --color-chip: #FFFFFF;             /* theme-constant white chip (e.g. USDA attribution badge) */
   --color-overlay: #000000;          /* modal & drawer backdrop overlay */
   --color-header-bg: #034430;        /* solid dark green header (darker than brand green) */
   --color-header-fg: #FFFFFF;        /* header text */
   --color-header-muted: #A7F3D0;     /* header secondary text */
   --color-header-line: #065F46;      /* header border */
+  --color-auth-card: #FAF7F2;        /* warm cream/ivory auth card surface */
+  --color-auth-banner: #033B2B;      /* deep forest green editorial banner */
+  --color-auth-banner-to: #022318;   /* deep forest gradient shadow */
+  --color-auth-accent: #B38042;      /* warm golden/amber accent line and text */
+  --color-auth-accent-hover: #8F6229;
+  /* Navigation category themes (sidebar & mobile drawer) */
+  --color-cat-planning-fg: #0369A1;
+  --color-cat-planning-bg: #E0F2FE;
+  --color-cat-planning-line: #BAE6FD;
+  --color-cat-planning-dot: #0284C7;
+  --color-cat-meals-fg: #92400E;
+  --color-cat-meals-bg: #FEF3C7;
+  --color-cat-meals-line: #FDE68A;
+  --color-cat-meals-dot: #D97706;
+  --color-cat-health-fg: #065F46;
+  --color-cat-health-bg: #D1FAE5;
+  --color-cat-health-line: #A7F3D0;
+  --color-cat-health-dot: #059669;
+  --color-cat-engine-fg: #6D28D9;
+  --color-cat-engine-bg: #F3E8FF;
+  --color-cat-engine-line: #DDD6FE;
+  --color-cat-engine-dot: #7C3AED;
+  --color-cat-governance-fg: #9F1239;
+  --color-cat-governance-bg: #FFE4E6;
+  --color-cat-governance-line: #FECDD3;
+  --color-cat-governance-dot: #E11D48;
   --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-serif: "Playfair Display", Georgia, Cambria, "Times New Roman", Times, serif;
 }
 
 /* DARK overrides */
@@ -43,7 +70,7 @@
   --color-page: #0B1410;
   --color-surface: #12201A;
   --color-surface-muted: #182B22;
-  --color-line: #2E4B3C;
+  --color-line: #2D4C3C;
   --color-field-line: #5E8571;
   --color-fg: #FFFFFF;
   --color-muted: #B8D9C8;
@@ -64,6 +91,33 @@
   --color-header-fg: #FFFFFF;
   --color-header-muted: #B8D9C8;
   --color-header-line: #0D3E2C;
+  --color-auth-card: #12201A;
+  --color-auth-banner: #05261B;
+  --color-auth-banner-to: #031710;
+  --color-auth-accent: #DEAB65;
+  --color-auth-accent-hover: #F2C585;
+
+  /* Navigation category themes (dark mode) */
+  --color-cat-planning-fg: #38BDF8;
+  --color-cat-planning-bg: #0C2B42;
+  --color-cat-planning-line: #15476B;
+  --color-cat-planning-dot: #38BDF8;
+  --color-cat-meals-fg: #FBBF24;
+  --color-cat-meals-bg: #36200A;
+  --color-cat-meals-line: #58350F;
+  --color-cat-meals-dot: #F59E0B;
+  --color-cat-health-fg: #34D399;
+  --color-cat-health-bg: #0B281E;
+  --color-cat-health-line: #134E39;
+  --color-cat-health-dot: #10B981;
+  --color-cat-engine-fg: #C084FC;
+  --color-cat-engine-bg: #261445;
+  --color-cat-engine-line: #432174;
+  --color-cat-engine-dot: #A855F7;
+  --color-cat-governance-fg: #FB7185;
+  --color-cat-governance-bg: #3E101D;
+  --color-cat-governance-line: #661A30;
+  --color-cat-governance-dot: #F43F5E;
 }
 
 :root {
@@ -114,6 +168,18 @@
   @media (prefers-reduced-motion: reduce) {
     *, ::before, ::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
   }
+
+  /* Thin modern scrollbar styling */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-field-line) transparent;
+  }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--color-line); border-radius: 9999px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--color-field-line); }
+  ::-webkit-scrollbar-corner { background: transparent; }
+  ::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
 }
 
 @theme inline {
@@ -130,18 +196,15 @@
   --color-chart-3: var(--chart-3);
   --color-chart-2: var(--chart-2);
   --color-chart-1: var(--chart-1);
-  --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
   --color-destructive: var(--destructive);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--color-muted);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-secondary: var(--secondary);
   --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
   --color-popover-foreground: var(--popover-foreground);
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
@@ -163,5 +226,12 @@
   .fill-muted-foreground,
   [class*="recharts-cartesian-axis-tick"] text {
     fill: var(--color-muted) !important;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
   }
 }

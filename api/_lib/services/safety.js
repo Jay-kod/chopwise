@@ -50,7 +50,7 @@ function containsUlcerIrritants(meal) {
 
 /**
  * Evaluate safety flags for a meal against user's declared conditions.
- * Uses nutrient estimates (from aiNutritionEstimate or real Edamam data).
+ * Uses nutrient estimates (from aiNutritionEstimate or USDA FoodData Central data).
  *
  * @param {object} meal
  * @param {string[]} userConditions - e.g. ['hypertension', 'diabetes']
@@ -101,4 +101,3 @@ export function evaluateMealSafety(meal, userConditions = [], thresholds = {}) {
 
   return flags;
 }
-

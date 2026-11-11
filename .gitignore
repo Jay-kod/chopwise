@@ -14,6 +14,7 @@ dist/
 .env.development
 .env.production
 !.env.example
+/docker.test.env
 
 # Service account files (never commit)
 *-firebase-adminsdk-*.json
@@ -31,4 +32,3 @@ Thumbs.db
 # Logs
 *.log
 npm-debug.log*
-

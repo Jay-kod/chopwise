@@ -1,14 +1,10 @@
 import { withHandler, AppError } from './_lib/http.js';
-import { verifyRequest, requireAdmin, checkIsAdmin } from './_lib/auth.js';
+import { verifyRequest, requireAdmin, checkIsAdmin, setDynamicBootstrapAdminIds } from './_lib/auth.js';
 import {
-  getSettingsConfig,
-  getSafetyConfig,
-  getPricesConfig,
-  saveConfig,
-  resetSection,
-  getGeminiConfig,
-  getEdamamConfig,
+  getSettingsConfig, getSafetyConfig, getPricesConfig,
+  saveConfig, resetSection, getGeminiConfig, getUsdaConfig,
 } from './_lib/configStore.js';
+import { loadDoc } from './_lib/configBase.js';
 import { getIntegrationsStatus, runHealthCheck } from './_lib/integrations.js';
 import { query, isMysqlConfigured } from './_lib/mysql.js';
 import { EVALUATION_PROFILES } from './_lib/data/evaluationProfiles.js';
@@ -16,25 +12,39 @@ import { getRecommendations } from './_lib/services/recommendationService.js';
 import { getMealNutrition } from './_lib/services/nutritionService.js';
 import { listAvailableModels } from './_lib/clients/gemini.js';
 import { listCustomers, setCustomerActive, updateCustomerEmail } from './_lib/services/customerAdminService.js';
-import { grantAdmin, listAdmins, revokeAdmin } from './_lib/services/adminAccessService.js';
-import { createRecipe, deleteRecipe, listRecipes, updateRecipe } from './_lib/services/recipeCatalogService.js';
+import { grantAdmin, listAdmins, revokeAdmin, saveBootstrapAdminIds } from './_lib/services/adminAccessService.js';
+import {
+  createRecipe, deleteRecipe, listRecipes, updateRecipe,
+  draftRecipeWithAi, analyzeRecipeNutrition,
+} from './_lib/services/recipeCatalogService.js';
 import { listAdminActivity } from './_lib/services/adminAuditService.js';
 import { clearNutritionCache, resetRateLimits } from './_lib/services/adminMaintenanceService.js';
 
 async function handleStatus() {
+  let dbBootstrapUids = '';
+  try {
+    const doc = await loadDoc('bootstrap');
+    if (doc?.adminUids) {
+      dbBootstrapUids = doc.adminUids;
+      setDynamicBootstrapAdminIds(doc.adminUids);
+    }
+  } catch {}
+
+  const envUids = (process.env.ADMIN_UIDS || '').trim();
+  const effectiveUids = envUids || dbBootstrapUids.trim();
+  const bootstrapSource = envUids && dbBootstrapUids ? 'both' : envUids ? 'environment' : dbBootstrapUids ? 'database' : 'none';
+
   const bootstrap = {
     mysql: isMysqlConfigured(),
-    adminUidsSet: Boolean(process.env.ADMIN_UIDS),
-    jwtSecretSet: Boolean(process.env.JWT_SECRET && Buffer.byteLength(process.env.JWT_SECRET, 'utf8') >= 32),
+    adminUidsSet: Boolean(effectiveUids),
+    adminUids: effectiveUids,
+    adminUidsSource: bootstrapSource,
+    jwtSecretSet: Boolean(
+      (process.env.JWT_SECRET && Buffer.byteLength(process.env.JWT_SECRET, 'utf8') >= 32) ||
+      process.env.CONFIG_ENCRYPTION_KEY
+    ),
     encryptionKeySet: Boolean(process.env.CONFIG_ENCRYPTION_KEY),
   };
-
-  const [integrations, settings, safety, pricesData] = await Promise.all([
-    getIntegrationsStatus(),
-    getSettingsConfig(),
-    getSafetyConfig(),
-    getPricesConfig(),
-  ]);
 
   let testResults = {};
   try {
@@ -44,8 +54,15 @@ async function handleStatus() {
     }
   } catch {}
 
+  const [integrations, settings, safety, pricesData] = await Promise.all([
+    getIntegrationsStatus(testResults),
+    getSettingsConfig(),
+    getSafetyConfig(),
+    getPricesConfig(),
+  ]);
+
   const geminiConf = await getGeminiConfig();
-  const edamamConf = await getEdamamConfig();
+  const usdaConf = await getUsdaConfig();
   const dbTest = testResults.mysql || null;
 
   const functions = [
@@ -66,12 +83,12 @@ async function handleStatus() {
       testTarget: 'gemini',
     },
     {
-      id: 'edamam',
-      title: 'Edamam Nutrition Analysis API',
+      id: 'usda',
+      title: 'USDA FoodData Central',
       kind: 'integration',
-      status: !edamamConf.appId || !edamamConf.appKey ? 'not_configured' : testResults.edamam ? (testResults.edamam.ok ? 'ok' : 'failing') : 'untested',
-      lastTest: testResults.edamam || null,
-      testTarget: 'edamam',
+      status: !usdaConf.apiKey ? 'not_configured' : testResults.usda ? (testResults.usda.ok ? 'ok' : 'failing') : 'untested',
+      lastTest: testResults.usda || null,
+      testTarget: 'usda',
     },
     {
       id: 'recommend',
@@ -134,7 +151,7 @@ async function handleEvaluationCase(index) {
     withinBudgetCount: meals.filter((m) => !m.overBudget).length,
     safetyFlagCounts: meals.reduce((sum, m) => sum + (m.safetyFlags?.length || 0), 0),
     nutritionSources,
-    edamamCount: nutritionSources.filter((s) => s === 'edamam').length,
+    usdaCount: nutritionSources.filter((s) => s === 'usda').length,
     aiEstimateCount: nutritionSources.filter((s) => s === 'ai-estimate').length,
   };
 }
@@ -186,9 +203,9 @@ export default withHandler(async (req, res) => {
   }
 
   if (action === 'test') {
-    const { target } = body;
+    const { target, values } = body;
     if (!target) throw AppError.validation({ target: 'Test target is required.' });
-    const result = await runHealthCheck(target);
+    const result = await runHealthCheck(target, values);
     return res.status(200).json(result);
   }
 
@@ -197,45 +214,22 @@ export default withHandler(async (req, res) => {
     return res.status(200).json(evalResult);
   }
 
-  if (action === 'listCustomers') {
-    return res.status(200).json(await listCustomers(body));
-  }
-  if (action === 'updateCustomer') {
-    return res.status(200).json(await updateCustomerEmail(adminId, body));
-  }
-  if (action === 'setCustomerActive') {
-    return res.status(200).json(await setCustomerActive(adminId, body));
-  }
-  if (action === 'listAdmins') {
-    return res.status(200).json(await listAdmins());
-  }
-  if (action === 'grantAdmin') {
-    return res.status(200).json(await grantAdmin(adminId, body));
-  }
-  if (action === 'revokeAdmin') {
-    return res.status(200).json(await revokeAdmin(adminId, body));
-  }
-  if (action === 'listRecipes') {
-    return res.status(200).json(await listRecipes(body));
-  }
-  if (action === 'createRecipe') {
-    return res.status(200).json(await createRecipe(adminId, body));
-  }
-  if (action === 'updateRecipe') {
-    return res.status(200).json(await updateRecipe(adminId, body));
-  }
-  if (action === 'deleteRecipe') {
-    return res.status(200).json(await deleteRecipe(adminId, body));
-  }
-  if (action === 'listActivity') {
-    return res.status(200).json(await listAdminActivity(body));
-  }
-  if (action === 'clearNutritionCache') {
-    return res.status(200).json(await clearNutritionCache(adminId));
-  }
-  if (action === 'resetRateLimits') {
-    return res.status(200).json(await resetRateLimits(adminId));
-  }
+  if (action === 'listCustomers') return res.status(200).json(await listCustomers(body));
+  if (action === 'updateCustomer') return res.status(200).json(await updateCustomerEmail(adminId, body));
+  if (action === 'setCustomerActive') return res.status(200).json(await setCustomerActive(adminId, body));
+  if (action === 'listAdmins') return res.status(200).json(await listAdmins());
+  if (action === 'grantAdmin') return res.status(200).json(await grantAdmin(adminId, body));
+  if (action === 'revokeAdmin') return res.status(200).json(await revokeAdmin(adminId, body));
+  if (action === 'saveBootstrapAdminIds') return res.status(200).json(await saveBootstrapAdminIds(adminId, body));
+  if (action === 'listRecipes') return res.status(200).json(await listRecipes(body));
+  if (action === 'createRecipe') return res.status(200).json(await createRecipe(adminId, body));
+  if (action === 'updateRecipe') return res.status(200).json(await updateRecipe(adminId, body));
+  if (action === 'deleteRecipe') return res.status(200).json(await deleteRecipe(adminId, body));
+  if (action === 'draftRecipeWithAi') return res.status(200).json(await draftRecipeWithAi(body));
+  if (action === 'analyzeRecipeNutrition') return res.status(200).json(await analyzeRecipeNutrition(body));
+  if (action === 'listActivity') return res.status(200).json(await listAdminActivity(body));
+  if (action === 'clearNutritionCache') return res.status(200).json(await clearNutritionCache(adminId));
+  if (action === 'resetRateLimits') return res.status(200).json(await resetRateLimits(adminId));
 
   throw AppError.validation({ action: `Unknown admin action: ${action}` });
 });

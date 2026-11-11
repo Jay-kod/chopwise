@@ -7,7 +7,7 @@ import { adminListSchema } from '../schemas.js';
  * @param {string} action
  * @param {string} entityType
  * @param {string|null} entityId
- * @param {(connection: import('mysql2/promise').PoolConnection) => Promise<{result: object, auditDetails?: object}>} operation
+ * @param {(connection: import('mysql2/promise').PoolConnection) => Promise<{result: object, auditDetails?: object, auditEntityId?: string|null}>} operation
  * @returns {Promise<object>}
  */
 export async function runAuditedAdminMutation(actorId, action, entityType, entityId, operation) {
@@ -19,7 +19,7 @@ export async function runAuditedAdminMutation(actorId, action, entityType, entit
     await connection.execute(
       `INSERT INTO admin_activity (actor_id, action, entity_type, entity_id, details)
        VALUES (?, ?, ?, ?, ?)`,
-      [actorId, action, entityType, entityId, JSON.stringify(outcome.auditDetails || {})]
+      [actorId, action, entityType, outcome.auditEntityId ?? entityId, JSON.stringify(outcome.auditDetails || {})]
     );
     await connection.commit();
     return outcome.result;

@@ -80,6 +80,7 @@ export default withHandler(async (req, res) => {
       email: row.email,
       profileComplete: Boolean(row.profile_complete),
       profile,
+      avatar: row.avatar || profile.avatar || null,
     };
 
     return res.status(200).json({ ok: true, token, user });
@@ -109,6 +110,7 @@ export default withHandler(async (req, res) => {
       email: row.email,
       profileComplete: Boolean(row.profile_complete),
       profile,
+      avatar: row.avatar || profile.avatar || null,
     };
 
     return res.status(200).json({ user, isAdmin: await checkIsAdmin(row.id) });
@@ -118,17 +120,35 @@ export default withHandler(async (req, res) => {
   if (action === 'update-profile') {
     const rawProfile = body.profile || {};
     const parsed = profileSchema.safeParse(rawProfile);
-    if (!parsed.success) {
-      throw AppError.validation({ profile: 'Invalid profile data structure.' });
-    }
+    if (!parsed.success) throw AppError.validation({ profile: 'Invalid profile data structure.' });
 
-    const profileData = { ...parsed.data, updatedAt: new Date().toISOString() };
+    const rows = await query('SELECT avatar FROM users WHERE id = ? LIMIT 1', [uid]);
+    const avatar = parsed.data.avatar || rows?.[0]?.avatar || null;
+    const profileData = { ...parsed.data, ...(avatar ? { avatar } : {}), updatedAt: new Date().toISOString() };
+
     await query(
-      'UPDATE users SET profile = ?, profile_complete = 1, updated_at = NOW() WHERE id = ?',
-      [JSON.stringify(profileData), uid]
+      'UPDATE users SET profile = ?, avatar = COALESCE(?, avatar), profile_complete = 1, updated_at = NOW() WHERE id = ?',
+      [JSON.stringify(profileData), avatar, uid]
     );
+    return res.status(200).json({ ok: true, profile: profileData, avatar });
+  }
 
-    return res.status(200).json({ ok: true, profile: profileData });
+  // 4b. Action: update-avatar
+  if (action === 'update-avatar') {
+    const avatar = typeof body.avatar === 'string' ? body.avatar.trim() : '';
+    if (!avatar) throw AppError.validation({ avatar: 'Avatar selection or image data is required.' });
+    if (avatar.length > 300000) throw AppError.validation({ avatar: 'Avatar is too large. Choose under 200KB.' });
+
+    const rows = await query('SELECT profile FROM users WHERE id = ? LIMIT 1', [uid]);
+    if (rows.length === 0) throw AppError.notFound('User record not found.');
+
+    let currentProfile = {};
+    try { currentProfile = typeof rows[0].profile === 'string' ? JSON.parse(rows[0].profile || '{}') : rows[0].profile || {}; } catch {}
+    currentProfile.avatar = avatar;
+    currentProfile.updatedAt = new Date().toISOString();
+
+    await query('UPDATE users SET avatar = ?, profile = ?, updated_at = NOW() WHERE id = ?', [avatar, JSON.stringify(currentProfile), uid]);
+    return res.status(200).json({ ok: true, avatar });
   }
 
   // 5. Action: get-saved-meals
@@ -204,6 +224,14 @@ export default withHandler(async (req, res) => {
         if (Array.isArray(meals)) {
           meal = meals.find((m) => m.id === mealId) || null;
         }
+      }
+    }
+
+    if (!meal) {
+      const catRows = await query('SELECT id, recipe FROM recipe_catalog WHERE id = ? LIMIT 1', [mealId]);
+      if (catRows.length > 0) {
+        const catRecipe = typeof catRows[0].recipe === 'string' ? JSON.parse(catRows[0].recipe) : catRows[0].recipe;
+        meal = { ...catRecipe, id: catRows[0].id };
       }
     }
 

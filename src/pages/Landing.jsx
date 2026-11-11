@@ -204,7 +204,7 @@ export default function Landing() {
 
                   <div className="border-t border-line pt-3 space-y-2">
                     <div className="flex items-baseline justify-between">
-                      <span className="text-xs text-muted">Estimated cost:</span>
+                      <span className="text-xs text-muted">Estimated ingredient cost:</span>
                       <span className="text-base font-extrabold text-primary">{m.cost}</span>
                     </div>
                     <div className="flex flex-wrap gap-1">

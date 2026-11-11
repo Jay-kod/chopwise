@@ -56,13 +56,13 @@ export default function EvaluationRunner() {
     totalMeals > 0 ? Math.round((totalWithinBudget / totalMeals) * 100) : 0;
 
   const totalNutrition = results.reduce(
-    (acc, r) => acc + (r.edamamCount || 0) + (r.aiEstimateCount || 0),
+    (acc, r) => acc + (r.usdaCount || 0) + (r.aiEstimateCount || 0),
     0
   );
-  const edamamPct =
+  const usdaPct =
     totalNutrition > 0
       ? Math.round(
-          (results.reduce((acc, r) => acc + (r.edamamCount || 0), 0) /
+        (results.reduce((acc, r) => acc + (r.usdaCount || 0), 0) /
             totalNutrition) *
             100
         )
@@ -82,7 +82,7 @@ export default function EvaluationRunner() {
             G. Evaluation Runner (Chapter 4 Evidence)
           </h3>
           <p className="mt-1 text-xs text-muted max-w-2xl leading-relaxed">
-            Executes 10 fixed clinical profiles sequentially through the live Gemini and Edamam pipelines.
+            Executes 10 fixed clinical profiles sequentially through the live Gemini and USDA FoodData Central pipelines.
             Outputs real empirical metrics for thesis Chapter 4 without saving dummy records to user accounts.
           </p>
         </div>
@@ -144,10 +144,10 @@ export default function EvaluationRunner() {
           </div>
 
           <div className="rounded-xl border border-line bg-surface-muted p-3 text-center">
-            <div className="text-[11px] text-muted">Edamam Coverage</div>
-            <div className="text-lg font-bold text-fg">{edamamPct}%</div>
+            <div className="text-[11px] text-muted">USDA Coverage</div>
+            <div className="text-lg font-bold text-fg">{usdaPct}%</div>
             <div className="text-[10px] text-muted">
-              {100 - edamamPct}% AI fallback
+              {100 - usdaPct}% AI fallback
             </div>
           </div>
 
@@ -210,9 +210,9 @@ export default function EvaluationRunner() {
                     )}
                   </td>
                   <td className="py-2.5 text-[11px]">
-                    {r.edamamCount > 0 && (
+                    {r.usdaCount > 0 && (
                       <span className="mr-1 rounded bg-surface-muted px-1.5 py-0.5 font-medium text-primary">
-                        {r.edamamCount} Edamam
+                        {r.usdaCount} USDA
                       </span>
                     )}
                     {r.aiEstimateCount > 0 && (
@@ -233,4 +233,3 @@ export default function EvaluationRunner() {
     </Card>
   );
 }
-

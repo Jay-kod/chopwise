@@ -1,6 +1,6 @@
 # AGENTS.md — Rules for AI coding agents
 
-Project: AI-based Nigerian recipe recommendation web app. React + Vite + Tailwind, MySQL/MariaDB with server-issued JWTs, Vercel serverless functions, Gemini API, Edamam API. Admin pages under `/admin/*` manage system configuration, customer account status, the shared recipe catalogue, administrator access, and operational maintenance.
+Project: AI-based Nigerian recipe recommendation web app. React + Vite + Tailwind, MySQL/MariaDB with server-issued JWTs, Vercel serverless functions, Gemini API, and USDA FoodData Central. Admin pages under `/admin/*` manage system configuration, customer account status, the shared recipe catalogue, administrator access, and operational maintenance.
 
 ## Before ANY task
 1. Read this file.
@@ -9,7 +9,7 @@ Project: AI-based Nigerian recipe recommendation web app. React + Vite + Tailwin
 
 ## Hard rules
 1. Never invent files, endpoints, database fields, env vars, packages or features that are not in the docs. If a detail is missing: state a one-line assumption and proceed only if it is safe.
-2. Secrets: Gemini/Edamam keys, `MYSQL_PASSWORD`, `JWT_SECRET`, and `CONFIG_ENCRYPTION_KEY` NEVER appear in `src/`, logs, API responses, commits or docs. The browser never calls Gemini or Edamam. Server only.
+2. Secrets: Gemini/USDA keys, `MYSQL_PASSWORD`, `JWT_SECRET`, and `CONFIG_ENCRYPTION_KEY` NEVER appear in `src/`, logs, API responses, commits or docs. The browser never calls Gemini or USDA. Server only.
 3. Never weaken security (database ownership checks, token checks, admin checks, validation) to make something work.
 4. One task at a time. Finish it, run its exit test, report, then STOP. If a prompt lists several tasks (a block), do them strictly in order, verify and commit each before the next, and stop at the first task that still fails after 2 fix attempts (log it in docs/KNOWN_ISSUES.md). Never start tasks outside the block.
 5. Smallest change that works. Do not refactor or rewrite working code unless the task says so.
@@ -29,7 +29,7 @@ ES modules. React function components + hooks. Pages are thin; logic lives in `s
 
 ## Commands
 - Install: `npm install`
-- Run frontend + API locally: `vercel dev` (plain Vite does NOT serve `/api`)
+- Run frontend + API locally: `npm run dev` (Vite middleware serves `/api`); use `vercel dev` to test the Vercel runtime
 - Tests: `npm test`
 - Full check (colours + tests + build): `npm run verify`
 - Build: `npm run build`

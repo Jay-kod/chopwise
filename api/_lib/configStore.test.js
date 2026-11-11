@@ -11,7 +11,7 @@ describe('api/_lib/configStore', () => {
   describe('maskSecret', () => {
     it('masks full key to only show last 4 characters', () => {
       expect(maskSecret('AIzaSyD-12345678AbCd')).toBe('••••AbCd');
-      expect(maskSecret('edamamKey9999')).toBe('••••9999');
+      expect(maskSecret('usdaKey9999')).toBe('••••9999');
       expect(maskSecret('1234')).toBe('••••1234');
     });
 
@@ -56,4 +56,3 @@ describe('api/_lib/configStore', () => {
     });
   });
 });
-

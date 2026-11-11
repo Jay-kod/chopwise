@@ -20,13 +20,14 @@
 | `/api/*` returns 404 locally | running plain Vite | use `vercel dev` |
 | 401 on every API call | token missing/expired, or service account env wrong | log the failing step (never the token); re-encode service account base64 without line breaks |
 | Admin page shows NotFound for you | `ADMIN_UIDS` missing, has spaces, or holds the wrong UID | compare against Firebase console UID; restart `vercel dev`; redeploy after changing Vercel env |
+| Admin cannot save Gemini or USDA credentials | missing or invalid `CONFIG_ENCRYPTION_KEY` prevents server-side encryption | set a valid 32-byte base64 key in the server environment, restart the API, confirm the Admin bootstrap checklist shows it configured, then save again |
 | Saved key still "not configured" | config cache (60 s), or `CONFIG_ENCRYPTION_KEY` changed after saving | wait 60 s; if the key changed, re-save the secrets |
 | Gemini test fails | wrong/typo model name, key restricted, region/free-tier limit | pick a current model from the Models page; test the key in AI Studio |
 | Gemini returns schema errors | response schema too strict or unsupported field types | log the validation error (no secrets); simplify the schema; keep one retry |
 | Meals over budget every time | price table empty or per-meal cap too small | fill prices in Admin; check budgetDivisor and the user's budget |
-| Edamam 401 | credentials from a different Edamam API | create the app under Nutrition Analysis API |
-| Edamam always falls back | unparseable local names, request rejected as a whole | check the P2 findings; send simpler ingredient names; expected for some dishes |
-| Edamam limit errors | free plan rate limit | cache is keyed by ingredient hash; avoid bursts; raise delay |
+| USDA integration is not configured | no key has been saved or the integration is disabled | request a data.gov key from the USDA FoodData Central signup page, save it at `/admin/usda`, enable the integration, then test |
+| USDA nutrition falls back to AI estimate | an ingredient did not match or uses a non-gram unit | expected behavior; use a gram quantity and a recognizable food name, or keep the clearly labelled AI estimate |
+| USDA test reports an API error | invalid key, upstream outage, or rate limit | check the key at `/admin/usda`; wait and retry if the API reports a limit or outage |
 | Firestore permission denied | rules not published or client reading server-only docs | re-publish rules; check which path is read |
 | Works locally, fails in production | env vars missing in Vercel, or not redeployed | compare `.env.example` names with Vercel; redeploy |
 | Function timeout in production | Gemini slow or `maxDuration` not applied | check Vercel logs; try a faster model; reduce `mealsPerType` |
@@ -36,9 +37,9 @@
 | Dashboard empty after profile edit | profileHash changed and regeneration failed | check recommend errors; try Regenerate |
 
 ## Evidence to capture for Chapter 4
-Screenshots: landing, register, each onboarding step, dashboard (with badges), filters in use, meal detail with Edamam data, meal detail with "AI estimate", saved meals, profile, Admin Functions table (all green), Admin key card (masked), mobile views at 375 px, and light + dark pairs of the main screens.
+Screenshots: landing, register, each onboarding step, dashboard (with badges), filters in use, meal detail with USDA data, meal detail with "AI estimate", saved meals, profile, Admin Functions table (all green), Admin key card (masked), mobile views at 375 px, and light + dark pairs of the main screens.
 Data: the 10-profile results table; `npm test` output; Vercel production URL; response-time samples; SUS form responses (about 10 users).
-Diagrams to update: use case (add Admin actor), DFD and flowchart (Edamam on meal open).
+Diagrams to update: use case (add Admin actor), DFD and flowchart (USDA nutrition lookup on meal open).
 
 ## Bug template (copy into KNOWN_ISSUES.md)
 `| ID | Severity | Symptom | Reproduction | Root cause | Fix / status |`

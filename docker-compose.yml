@@ -1,0 +1,45 @@
+services:
+  database:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD:?Run scripts/Initialize-DockerShare.ps1 first}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-chopwise}
+    volumes:
+      - chopwise_mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "--silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+    restart: unless-stopped
+
+  app:
+    build: .
+    environment:
+      MYSQL_HOST: database
+      MYSQL_PORT: "3306"
+      MYSQL_USER: root
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Run scripts/Initialize-DockerShare.ps1 first}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-chopwise}
+      JWT_SECRET: ${JWT_SECRET:?Run scripts/Initialize-DockerShare.ps1 first}
+      CONFIG_ENCRYPTION_KEY: ${CONFIG_ENCRYPTION_KEY:?Run scripts/Initialize-DockerShare.ps1 first}
+      ADMIN_UIDS: ${ADMIN_UIDS:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-}
+    depends_on:
+      database:
+        condition: service_healthy
+    expose:
+      - "5173"
+    restart: unless-stopped
+
+  tunnel:
+    image: cloudflare/cloudflared:2026.10.7
+    command: tunnel --no-autoupdate --url http://app:5173
+    depends_on:
+      - app
+    restart: unless-stopped
+
+volumes:
+  chopwise_mysql_data:

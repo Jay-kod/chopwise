@@ -11,12 +11,17 @@ export default function AdminGemini() {
     id: 'gemini',
     name: 'Google Gemini',
   };
+  const geminiFunction = status?.functions?.find((f) => f.id === 'gemini');
+  const enrichedGemini = {
+    ...gemini,
+    lastTest: gemini.lastTest || geminiFunction?.lastTest || null,
+  };
 
   return (
     <div className="space-y-6">
       <AdminPageHeader
         title="Google Gemini AI Integration"
-        description="Configure your Gemini API key, model target, and run latency tests for Nigerian meal plan generation."
+        description="Configure and test Gemini for Nigerian meal generation, nutrition estimates, and general food feedback on customer meal details."
         actions={
           <Button
             variant="secondary"
@@ -31,7 +36,7 @@ export default function AdminGemini() {
 
       <div className="max-w-3xl">
         <IntegrationCard
-          integration={gemini}
+          integration={enrichedGemini}
           onSave={saveSection}
           onTest={runTest}
           isTesting={testingTarget === 'gemini'}

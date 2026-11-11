@@ -1,7 +1,7 @@
 import crypto from 'node:crypto';
 import { query } from '../mysql.js';
-import { getEdamamConfig, getSafetyConfig } from '../configStore.js';
-import { analyzeIngredients } from '../clients/edamam.js';
+import { getUsdaConfig, getSafetyConfig } from '../configStore.js';
+import { analyzeIngredients } from '../clients/usda.js';
 import { evaluateMealSafety } from './safety.js';
 import { AppError } from '../http.js';
 
@@ -35,118 +35,140 @@ export function formatAiEstimateNutrients(estimate = {}) {
   };
 }
 
-export function extractNutrientsFromEdamam(edamamData = {}) {
-  const nutrients = edamamData.totalNutrients || {};
-  const getAmount = (k) => nutrients[k]?.quantity != null ? Math.round(nutrients[k].quantity) : 0;
-  const vitamins = [];
-  const map = [
-    { key: 'VITA_RAE', name: 'Vitamin A', unit: 'µg' }, { key: 'VITC', name: 'Vitamin C', unit: 'mg' },
-    { key: 'VITD', name: 'Vitamin D', unit: 'µg' }, { key: 'TOCPHA', name: 'Vitamin E', unit: 'mg' },
-    { key: 'VITB6A', name: 'Vitamin B6', unit: 'mg' }, { key: 'VITB12', name: 'Vitamin B12', unit: 'µg' },
-    { key: 'CA', name: 'Calcium', unit: 'mg' }, { key: 'FE', name: 'Iron', unit: 'mg' }, { key: 'K', name: 'Potassium', unit: 'mg' },
-  ];
-  for (const v of map) {
-    if (nutrients[v.key]?.quantity > 0) {
-      vitamins.push({
-        name: v.name,
-        amount: Math.round(nutrients[v.key].quantity * 10) / 10,
-        unit: nutrients[v.key].unit || v.unit,
-      });
-    }
-  }
-  return {
-    calories: Math.round(edamamData.calories || 0),
-    proteinG: getAmount('PROCNT'),
-    carbsG: getAmount('CHOCDF'),
-    fatG: getAmount('FAT'),
-    sodiumMg: getAmount('NA'),
-    sugarG: getAmount('SUGAR'),
-    vitamins,
-  };
-}
-
-async function fetchMealFromDb(uid, mealId) {
+async function fetchMealFromDb(uid, mealId, includeConditions = true) {
   let userConditions = [];
   let meal = null;
-  try {
+  if (includeConditions) {
     const userRows = await query('SELECT profile FROM users WHERE id = ? LIMIT 1', [uid]);
     if (userRows?.[0]?.profile) {
       const p = typeof userRows[0].profile === 'string' ? JSON.parse(userRows[0].profile) : userRows[0].profile;
       userConditions = p?.conditions || [];
     }
-    const recRows = await query('SELECT meals FROM latest_recs WHERE user_id = ? LIMIT 1', [uid]);
-    if (recRows?.[0]?.meals) {
-      const meals = typeof recRows[0].meals === 'string' ? JSON.parse(recRows[0].meals) : recRows[0].meals;
-      meal = meals.find((m) => m.id === mealId);
+  }
+  const recRows = await query('SELECT meals FROM latest_recs WHERE user_id = ? LIMIT 1', [uid]);
+  if (recRows?.[0]?.meals) {
+    const meals = typeof recRows[0].meals === 'string' ? JSON.parse(recRows[0].meals) : recRows[0].meals;
+    meal = meals.find((m) => m.id === mealId);
+  }
+  if (!meal) {
+    const saved = await query('SELECT meal FROM saved_meals WHERE user_id = ? AND meal_id = ? LIMIT 1', [uid, mealId]);
+    if (saved?.[0]?.meal) {
+      meal = typeof saved[0].meal === 'string' ? JSON.parse(saved[0].meal) : saved[0].meal;
     }
-    if (!meal) {
-      const saved = await query('SELECT meal FROM saved_meals WHERE user_id = ? AND meal_id = ? LIMIT 1', [uid, mealId]);
-      if (saved?.[0]?.meal) {
-        meal = typeof saved[0].meal === 'string' ? JSON.parse(saved[0].meal) : saved[0].meal;
-      }
+  }
+  if (!meal) {
+    const cat = await query('SELECT id, recipe FROM recipe_catalog WHERE id = ? LIMIT 1', [mealId]);
+    if (cat?.[0]?.recipe) {
+      const catRecipe = typeof cat[0].recipe === 'string' ? JSON.parse(cat[0].recipe) : cat[0].recipe;
+      meal = { ...catRecipe, id: cat[0].id };
     }
-  } catch {}
+  }
   return { meal, userConditions };
 }
 
-async function resolveEdamam(lines, mealName) {
+async function resolveUsda(ingredients) {
   try {
-    const res = await analyzeIngredients(mealName, lines);
-    if (res?.calories > 0) {
-      return { nutrition: extractNutrientsFromEdamam(res.raw), source: 'edamam' };
+    return { result: await analyzeIngredients(ingredients), message: '' };
+  } catch (error) {
+    const detail = error?.details?.ingredients;
+    if (error?.code === 'VALIDATION_ERROR' && detail) return { result: null, message: detail };
+    if (String(error?.message).includes('could not find a usable match')) {
+      return { result: null, message: 'USDA could not match every ingredient. Showing the AI estimate.' };
     }
-  } catch {}
-  return null;
+    if (String(error?.message).toLowerCase().includes('rate limit')) {
+      return { result: null, message: 'USDA is rate-limited right now. Showing the AI estimate; try again later.' };
+    }
+    return { result: null, message: 'USDA could not complete this lookup. Showing the AI estimate.' };
+  }
+}
+
+async function findCachedNutrition(hash, meal, userConditions, thresholds, forceRefresh) {
+  if (!hash || forceRefresh) return null;
+  const rows = await query('SELECT nutrition, source FROM nutrition_cache WHERE ingredients_hash = ? LIMIT 1', [hash]);
+  if (!rows?.[0]?.nutrition) return null;
+  const nutrition = typeof rows[0].nutrition === 'string' ? JSON.parse(rows[0].nutrition) : rows[0].nutrition;
+  return {
+    nutrition,
+    source: rows[0].source || 'usda',
+    safetyFlags: evaluateMealSafety({ ...meal, nutrition }, userConditions, thresholds),
+    cached: true,
+    ...(rows[0].source === 'ai-estimate' ? {
+      sourceMessage: 'USDA did not return complete data for this meal; showing the AI estimate. Select Check USDA to try again.',
+    } : {}),
+  };
+}
+
+async function calculateMealNutrition(meal) {
+  const conf = await getUsdaConfig();
+  const ingredients = meal.ingredients || [];
+  if (!conf.enabled || !conf.apiKey) {
+    return {
+      source: 'ai-estimate',
+      nutrition: formatAiEstimateNutrients(meal.aiNutritionEstimate),
+      sourceMessage: 'USDA is not configured. Showing the AI estimate.',
+    };
+  }
+  if (!ingredients.length) {
+    return {
+      source: 'ai-estimate',
+      nutrition: formatAiEstimateNutrients(meal.aiNutritionEstimate),
+      sourceMessage: 'This meal has no ingredients to look up in USDA. Showing the AI estimate.',
+    };
+  }
+  const usda = await resolveUsda(ingredients);
+  return {
+    source: usda.result?.source || 'ai-estimate',
+    nutrition: usda.result?.nutrition || formatAiEstimateNutrients(meal.aiNutritionEstimate),
+    sourceMessage: usda.message,
+  };
+}
+
+async function saveNutritionCache(hash, nutrition, source) {
+  if (!hash) return;
+  await query(
+    `INSERT INTO nutrition_cache (ingredients_hash, nutrition, source, fetched_at)
+     VALUES (?, ?, ?, NOW()) ON DUPLICATE KEY UPDATE nutrition = VALUES(nutrition), source = VALUES(source), fetched_at = NOW()`,
+    [hash, JSON.stringify(nutrition), source]
+  );
 }
 
 export async function getMealNutrition(uid, mealId, options = {}) {
-  let { sampleMeal: meal = null, userConditions = [] } = options;
+  const { sampleMeal = null, userConditions = [], forceRefresh = false } = options;
+  let meal = sampleMeal;
+  let conditions = userConditions;
   if (!meal) {
     if (!mealId || typeof mealId !== 'string') throw AppError.validation({ mealId: 'Valid mealId required.' });
     const fetched = await fetchMealFromDb(uid, mealId);
     meal = fetched.meal;
-    userConditions = fetched.userConditions;
-    if (!meal) throw AppError.notFound(`Meal "${mealId}" not found in recommendations or saved meals.`);
+    conditions = fetched.userConditions;
+    if (!meal) throw AppError.notFound('Meal not found.');
   }
 
-  const lines = buildIngredientLines(meal.ingredients || []);
-  const hash = computeIngredientsHash(lines);
+  const hash = computeIngredientsHash(buildIngredientLines(meal.ingredients || []));
   const thresholds = await getSafetyConfig();
+  const cached = await findCachedNutrition(hash, meal, conditions, thresholds, forceRefresh);
+  if (cached) return cached;
 
-  if (hash) {
-    try {
-      const rows = await query('SELECT nutrition, source FROM nutrition_cache WHERE ingredients_hash = ? LIMIT 1', [hash]);
-      if (rows?.[0]?.nutrition) {
-        const nut = typeof rows[0].nutrition === 'string' ? JSON.parse(rows[0].nutrition) : rows[0].nutrition;
-        return {
-          nutrition: nut,
-          source: rows[0].source || 'edamam',
-          safetyFlags: evaluateMealSafety({ ...meal, nutrition: nut }, userConditions, thresholds),
-          cached: true,
-        };
-      }
-    } catch {}
-  }
-
-  const conf = await getEdamamConfig();
-  let resolved = conf.enabled && conf.appId && conf.appKey && lines.length > 0 ? await resolveEdamam(lines, meal.name) : null;
-  const source = resolved?.source || 'ai-estimate';
-  const nutrition = resolved?.nutrition || formatAiEstimateNutrients(meal.aiNutritionEstimate);
-
-  if (hash) {
-    try {
-      await query(
-        `INSERT INTO nutrition_cache (ingredients_hash, nutrition, source, fetched_at)
-         VALUES (?, ?, ?, NOW()) ON DUPLICATE KEY UPDATE nutrition = VALUES(nutrition), source = VALUES(source), fetched_at = NOW()`,
-        [hash, JSON.stringify(nutrition), source]
-      );
-    } catch {}
-  }
-
+  const result = await calculateMealNutrition(meal);
+  await saveNutritionCache(hash, result.nutrition, result.source);
   return {
-    nutrition,
-    source,
-    safetyFlags: evaluateMealSafety({ ...meal, nutrition }, userConditions, thresholds),
+    nutrition: result.nutrition,
+    source: result.source,
+    ...(result.source === 'ai-estimate' ? { sourceMessage: result.sourceMessage } : {}),
+    safetyFlags: evaluateMealSafety({ ...meal, nutrition: result.nutrition }, conditions, thresholds),
     cached: false,
   };
+}
+
+/**
+ * Loads a meal owned by the signed-in user, or a published catalogue recipe.
+ * @param {string} uid
+ * @param {string} mealId
+ * @returns {Promise<object>}
+ */
+export async function getMealForUser(uid, mealId) {
+  if (!mealId || typeof mealId !== 'string') throw AppError.validation({ mealId: 'Valid mealId required.' });
+  const { meal } = await fetchMealFromDb(uid, mealId, false);
+  if (!meal) throw AppError.notFound(`Meal "${mealId}" not found in recommendations or saved meals.`);
+  return meal;
 }

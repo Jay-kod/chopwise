@@ -34,7 +34,7 @@ export async function getGeminiConfig() {
 
   const data = {
     apiKey,
-    model: stored.model || process.env.GEMINI_MODEL || 'gemini-2.5-flash',
+    model: stored.model || process.env.GEMINI_MODEL || 'gemini-3.5-flash-lite',
     updatedAt: stored.updatedAt || null,
   };
 
@@ -42,39 +42,27 @@ export async function getGeminiConfig() {
   return data;
 }
 
-export async function getEdamamConfig() {
+export async function getUsdaConfig() {
   const now = Date.now();
-  const cached = cache.get('edamam');
+  const cached = cache.get('usda');
   if (cached && cached.expiresAt > now) return cached.data;
 
   const doc = await loadDoc('integrations');
-  const stored = doc?.edamam || {};
+  const stored = doc?.usda || {};
 
-  let appId = null;
-  let appKey = null;
-
-  if (stored.appIdEnc) {
+  let apiKey = null;
+  if (stored.apiKeyEnc) {
     try {
-      appId = decrypt(stored.appIdEnc);
+      apiKey = decrypt(stored.apiKeyEnc);
     } catch {
-      appId = null;
-    }
-  }
-  if (stored.appKeyEnc) {
-    try {
-      appKey = decrypt(stored.appKeyEnc);
-    } catch {
-      appKey = null;
+      apiKey = null;
     }
   }
 
-  if (!appId && process.env.EDAMAM_APP_ID) appId = process.env.EDAMAM_APP_ID;
-  if (!appKey && process.env.EDAMAM_APP_KEY) appKey = process.env.EDAMAM_APP_KEY;
+  const enabled = stored.enabled !== undefined ? Boolean(stored.enabled) : Boolean(apiKey);
+  const data = { apiKey, enabled, updatedAt: stored.updatedAt || null };
 
-  const enabled = stored.enabled !== undefined ? Boolean(stored.enabled) : Boolean(appId && appKey);
-  const data = { appId, appKey, enabled, updatedAt: stored.updatedAt || null };
-
-  cache.set('edamam', { data, expiresAt: now + CACHE_TTL_MS });
+  cache.set('usda', { data, expiresAt: now + CACHE_TTL_MS });
   return data;
 }
 

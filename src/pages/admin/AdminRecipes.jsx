@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import AdminPageHeader from './AdminPageHeader';
 import RecipeEditorForm from '@/features/admin/RecipeEditorForm';
 import { useAdminActions } from '@/features/admin/useAdminActions';
+import { useNotifications } from '@/features/notifications/NotificationContext';
 import Button from '@/components/Button';
 import Card from '@/components/Card';
 import Input from '@/components/Input';
@@ -9,6 +10,7 @@ import Spinner from '@/components/Spinner';
 import ErrorState from '@/components/ErrorState';
 import EmptyState from '@/components/EmptyState';
 import ConfirmModal from '@/components/ConfirmModal';
+import { formatNaira } from '@/lib/format';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
@@ -21,6 +23,7 @@ function formatDate(value) {
 
 export default function AdminRecipes() {
   const { run, pendingAction, error, setError } = useAdminActions();
+  const { addNotification } = useNotifications();
   const [recipes, setRecipes] = useState([]);
   const [total, setTotal] = useState(0);
   const [searchInput, setSearchInput] = useState('');
@@ -53,15 +56,30 @@ export default function AdminRecipes() {
       setShowForm(false);
       setEditingRecipe(null);
       await loadRecipes();
+      addNotification({
+        type: 'meal',
+        title: editingRecipe ? 'Recipe Updated' : 'Recipe Published',
+        message: `"${recipe.name}" was ${editingRecipe ? 'updated' : 'added to the catalogue'}.`,
+        href: '/admin/recipes',
+        icon: '🍲',
+      });
     }
   }
 
   async function removeRecipe() {
     if (!deleteTarget) return;
+    const name = deleteTarget.recipe?.name || 'Recipe';
     const result = await run('deleteRecipe', { id: deleteTarget.id });
     if (result) {
       setDeleteTarget(null);
       await loadRecipes();
+      addNotification({
+        type: 'meal',
+        title: 'Recipe Deleted',
+        message: `"${name}" was deleted from the catalogue.`,
+        href: '/admin/recipes',
+        icon: '🗑️',
+      });
     }
   }
 
@@ -98,7 +116,9 @@ export default function AdminRecipes() {
         <Card>
           <div className="mb-4 flex flex-col gap-1">
             <h2 className="text-lg font-semibold text-fg">{editingRecipe ? 'Edit recipe' : 'Add recipe'}</h2>
-            <p className="text-sm text-muted">Recipes are published to signed-in customers as soon as they are saved.</p>
+            <p className="text-sm text-muted">
+              Recipe costs are estimates for the ingredients, not prices charged to customers.
+            </p>
           </div>
           <RecipeEditorForm
             key={editingRecipe?.id || 'new-recipe'}
@@ -141,6 +161,7 @@ export default function AdminRecipes() {
               <TableRow>
                 <TableHead>Recipe</TableHead>
                 <TableHead>Meal type</TableHead>
+                <TableHead>Estimated ingredient cost</TableHead>
                 <TableHead>Last updated</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -150,6 +171,9 @@ export default function AdminRecipes() {
                 <TableRow key={item.id}>
                   <TableCell className="font-medium text-fg">{item.recipe.name}</TableCell>
                   <TableCell className="capitalize">{item.recipe.mealType}</TableCell>
+                  <TableCell>
+                    {formatNaira(item.recipe.costNGN)}
+                  </TableCell>
                   <TableCell>{formatDate(item.updatedAt)}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
@@ -186,7 +210,7 @@ export default function AdminRecipes() {
         onClose={() => setDeleteTarget(null)}
         onConfirm={removeRecipe}
         title="Remove this recipe?"
-        message="This permanently removes the catalogue entry. Customer accounts and personalized recommendations are not changed."
+        message="This permanently removes the catalogue entry."
         confirmText="Remove recipe"
         variant="danger"
         loading={pendingAction === 'deleteRecipe'}

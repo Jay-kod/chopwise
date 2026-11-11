@@ -10,6 +10,7 @@ import { useAppConfig } from '../context/ConfigContext';
 import { useAuth } from '../features/auth/useAuth';
 import { apiClient } from '../lib/apiClient';
 import { ROUTES } from '../lib/routes';
+import { customerNavGroups } from './app-shared';
 
 /**
  * Standard application layout with sticky header, responsive navigation, mobile drawer, and footer.
@@ -70,18 +71,15 @@ export default function Layout({
 
   const desktopNavActions = user ? (
     <div className="hidden sm:flex items-center gap-3">
-      <Link
-        to={ROUTES.customer.dashboard}
-        className="text-xs font-semibold text-header-fg hover:text-header-muted transition-colors"
-      >
-        Dashboard
-      </Link>
-      <Link
-        to={ROUTES.customer.profile}
-        className="text-xs font-semibold text-header-fg hover:text-header-muted transition-colors"
-      >
-        Profile
-      </Link>
+      {customerNavGroups[0].items.map((item) => (
+        <Link
+          key={item.path}
+          to={item.path}
+          className="text-xs font-semibold text-header-fg hover:text-header-muted transition-colors"
+        >
+          {item.title}
+        </Link>
+      ))}
       {isAdmin && (
         <Link to={ROUTES.admin.dashboard}>
           <Button

@@ -7,6 +7,8 @@ import { CustomSidebarTrigger } from "@/components/custom-sidebar-trigger";
 import { navLinks } from "@/components/app-shared";
 import { NavUser } from "@/components/nav-user";
 import ThemeToggle from "@/components/ThemeToggle";
+import NotificationBell from "@/components/NotificationBell";
+import LiveClock from "@/components/LiveClock";
 import { ROUTES } from "@/lib/routes";
 
 export function AppHeader({
@@ -33,6 +35,8 @@ export function AppHeader({
 				<AppBreadcrumbs page={activeItem} />
 			</div>
 			<div className="flex items-center gap-2 sm:gap-3">
+				<LiveClock className="hidden md:inline-flex" />
+				<NotificationBell />
 				<ThemeToggle />
 				<Separator
 					className="h-4 data-[orientation=vertical]:self-center"

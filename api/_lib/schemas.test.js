@@ -8,6 +8,10 @@ import {
   enrichedMealSchema,
   catalogRecipeSchema,
   adminListSchema,
+  draftRecipeSchema,
+  analyzeRecipeNutritionSchema,
+  nutritionRequestSchema,
+  mealFeedbackSchema,
 } from './schemas.js';
 
 describe('api/_lib/schemas', () => {
@@ -166,6 +170,41 @@ describe('api/_lib/schemas', () => {
         });
         expect(adminListSchema.safeParse({ offset: -1 }).success).toBe(false);
         expect(adminListSchema.safeParse({ limit: 101 }).success).toBe(false);
+      });
+
+      it('validates AI draft and nutrition analysis schemas', () => {
+        expect(draftRecipeSchema.safeParse({ mealName: 'Jollof Rice', mealType: 'lunch' }).success).toBe(true);
+        expect(draftRecipeSchema.safeParse({ mealName: '  Egusi Soup  ' }).success).toBe(true);
+        expect(draftRecipeSchema.safeParse({ mealName: '' }).success).toBe(false);
+        expect(draftRecipeSchema.safeParse({ mealName: 'Rice', mealType: 'snack' }).success).toBe(false);
+
+        const validNutritionPayload = {
+          title: 'Jollof Rice',
+          ingredients: [{ item: 'rice', quantity: 200, unit: 'g' }],
+        };
+        expect(analyzeRecipeNutritionSchema.safeParse(validNutritionPayload).success).toBe(true);
+        expect(analyzeRecipeNutritionSchema.safeParse({ title: '', ingredients: [] }).success).toBe(false);
+      });
+
+      it('validates customer nutrition actions and bounded AI feedback', () => {
+        expect(nutritionRequestSchema.parse({ mealId: 'meal-1' })).toEqual({
+          mealId: 'meal-1',
+          action: 'nutrition',
+        });
+        expect(nutritionRequestSchema.safeParse({ mealId: '', action: 'ai-feedback' }).success).toBe(false);
+        expect(nutritionRequestSchema.safeParse({ mealId: 'meal-1', action: 'unknown' }).success).toBe(false);
+        expect(mealFeedbackSchema.safeParse({
+          summary: 'A balanced meal with a few possible improvements.',
+          strengths: ['Includes a protein source.'],
+          cautions: [],
+          improvements: ['Consider adding vegetables.'],
+        }).success).toBe(true);
+        expect(mealFeedbackSchema.safeParse({
+          summary: '',
+          strengths: [],
+          cautions: [],
+          improvements: [],
+        }).success).toBe(false);
       });
     });
   });

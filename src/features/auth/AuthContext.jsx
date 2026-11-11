@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { apiClient } from '../../lib/apiClient';
 
-const AuthContext = createContext(null);
+export const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -100,6 +100,16 @@ export function AuthProvider({ children }) {
     setUserDoc(null);
   }
 
+  async function updateAvatar(avatar) {
+    const res = await apiClient('/api/auth', { action: 'update-avatar', avatar });
+    if (res?.ok) {
+      setUser((prev) => (prev ? { ...prev, avatar, profile: { ...prev.profile, avatar } } : prev));
+      setUserDoc((prev) => (prev ? { ...prev, avatar, profile: { ...prev.profile, avatar } } : prev));
+      await loadProfile();
+    }
+    return res;
+  }
+
   const value = {
     user,
     userDoc,
@@ -108,6 +118,7 @@ export function AuthProvider({ children }) {
     register,
     login,
     logout,
+    updateAvatar,
     refreshProfile: loadProfile,
   };
 

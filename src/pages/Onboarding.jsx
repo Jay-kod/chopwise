@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { apiClient } from '../lib/apiClient';
 import { useAuth } from '../features/auth/useAuth';
 import { ROUTES } from '../lib/routes';
+import { useToast } from '../components/Toast';
 import Logo from '../components/Logo';
 import ThemeToggle from '../components/ThemeToggle';
 import Card from '../components/Card';
@@ -20,8 +21,9 @@ import {
 const TOTAL_STEPS = 4;
 
 export default function Onboarding() {
-  const { user, userDoc } = useAuth();
+  const { userDoc, logout } = useAuth();
   const navigate = useNavigate();
+  const addToast = useToast();
 
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
@@ -116,7 +118,9 @@ export default function Onboarding() {
         },
       });
 
-      navigate(ROUTES.customer.dashboard);
+      addToast('Setup complete! Please sign in to continue.', 'ok');
+      await logout();
+      navigate(ROUTES.customer.login, { replace: true });
     } catch (err) {
       setErrors({ form: err.message || 'Failed to save profile. Please try again.' });
     } finally {

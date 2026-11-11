@@ -1,0 +1,9 @@
+.git
+.vercel
+node_modules
+dist
+.env*
+docker.test.env
+*-firebase-adminsdk-*.json
+*service-account*.json
+firebase-adminsdk*.json

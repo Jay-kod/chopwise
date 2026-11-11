@@ -4,19 +4,19 @@ Tick a box only when the exit test passes. Prompts are in AGENT_PROMPTS.md (bloc
 ## Day 1 — build (pre-flight first, see AGENT_PROMPTS.md)
 ### Block 1 — scaffold + probe
 - [x] **P1** Scaffold — exit: `vercel dev` serves the ChopWise Landing; theme toggle works (system/light/dark, persists, no flash); `npm run verify` passes
-- [x] **P2** Edamam probe — exit: table of which Nigerian ingredients Edamam parses
+- [x] **P2** Historical Edamam probe — completed for the original provider; its standalone script was removed when USDA replaced Edamam
 ### Block 2 — client foundation (parallel-safe with Block 3)
 - [x] **P3** Auth + guards — exit: register -> users doc created; refresh keeps session; logout; guards redirect
 - [x] **P4** Rules + onboarding — exit: profile persists; second account cannot read it
 ### Block 3 — server foundation (parallel-safe with Block 2)
 - [x] **P5** Server foundation + Admin API — exit: 401/403 checks; saved Gemini key encrypted (`v1:`); `test gemini` ok; crypto tests pass
 ### Block 4
-- [x] **P6** Admin page UI — exit: paste Gemini + Edamam keys; Test all green; secrets masked; non-admin NotFound
+- [x] **P6** Admin page UI — exit: paste Gemini + USDA keys; Test all green; secrets masked; non-admin NotFound
 ### Block 5
 - [x] **P7** Recommendation service + endpoint — exit: 6 valid meals; cache; 11th call RATE_LIMITED; missing key NOT_CONFIGURED; Admin `recommend` test green
 - [x] **P8** Dashboard — exit: sign up -> onboard -> real meals
 ### Block 6
-- [x] **P9** Nutrition service + endpoint — exit: edamam result, AI-estimate fallback, cache, NOT_FOUND; Admin `nutrition` test green
+- [x] **P9** Nutrition service + endpoint — exit: USDA result for matched gram-based ingredients, AI-estimate fallback, cache, NOT_FOUND; Admin `nutrition` test green
 - [x] **P10** Meal detail + Save — exit: detail survives reload; save/unsave persists
 - [x] **P11** Filters + Profile — exit: FR1–FR10 demonstrable
 ### Block 7

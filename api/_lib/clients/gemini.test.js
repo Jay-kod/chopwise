@@ -7,22 +7,24 @@ import {
 
 describe('api/_lib/clients/gemini', () => {
   describe('sortGeminiModels', () => {
-    it('prioritizes 2.5-flash, then 2.0-flash, 1.5-flash, pro, then others', () => {
+    it('prioritizes active flash models in order, then pro, then others', () => {
       const input = [
-        { id: 'gemini-1.5-pro', displayName: 'Gemini 1.5 Pro' },
-        { id: 'gemini-1.5-flash', displayName: 'Gemini 1.5 Flash' },
-        { id: 'gemini-2.5-flash', displayName: 'Gemini 2.5 Flash' },
-        { id: 'gemini-2.0-flash', displayName: 'Gemini 2.0 Flash' },
         { id: 'gemini-2.5-pro', displayName: 'Gemini 2.5 Pro' },
+        { id: 'gemini-3.5-flash', displayName: 'Gemini 3.5 Flash' },
+        { id: 'gemini-3.5-flash-lite', displayName: 'Gemini 3.5 Flash Lite' },
+        { id: 'gemini-3.1-flash-lite', displayName: 'Gemini 3.1 Flash Lite' },
+        { id: 'gemini-3.6-flash', displayName: 'Gemini 3.6 Flash' },
+        { id: 'gemini-3.8-flash', displayName: 'Gemini 3.8 Flash' },
         { id: 'gemini-custom', displayName: 'Gemini Custom' },
       ];
 
       const sorted = sortGeminiModels(input);
       expect(sorted.map((m) => m.id)).toEqual([
-        'gemini-2.5-flash',
-        'gemini-2.0-flash',
-        'gemini-1.5-flash',
-        'gemini-1.5-pro',
+        'gemini-3.5-flash-lite',
+        'gemini-3.5-flash',
+        'gemini-3.1-flash-lite',
+        'gemini-3.6-flash',
+        'gemini-3.8-flash',
         'gemini-2.5-pro',
         'gemini-custom',
       ]);

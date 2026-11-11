@@ -28,12 +28,14 @@ Validate with zod. On invalid JSON or schema failure retry once; second failure 
 - If `retryOnOverBudget` and more than half of meals are over budget: regenerate once with a stricter instruction and the exact cap; keep the better result (fewer over-budget meals). Never hide the flag.
 
 ## Nutrition (`nutritionService.js`)
-- Build ingredient lines: `"<qty> <unit> <item>"`; for `piece` use `"<qty> <item>"`. Normalise, then hash (`ingredientsHash`).
-- Cache hit -> return. Else call Edamam Nutrition Analysis (endpoint constant in `clients/edamam.js`; verify against the docs at https://developer.edamam.com/). Result is per meal (one serving).
-- Treat ANY non-2xx, timeout, or low-quality/unparseable response as failure -> fallback to `aiNutritionEstimate` with `source: "ai-estimate"`. Edamam may reject a whole request when one ingredient is unparseable; if so, retry once without the unparseable lines only if the API identifies them, else fallback.
-- Respect rate limits: no parallel bursts; map "limited" to a friendly message or fallback.
-- Edamam attribution ("Powered by Edamam" linking to developer.edamam.com) must show wherever Edamam data is displayed.
-- If the Edamam integration is disabled or not configured, use the AI estimate path directly.
+- Normalize the ingredient list and hash it (`ingredientsHash`) for the MySQL `nutrition_cache`.
+- On a cache miss, the server searches USDA FoodData Central (`POST https://api.nal.usda.gov/fdc/v1/foods/search`) for each ingredient. The API key is admin-managed and encrypted; it is never sent to the browser.
+- USDA is a food-composition database, not a recipe parser. Compute meal totals only when every ingredient returns a usable match and has a quantity in grams. USDA nutrient amounts are per 100 g and are scaled by each ingredient's gram quantity.
+- If USDA is disabled/unconfigured, any search fails or is rate-limited, an ingredient is unmatched, or a quantity is not in grams, use the meal's `aiNutritionEstimate` with `source: "ai-estimate"` and empty vitamins. Do not mix partial USDA totals with the AI estimate.
+- Limit concurrent searches and apply a request timeout; show USDA source attribution wherever USDA nutrition data is displayed.
+- USDA results use `source: "usda"` and expose calories, protein, carbohydrates, fat, sodium, sugar, and the available supported vitamins/minerals. These are food-composition estimates and not medical advice.
+- On the meal detail page, customers can request general Gemini feedback about a stored meal's ingredients, steps, and estimate. The feedback identifies strengths, cautions, and possible improvements; it does not use customer profile data, diagnose, or provide medical advice. AI output is schema-validated before display.
+- The meal detail page also provides an explicit USDA refresh action. It bypasses the nutrition cache; if USDA is unavailable or cannot match every ingredient, the existing AI estimate is shown with a clear reason where available.
 
 ## Safety rules (`safety.js`, pure, unit-tested)
 | Condition | Rule per meal | Flag text |
@@ -51,12 +53,7 @@ Format `{ "item": "egusi", "unit": "100g", "priceNGN": null }`. Jay fills prices
 100ml: palm oil, vegetable oil.
 piece: plantain, bread, eggs, scotch bonnet (rodo), seasoning cubes.
 
-## Edamam probe ingredient lines (scripts/edamam-probe.mjs)
-200 g egusi (melon seeds) | 50 g ogbono | 100 g ugu leaves | 100 g water leaf | 150 g garri | 200 g yam | 1 cup ofada rice | 1 cup brown beans | 1 ripe plantain | 2 tbsp palm oil | 30 g crayfish | 150 g stockfish | 1 cup ogi (pap) | 1 egg
-
-## Edamam findings
-- **Endpoint & Payload**: `POST https://api.edamam.com/api/nutrition-details?app_id=...&app_key=...` with JSON `{ title, ingr: [...], yield: 1 }`.
-- **Parsing behavior**: Commonly imported or global ingredients (yam, brown beans, ripe plantain, palm oil, egg, beef, long grain rice, tomatoes, melon seeds) parse reliably when expressed with clear metric or culinary units (`g`, `cup`, `tbsp`).
-- **Indigenous ingredient limitations**: Highly localized terms (`ogbono`, `ugu leaves`, `garri`, `ogi`, `crayfish`) frequently produce HTTP 555 ("Recipe with insufficient quality to parse") or are omitted from nutrient totals by Edamam's NLP parser.
-- **System Impact**: Confirms the necessity of our two-tier architecture in `nutritionService.js`—the pipeline attempts Edamam first, and on any 555/non-2xx or unparseable payload, seamlessly falls back to the meal's `aiNutritionEstimate` (`source: "ai-estimate"`) with empty vitamins.
-
+## USDA FoodData Central limitations
+- Search coverage and naming may vary, especially for Nigerian market ingredients. A missing usable match causes the complete meal to use its AI estimate.
+- The current nutrient calculation accepts only gram quantities. Millilitres, pieces, cups, spoons, and other units are not converted because ingredient density/weight conversions would be guesses.
+- The API requires a data.gov key. Store it in Admin at `/admin/usda`; do not put it in frontend environment variables or chat.

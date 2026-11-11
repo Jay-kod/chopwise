@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
 import Badge from '../../components/Badge';
@@ -28,7 +28,16 @@ export default function IntegrationCard({
   });
 
   const [saving, setSaving] = useState(false);
+  const [localTesting, setLocalTesting] = useState(false);
+  const [latestTest, setLatestTest] = useState(integration.lastTest || null);
   const [fieldErrors, setFieldErrors] = useState({});
+  const [saveError, setSaveError] = useState('');
+
+  useEffect(() => {
+    if (integration.lastTest) {
+      setLatestTest(integration.lastTest);
+    }
+  }, [integration.lastTest]);
 
   function handleChange(key, val) {
     setFormValues((prev) => ({ ...prev, [key]: val }));
@@ -45,12 +54,50 @@ export default function IntegrationCard({
     e.preventDefault();
     setSaving(true);
     setFieldErrors({});
+    setSaveError('');
 
-    const res = await onSave(integration.id, formValues);
-    if (!res?.ok && res?.error?.details?.fields) {
-      setFieldErrors(res.error.details.fields);
+    try {
+      const res = await onSave(integration.id, formValues);
+      if (!res?.ok) {
+        if (res?.error?.details?.fields) setFieldErrors(res.error.details.fields);
+        setSaveError(res?.error?.message || 'Could not save integration settings. Check the server configuration and try again.');
+        return;
+      }
+
+      setFormValues((previous) => {
+        const next = { ...previous };
+        for (const field of integration.fields) {
+          if (field.type === 'secret') next[field.key] = '';
+        }
+        return next;
+      });
+    } catch (error) {
+      setSaveError(error?.message || 'Could not save integration settings. Check the server configuration and try again.');
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
+  }
+
+  async function handleTestClick() {
+    setLocalTesting(true);
+    try {
+      const res = await onTest(integration.id, formValues);
+      if (res) {
+        setLatestTest(res);
+      }
+    } finally {
+      setLocalTesting(false);
+    }
+  }
+
+  function formatTime(isoStr) {
+    if (!isoStr) return '';
+    try {
+      const d = new Date(isoStr);
+      return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' ' + d.toLocaleDateString();
+    } catch {
+      return isoStr;
+    }
   }
 
   function getBadgeVariant(status) {
@@ -64,6 +111,8 @@ export default function IntegrationCard({
         return 'neutral';
     }
   }
+
+  const currentlyTesting = isTesting || localTesting;
 
   return (
     <Card id={`integration-${integration.id}`} className="p-6">
@@ -126,6 +175,14 @@ export default function IntegrationCard({
 
       {/* Form Fields */}
       <form onSubmit={handleSaveSubmit} className="mt-5 space-y-4">
+        {saveError && (
+          <div
+            role="alert"
+            className="rounded-lg border border-danger-line bg-danger-bg p-3 text-sm text-danger-fg"
+          >
+            {saveError}
+          </div>
+        )}
         {integration.fields.map((field) => {
           if (field.type === 'toggle') {
             return (
@@ -212,20 +269,75 @@ export default function IntegrationCard({
           );
         })}
 
+        {/* Live Testing Feedback */}
+        {currentlyTesting && (
+          <div
+            role="status"
+            aria-live="polite"
+            className="rounded-lg border border-line bg-surface-muted p-3.5 text-xs text-fg flex items-center gap-3 animate-pulse"
+          >
+            <Spinner label="Testing connection…" />
+            <div className="flex-1">
+              <div className="font-semibold text-fg">Verifying connection…</div>
+              <div className="text-muted">
+                Pinging {integration.title} with {formValues.apiKey || formValues.appId ? 'entered' : 'saved'} credentials…
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Connection Test Result Box */}
+        {!currentlyTesting && latestTest && (
+          <div
+            role="region"
+            aria-label="Connection test feedback"
+            className={`rounded-lg border p-3.5 text-xs ${
+              latestTest.ok
+                ? 'border-line bg-primary-soft text-on-primary-soft'
+                : 'border-danger-line bg-danger-bg text-danger-fg'
+            }`}
+          >
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex items-center gap-2 font-bold text-sm">
+                <span aria-hidden="true">{latestTest.ok ? '✓' : '✕'}</span>
+                <span>{latestTest.ok ? 'Connection Verified' : 'Connection Test Failed'}</span>
+              </div>
+              {latestTest.latencyMs != null && (
+                <span className="font-mono text-[11px] font-medium opacity-80">
+                  ⚡ {latestTest.latencyMs} ms
+                </span>
+              )}
+            </div>
+
+            <p className="mt-1 leading-relaxed text-xs">
+              {latestTest.message}
+            </p>
+
+            {latestTest.testedAt && (
+              <div className="mt-2 flex flex-wrap items-center justify-between gap-1 text-[11px] opacity-75 border-t border-line/20 pt-1.5">
+                <span>Last tested: {formatTime(latestTest.testedAt)}</span>
+                {!latestTest.ok && !formValues.apiKey && !formValues.appId && (
+                  <span className="italic">Enter your API credentials above, or save settings before testing.</span>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="flex items-center justify-end gap-2 pt-2 border-t border-line">
           <Button
             type="button"
             variant="secondary"
-            onClick={() => onTest(integration.id)}
-            disabled={isTesting || saving}
+            onClick={handleTestClick}
+            disabled={currentlyTesting || saving}
             className="text-xs min-h-9 px-3"
           >
-            {isTesting ? <Spinner label="Testing…" /> : 'Test connection'}
+            {currentlyTesting ? <Spinner label="Testing…" /> : 'Test connection'}
           </Button>
 
           <Button
             type="submit"
-            disabled={saving || isTesting}
+            disabled={saving || currentlyTesting}
             className="text-xs min-h-9 px-4"
           >
             {saving ? <Spinner label="Saving…" /> : 'Save settings'}
@@ -235,4 +347,3 @@ export default function IntegrationCard({
     </Card>
   );
 }
-
