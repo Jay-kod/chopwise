@@ -67,7 +67,11 @@ export const PREWORKED_AVATARS = [
  */
 export function AvatarDisplay({ avatarId, className = 'size-8', fallback = 'A' }) {
   if (!avatarId) {
-    return <span className="font-semibold text-xs">{fallback}</span>;
+    return (
+      <span className="font-extrabold text-on-primary-soft text-base flex items-center justify-center size-full">
+        {fallback}
+      </span>
+    );
   }
 
   const found = PREWORKED_AVATARS.find((a) => a.id === avatarId);
@@ -83,5 +87,9 @@ export function AvatarDisplay({ avatarId, className = 'size-8', fallback = 'A' }
     );
   }
 
-  return <span className="font-semibold text-xs">{fallback}</span>;
+  return (
+    <span className="font-extrabold text-on-primary-soft text-base flex items-center justify-center size-full">
+      {fallback}
+    </span>
+  );
 }

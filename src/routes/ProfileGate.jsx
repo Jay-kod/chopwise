@@ -1,6 +1,5 @@
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../features/auth/useAuth';
-import Preloader from '../components/Preloader';
 import { ROUTES } from '../lib/routes';
 
 /**
@@ -13,7 +12,7 @@ export default function ProfileGate({ allowIncomplete = false }) {
   const { user, profileComplete, loading } = useAuth();
 
   if (loading) {
-    return <Preloader message="Loading your health profile…" />;
+    return null;
   }
 
   if (!user) {

@@ -65,8 +65,8 @@ export default function MobileDrawer({
             <div className="space-y-3">
               <div className="rounded-lg bg-surface-muted p-2.5 text-xs">
                 <div className="text-[11px] text-muted">Signed in as</div>
-                <div className="font-semibold text-fg truncate" title={user.email}>
-                  {user.email}
+                <div className="font-semibold text-fg truncate" title={user.name || user.profile?.displayName || user.email}>
+                  {user.name || user.profile?.displayName || (user.email ? user.email.split('@')[0] : '')}
                 </div>
               </div>
 

@@ -18,7 +18,7 @@ The canonical schema is `mysql/schema.sql`; the server also creates/migrates tab
 
 The integration config stores the USDA API key encrypted under `integrations.usda`. Startup migration removes only legacy Edamam settings and health-test results, plus cached nutrition rows whose source is `edamam`; other integration settings and nutrition data are preserved.
 
-Admin customer views expose only account metadata: ID, email, creation date, profile-complete and active status. Health profiles and password hashes are never returned by admin endpoints. Customer removal is a soft-disable (`users.is_active = 0`); existing sessions are rejected on the next API request. Admin-created customer accounts are not supported.
+Admin customer views expose only account metadata: ID, email, name, creation date, profile-complete and active status. Health profiles and password hashes are never returned by admin endpoints. Customer removal is a soft-disable (`users.is_active = 0`); existing sessions are rejected on the next API request. Admin-created customer accounts are not supported.
 
 Only active registered users can be granted an additional admin role. `ADMIN_UIDS` entries are protected bootstrap admins and cannot be revoked or disabled through the app. Role changes are checked against the database for every admin request.
 
@@ -40,6 +40,7 @@ Maintenance actions are limited to clearing `nutrition_cache` and resetting `rat
 - preferences: subset of `vegetarian, no-pork, no-fish, no-beef, low-carb, high-protein`
 - avoidText: string, max 100 chars, optional
 - weeklyBudgetNGN: integer 1000–500000
+- displayName: optional string, max 100 characters; stored in the authenticated user's profile JSON
 - The server re-validates the profile with zod on every recommend call and never trusts the client.
 
 ## Hashes

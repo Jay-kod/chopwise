@@ -1,6 +1,5 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../features/auth/useAuth';
-import Preloader from '../components/Preloader';
 import { ROUTES } from '../lib/routes';
 
 /**
@@ -12,7 +11,7 @@ export default function ProtectedRoute() {
   const location = useLocation();
 
   if (loading) {
-    return <Preloader message="Verifying authentication session…" />;
+    return null;
   }
 
   if (!user) {

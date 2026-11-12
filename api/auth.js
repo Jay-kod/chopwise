@@ -5,26 +5,34 @@ import { hashPassword, verifyPassword, signToken } from './_lib/authTokens.js';
 import { verifyRequest, checkIsAdmin } from './_lib/auth.js';
 import { profileSchema } from './_lib/schemas.js';
 
+const parseJson = (val, fb = {}) => {
+  try { return typeof val === 'string' ? JSON.parse(val) : (val || fb); } catch { return fb; }
+};
+
+function formatUser(row, profile = {}) {
+  const name = row.name || profile.displayName || (row.email ? row.email.split('@')[0] : '');
+  return {
+    id: row.id, uid: row.id, email: row.email, name,
+    profileComplete: Boolean(row.profile_complete),
+    profile: { ...profile, displayName: name },
+    avatar: row.avatar || profile.avatar || null,
+  };
+}
+
 export default withHandler(async (req, res) => {
   const body = req.body || {};
   const action = body.action;
-
-  if (!action) {
-    throw AppError.validation({ action: 'Action is required.' });
-  }
+  if (!action) throw AppError.validation({ action: 'Action is required.' });
 
   // 1. Action: register
   if (action === 'register') {
-    const { email, password, consent } = body;
-    if (!email || !password) {
-      throw AppError.validation({ form: 'Email and password are required.' });
-    }
-    if (password.length < 8) {
-      throw AppError.validation({ password: 'Password must be at least 8 characters long.' });
-    }
-    if (!consent) {
-      throw AppError.validation({ consent: 'Consent to health data storage is required.' });
-    }
+    const { name, email, password, consent } = body;
+    if (!email || !password) throw AppError.validation({ form: 'Email and password are required.' });
+    const cleanName = typeof name === 'string' ? name.trim() : '';
+    if (!cleanName) throw AppError.validation({ name: 'Full name is required.' });
+    if (cleanName.length > 100) throw AppError.validation({ name: 'Name must be 100 characters or fewer.' });
+    if (password.length < 8) throw AppError.validation({ password: 'Password must be at least 8 characters long.' });
+    if (!consent) throw AppError.validation({ consent: 'Consent to health data storage is required.' });
 
     const normalizedEmail = email.trim().toLowerCase();
     const existing = await query('SELECT id FROM users WHERE email = ? LIMIT 1', [normalizedEmail]);
@@ -35,29 +43,26 @@ export default withHandler(async (req, res) => {
     const id = crypto.randomUUID();
     const passwordHash = hashPassword(password);
     const now = new Date();
+    const initialProfile = { displayName: cleanName };
 
     await query(
-      `INSERT INTO users (id, email, password_hash, created_at, consent_at, profile_complete, profile)
-       VALUES (?, ?, ?, ?, ?, 0, '{}')`,
-      [id, normalizedEmail, passwordHash, now, now]
+      `INSERT INTO users (id, email, name, password_hash, created_at, consent_at, profile_complete, profile)
+       VALUES (?, ?, ?, ?, ?, ?, 0, ?)`,
+      [id, normalizedEmail, cleanName, passwordHash, now, now, JSON.stringify(initialProfile)]
     );
 
     const token = signToken({ uid: id, email: normalizedEmail });
-    const user = { id, uid: id, email: normalizedEmail, profileComplete: false, profile: {} };
-
+    const user = { id, uid: id, name: cleanName, email: normalizedEmail, profileComplete: false, profile: initialProfile };
     return res.status(200).json({ ok: true, token, user });
   }
 
   // 2. Action: login
   if (action === 'login') {
     const { email, password } = body;
-    if (!email || !password) {
-      throw AppError.validation({ form: 'Email and password are required.' });
-    }
+    if (!email || !password) throw AppError.validation({ form: 'Email and password are required.' });
 
     const normalizedEmail = email.trim().toLowerCase();
     const rows = await query('SELECT * FROM users WHERE email = ? LIMIT 1', [normalizedEmail]);
-
     if (rows.length === 0 || !verifyPassword(password, rows[0].password_hash)) {
       throw AppError.unauthorized('Incorrect email or password. Please try again.');
     }
@@ -66,24 +71,9 @@ export default withHandler(async (req, res) => {
     if (!Boolean(row.is_active)) {
       throw AppError.unauthorized('This account has been disabled. Contact support for assistance.');
     }
-    let profile = {};
-    try {
-      profile = typeof row.profile === 'string' ? JSON.parse(row.profile || '{}') : row.profile || {};
-    } catch {
-      profile = {};
-    }
-
+    const profile = parseJson(row.profile);
     const token = signToken({ uid: row.id, email: row.email });
-    const user = {
-      id: row.id,
-      uid: row.id,
-      email: row.email,
-      profileComplete: Boolean(row.profile_complete),
-      profile,
-      avatar: row.avatar || profile.avatar || null,
-    };
-
-    return res.status(200).json({ ok: true, token, user });
+    return res.status(200).json({ ok: true, token, user: formatUser(row, profile) });
   }
 
   // Authenticated actions below require valid token
@@ -93,27 +83,10 @@ export default withHandler(async (req, res) => {
   // 3. Action: me
   if (action === 'me') {
     const rows = await query('SELECT * FROM users WHERE id = ? LIMIT 1', [uid]);
-    if (rows.length === 0) {
-      throw AppError.notFound('User record not found.');
-    }
+    if (rows.length === 0) throw AppError.notFound('User record not found.');
     const row = rows[0];
-    let profile = {};
-    try {
-      profile = typeof row.profile === 'string' ? JSON.parse(row.profile || '{}') : row.profile || {};
-    } catch {
-      profile = {};
-    }
-
-    const user = {
-      id: row.id,
-      uid: row.id,
-      email: row.email,
-      profileComplete: Boolean(row.profile_complete),
-      profile,
-      avatar: row.avatar || profile.avatar || null,
-    };
-
-    return res.status(200).json({ user, isAdmin: await checkIsAdmin(row.id) });
+    const profile = parseJson(row.profile);
+    return res.status(200).json({ user: formatUser(row, profile), isAdmin: await checkIsAdmin(row.id) });
   }
 
   // 4. Action: update-profile
@@ -122,13 +95,14 @@ export default withHandler(async (req, res) => {
     const parsed = profileSchema.safeParse(rawProfile);
     if (!parsed.success) throw AppError.validation({ profile: 'Invalid profile data structure.' });
 
-    const rows = await query('SELECT avatar FROM users WHERE id = ? LIMIT 1', [uid]);
+    const rows = await query('SELECT name, avatar FROM users WHERE id = ? LIMIT 1', [uid]);
     const avatar = parsed.data.avatar || rows?.[0]?.avatar || null;
-    const profileData = { ...parsed.data, ...(avatar ? { avatar } : {}), updatedAt: new Date().toISOString() };
+    const name = parsed.data.displayName || rows?.[0]?.name || null;
+    const profileData = { ...parsed.data, displayName: name || '', ...(avatar ? { avatar } : {}), updatedAt: new Date().toISOString() };
 
     await query(
-      'UPDATE users SET profile = ?, avatar = COALESCE(?, avatar), profile_complete = 1, updated_at = NOW() WHERE id = ?',
-      [JSON.stringify(profileData), avatar, uid]
+      'UPDATE users SET profile = ?, name = COALESCE(?, name), avatar = COALESCE(?, avatar), profile_complete = 1, updated_at = NOW() WHERE id = ?',
+      [JSON.stringify(profileData), name, avatar, uid]
     );
     return res.status(200).json({ ok: true, profile: profileData, avatar });
   }
@@ -142,8 +116,7 @@ export default withHandler(async (req, res) => {
     const rows = await query('SELECT profile FROM users WHERE id = ? LIMIT 1', [uid]);
     if (rows.length === 0) throw AppError.notFound('User record not found.');
 
-    let currentProfile = {};
-    try { currentProfile = typeof rows[0].profile === 'string' ? JSON.parse(rows[0].profile || '{}') : rows[0].profile || {}; } catch {}
+    const currentProfile = parseJson(rows[0].profile);
     currentProfile.avatar = avatar;
     currentProfile.updatedAt = new Date().toISOString();
 
@@ -157,45 +130,28 @@ export default withHandler(async (req, res) => {
       'SELECT id, meal_id, meal, saved_at FROM saved_meals WHERE user_id = ? ORDER BY saved_at DESC',
       [uid]
     );
-
-    const savedMeals = rows.map((r) => {
-      let meal = {};
-      try {
-        meal = typeof r.meal === 'string' ? JSON.parse(r.meal) : r.meal;
-      } catch {
-        meal = {};
-      }
-      return { id: r.meal_id || r.id, meal, savedAt: r.saved_at };
-    });
-
+    const savedMeals = rows.map((r) => ({ id: r.meal_id || r.id, meal: parseJson(r.meal), savedAt: r.saved_at }));
     return res.status(200).json({ savedMeals });
   }
 
   // 6. Action: save-meal
   if (action === 'save-meal') {
     const meal = body.meal;
-    if (!meal || !meal.id) {
-      throw AppError.validation({ meal: 'Meal object with an id is required.' });
-    }
+    if (!meal || !meal.id) throw AppError.validation({ meal: 'Meal object with an id is required.' });
 
     const id = `${uid}_${meal.id}`;
     await query(
-      `INSERT INTO saved_meals (id, user_id, meal_id, meal, saved_at)
-       VALUES (?, ?, ?, ?, NOW())
+      `INSERT INTO saved_meals (id, user_id, meal_id, meal, saved_at) VALUES (?, ?, ?, ?, NOW())
        ON DUPLICATE KEY UPDATE meal = VALUES(meal), saved_at = NOW()`,
       [id, uid, meal.id, JSON.stringify(meal)]
     );
-
     return res.status(200).json({ ok: true });
   }
 
   // 7. Action: delete-saved-meal
   if (action === 'delete-saved-meal') {
     const mealId = body.mealId;
-    if (!mealId) {
-      throw AppError.validation({ mealId: 'mealId is required.' });
-    }
-
+    if (!mealId) throw AppError.validation({ mealId: 'mealId is required.' });
     await query('DELETE FROM saved_meals WHERE user_id = ? AND meal_id = ?', [uid, mealId]);
     return res.status(200).json({ ok: true });
   }
@@ -208,30 +164,25 @@ export default withHandler(async (req, res) => {
     let meal = null;
     let isSaved = false;
 
-    const savedRows = await query(
-      'SELECT meal FROM saved_meals WHERE user_id = ? AND meal_id = ? LIMIT 1',
-      [uid, mealId]
-    );
+    const savedRows = await query('SELECT meal FROM saved_meals WHERE user_id = ? AND meal_id = ? LIMIT 1', [uid, mealId]);
     if (savedRows.length > 0) {
       isSaved = true;
-      meal = typeof savedRows[0].meal === 'string' ? JSON.parse(savedRows[0].meal) : savedRows[0].meal;
+      meal = parseJson(savedRows[0].meal, null);
     }
 
     if (!meal) {
       const recRows = await query('SELECT meals FROM latest_recs WHERE user_id = ? LIMIT 1', [uid]);
       if (recRows.length > 0) {
-        const meals = typeof recRows[0].meals === 'string' ? JSON.parse(recRows[0].meals) : recRows[0].meals;
-        if (Array.isArray(meals)) {
-          meal = meals.find((m) => m.id === mealId) || null;
-        }
+        const meals = parseJson(recRows[0].meals, []);
+        if (Array.isArray(meals)) meal = meals.find((m) => m.id === mealId) || null;
       }
     }
 
     if (!meal) {
       const catRows = await query('SELECT id, recipe FROM recipe_catalog WHERE id = ? LIMIT 1', [mealId]);
       if (catRows.length > 0) {
-        const catRecipe = typeof catRows[0].recipe === 'string' ? JSON.parse(catRows[0].recipe) : catRows[0].recipe;
-        meal = { ...catRecipe, id: catRows[0].id };
+        const catRecipe = parseJson(catRows[0].recipe, null);
+        if (catRecipe) meal = { ...catRecipe, id: catRows[0].id };
       }
     }
 

@@ -31,6 +31,9 @@ describe('getAuthErrorMessage', () => {
   });
 
   it('falls back to error.message or generic message for unknown errors', () => {
+    expect(getAuthErrorMessage({ message: 'Failed to fetch' })).toContain(
+      'Make sure the local server is running'
+    );
     expect(getAuthErrorMessage({ message: 'Custom error' })).toBe('Custom error');
     expect(getAuthErrorMessage('unknown/code')).toContain('unexpected authentication error');
   });

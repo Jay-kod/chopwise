@@ -5,13 +5,14 @@ import AuthCardLayout from '../features/auth/AuthCardLayout';
 import { useAuth } from '../features/auth/useAuth';
 import { getAuthErrorMessage } from '../features/auth/authErrors';
 import VerificationNotice from '../features/auth/VerificationNotice';
-import { PasswordToggle, ShieldCheckIcon, UserIcon } from '../features/auth/AuthIcons';
+import { MailIcon, PasswordToggle, ShieldCheckIcon, UserIcon } from '../features/auth/AuthIcons';
 import { ROUTES } from '../lib/routes';
 
 export default function Register() {
   const { register } = useAuth();
   const navigate = useNavigate();
 
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -27,6 +28,7 @@ export default function Register() {
     e.preventDefault();
     setError('');
 
+    if (!name.trim()) return setError('Please enter your full name.');
     if (!email.trim()) return setError('Please enter a valid email address.');
     if (password.length < 8) return setError('Password must be at least 8 characters long.');
     if (password !== confirmPassword) return setError('Passwords do not match. Please re-enter.');
@@ -34,7 +36,7 @@ export default function Register() {
 
     try {
       setLoading(true);
-      const res = await register(email, password, consent);
+      const res = await register(email, password, consent, name.trim());
       if (res?.needsEmailVerification) {
         setRegisteredEmail(email.trim());
         setNeedsVerification(true);
@@ -85,6 +87,18 @@ export default function Register() {
       ) : (
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input
+            id="register-name"
+            variant="underline"
+            type="text"
+            autoComplete="name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Full name"
+            required
+            rightElement={<UserIcon className="h-4 w-4 text-muted/70" />}
+          />
+
+          <Input
             id="register-email"
             variant="underline"
             type="email"
@@ -93,7 +107,7 @@ export default function Register() {
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Email address"
             required
-            rightElement={<UserIcon className="h-4 w-4 text-muted/70" />}
+            rightElement={<MailIcon className="h-4 w-4 text-muted/70" />}
           />
 
           <Input

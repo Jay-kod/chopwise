@@ -1,4 +1,9 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
+
+vi.mock('../configStore.js', () => ({
+  getGeminiConfig: vi.fn(async () => ({ apiKey: null })),
+}));
+
 import {
   sortGeminiModels,
   parseGeminiModels,

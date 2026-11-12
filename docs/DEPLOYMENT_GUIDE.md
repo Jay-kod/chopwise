@@ -14,7 +14,7 @@ docker compose --env-file docker.test.env up --build -d
 docker compose logs -f tunnel
 ```
 
-Share the URL printed by the `tunnel` service. Anyone with that URL can reach the app, and the URL changes after the tunnel stops. Stop the app with `docker compose down`; the named MySQL volume is preserved. Use disposable test data only, and do not seed the public test-admin account or enter real health information. The generated `docker.test.env` is local-only and Git-ignored. Gemini is not configured unless its key is added to that file.
+The app publishes host port `5190` (container port `5173`); Docker Desktop shows `http://localhost:5190` as its local link. This port is reserved for ChopWise in this setup; check it is still free if you run another container later. The local address works only on this computer. Share the temporary `trycloudflare.com` URL printed by the `tunnel` service with remote testers. Anyone with the public URL can reach the app, and it changes when the tunnel stops. Stop the app with `docker compose down`; the named MySQL volume is preserved. Use disposable test data only, and do not seed the public test-admin account or enter real health information. The generated `docker.test.env` is local-only and Git-ignored. Gemini is not configured unless its key is added to that file.
 
 Cloudflare Quick Tunnels are for testing and development, have no uptime guarantee, and stop working when the tunnel stops. See [Cloudflare Quick Tunnels](https://developers.cloudflare.com/tunnel/get-started/quick-tunnels/).
 

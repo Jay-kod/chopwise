@@ -28,7 +28,7 @@ export async function listCustomers(input) {
   const filter = customerFilter(search, getBootstrapAdminIds());
   const totals = await query(`SELECT COUNT(*) AS total FROM users u WHERE ${filter.where}`, filter.values);
   const rows = await query(
-    `SELECT u.id, u.email, u.created_at, u.profile_complete, u.is_active
+    `SELECT u.id, u.email, u.name, u.created_at, u.profile_complete, u.is_active
      FROM users u WHERE ${filter.where} ORDER BY u.created_at DESC LIMIT ? OFFSET ?`,
     [...filter.values, limit, offset]
   );
@@ -36,6 +36,7 @@ export async function listCustomers(input) {
     total: Number(totals[0]?.total || 0),
     items: rows.map((row) => ({
       id: row.id,
+      name: row.name || '',
       email: row.email,
       createdAt: row.created_at,
       profileComplete: Boolean(row.profile_complete),

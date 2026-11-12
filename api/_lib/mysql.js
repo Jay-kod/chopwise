@@ -7,9 +7,10 @@ let tablesEnsurePromise = null;
 const TABLES = [
   `CREATE TABLE IF NOT EXISTS users (
     id VARCHAR(36) NOT NULL PRIMARY KEY, email VARCHAR(255) NOT NULL,
+    name VARCHAR(255) NULL,
     password_hash VARCHAR(255) NOT NULL, created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     consent_at DATETIME NULL, profile_complete TINYINT(1) NOT NULL DEFAULT 0,
-    is_active TINYINT(1) NOT NULL DEFAULT 1, profile LONGTEXT NULL,
+    is_active TINYINT(1) NOT NULL DEFAULT 1, profile LONGTEXT NULL, avatar LONGTEXT NULL,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     UNIQUE KEY uq_users_email (email)
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
@@ -101,6 +102,13 @@ async function addAvatarColumnMigration(connection) {
   }
 }
 
+async function addNameColumnMigration(connection) {
+  const [columns] = await connection.query("SHOW COLUMNS FROM users LIKE 'name'");
+  if (columns.length === 0) {
+    await connection.query('ALTER TABLE users ADD COLUMN name VARCHAR(255) NULL AFTER email');
+  }
+}
+
 async function removeLegacyEdamamConfig(connection) {
   for (const section of ['integrations', 'testResults']) {
     const [rows] = await connection.execute(
@@ -146,6 +154,7 @@ async function initializeDatabase() {
     for (const statement of TABLES) await connection.query(statement);
     await addActiveAccountMigration(connection);
     await addAvatarColumnMigration(connection);
+    await addNameColumnMigration(connection);
     await removeLegacyEdamamConfig(connection);
     tablesEnsured = true;
   } finally {

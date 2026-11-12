@@ -91,10 +91,10 @@ export default function Layout({
         </Link>
       )}
       <span
-        className="hidden max-w-[120px] truncate text-xs text-header-muted lg:inline"
-        title={user.email}
+        className="hidden max-w-[140px] truncate text-xs text-header-muted lg:inline"
+        title={user.name || user.profile?.displayName || user.email}
       >
-        {user.email}
+        {user.name || user.profile?.displayName || (user.email ? user.email.split('@')[0] : '')}
       </span>
       <Button
         variant="secondary"

@@ -55,5 +55,19 @@ describe('onboarding schema validation', () => {
     };
     expect(profileSchema.safeParse(validProfile).success).toBe(true);
   });
+
+  it('accepts an optional display name and enforces its limit', () => {
+    const validProfile = {
+      age: 28,
+      gender: 'male',
+      weightKg: 78,
+      conditions: ['ulcer'],
+      preferences: ['no-pork'],
+      avoidText: 'excess pepper',
+      weeklyBudgetNGN: 20000,
+    };
+    expect(profileSchema.safeParse({ ...validProfile, displayName: 'Amina' }).success).toBe(true);
+    expect(profileSchema.safeParse({ ...validProfile, displayName: 'a'.repeat(101) }).success).toBe(false);
+  });
 });
 

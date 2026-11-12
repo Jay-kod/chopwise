@@ -103,7 +103,7 @@ export default function AdminCustomers() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Email</TableHead>
+                <TableHead>Customer</TableHead>
                 <TableHead>Account created</TableHead>
                 <TableHead>Profile</TableHead>
                 <TableHead>Status</TableHead>
@@ -133,7 +133,10 @@ export default function AdminCustomers() {
                         </Button>
                       </form>
                     ) : (
-                      <span className="font-medium text-fg">{customer.email}</span>
+                      <div className="flex flex-col">
+                        <span className="font-semibold text-fg">{customer.name || customer.email.split('@')[0]}</span>
+                        <span className="text-xs text-muted">{customer.email}</span>
+                      </div>
                     )}
                   </TableCell>
                   <TableCell>{formatDate(customer.createdAt)}</TableCell>

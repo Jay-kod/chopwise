@@ -88,6 +88,7 @@ export default function Onboarding() {
     if (!validateCurrentStep()) return;
 
     const fullProfile = {
+      displayName: userDoc?.name || userDoc?.profile?.displayName || '',
       age: Number(formData.age),
       gender: formData.gender,
       weightKg: Number(formData.weightKg),
@@ -95,6 +96,7 @@ export default function Onboarding() {
       preferences: formData.preferences || [],
       avoidText: formData.avoidText ? formData.avoidText.trim() : '',
       weeklyBudgetNGN: Number(formData.weeklyBudgetNGN),
+      avatar: userDoc?.avatar || userDoc?.profile?.avatar || null,
     };
 
     const parsed = profileSchema.safeParse(fullProfile);

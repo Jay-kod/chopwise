@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import Input from '../components/Input';
-import Preloader from '../components/Preloader';
 import AuthCardLayout from '../features/auth/AuthCardLayout';
 import { useAuth } from '../features/auth/useAuth';
 import { getAuthErrorMessage } from '../features/auth/authErrors';
@@ -136,10 +135,6 @@ export default function Login({ adminOnly = false }) {
 
   return (
     <>
-      {redirecting && (
-        <Preloader fullScreen message="Authenticating session and loading ChopWise…" />
-      )}
-
       <AuthCardLayout
         hideHeader={true}
         title={adminOnly ? 'Admin sign in' : 'Sign in'}

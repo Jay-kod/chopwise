@@ -30,13 +30,13 @@ services:
     depends_on:
       database:
         condition: service_healthy
-    expose:
-      - "5173"
+    ports:
+      - "5190:5173"
     restart: unless-stopped
 
   tunnel:
     image: cloudflare/cloudflared:2026.10.7
-    command: tunnel --no-autoupdate --url http://app:5173
+    command: tunnel --no-autoupdate --url http://app:5173 --http-host-header localhost:5173
     depends_on:
       - app
     restart: unless-stopped

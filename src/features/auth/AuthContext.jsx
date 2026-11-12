@@ -45,13 +45,14 @@ export function AuthProvider({ children }) {
     loadProfile();
   }, [loadProfile]);
 
-  async function register(email, password, consent) {
+  async function register(email, password, consent, name = '') {
     if (!consent) {
       throw new Error('You must agree to your health information being stored to personalise your meals.');
     }
 
     const res = await apiClient('/api/auth', {
       action: 'register',
+      name: typeof name === 'string' ? name.trim() : '',
       email: email.trim(),
       password,
       consent,

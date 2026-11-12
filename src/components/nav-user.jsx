@@ -28,7 +28,7 @@ export function NavUser() {
 	const [showAvatarModal, setShowAvatarModal] = useState(false);
 
 	const isAdminPortal = location.pathname.startsWith("/admin");
-	const displayName = user?.name || user?.email?.split("@")[0] || (isAdminPortal ? "Admin" : "User");
+	const displayName = user?.name || user?.profile?.displayName || (user?.email ? user.email.split("@")[0] : (isAdminPortal ? "Admin" : "User"));
 	const email = user?.email || "";
 	const initial = displayName.charAt(0).toUpperCase();
 

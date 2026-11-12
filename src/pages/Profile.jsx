@@ -7,6 +7,7 @@ import { useNotifications } from '../features/notifications/NotificationContext'
 import { AppShell } from '@/components/app-shell';
 import Card from '../components/Card';
 import Button from '../components/Button';
+import Input from '../components/Input';
 import Spinner from '../components/Spinner';
 import Disclaimer from '../components/Disclaimer';
 import ConfirmModal from '../components/ConfirmModal';
@@ -40,6 +41,7 @@ export default function Profile() {
     if (userDoc?.profile) {
       const p = userDoc.profile;
       setFormData({
+        displayName: p.displayName ?? userDoc.name ?? '',
         age: p.age ?? '', gender: p.gender ?? '', weightKg: p.weightKg ?? '',
         conditions: p.conditions ?? [], preferences: p.preferences ?? [],
         avoidText: p.avoidText ?? '', weeklyBudgetNGN: p.weeklyBudgetNGN ?? '',
@@ -172,6 +174,38 @@ export default function Profile() {
               <div className="flex justify-center py-12"><Spinner label="Loading profile data…" /></div>
             ) : (
               <form onSubmit={handleSaveProfile} className="space-y-6">
+                <Card className="p-5 space-y-4">
+                  <div>
+                    <h2 className="text-lg font-semibold text-fg">Account Details</h2>
+                    <p className="text-xs text-muted">
+                      Update the name shown across ChopWise. Your email address cannot be changed here.
+                    </p>
+                  </div>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <Input
+                      id="profile-display-name"
+                      label="Name"
+                      value={formData.displayName}
+                      onChange={(e) => handleFieldChange('displayName', e.target.value)}
+                      error={errors.displayName}
+                      placeholder="e.g. Amina"
+                      maxLength={100}
+                    />
+                    <Input
+                      id="profile-email"
+                      label="Email"
+                      type="email"
+                      value={user?.email || ''}
+                      readOnly
+                      disabled
+                      aria-describedby="profile-email-help"
+                    />
+                  </div>
+                  <p id="profile-email-help" className="text-xs text-muted">
+                    Email is used for signing in and is read-only on this page.
+                  </p>
+                </Card>
+
                 <div className="grid gap-6 md:grid-cols-2">
                   <Card className="p-5 space-y-4">
                     <Step1Demographics data={formData} errors={errors} onChange={handleFieldChange} />

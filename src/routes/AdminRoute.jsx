@@ -83,7 +83,7 @@ export default function AdminRoute() {
           <div className="space-y-1.5">
             <h2 className="text-xl font-bold text-fg">Administrator Access Required</h2>
             <p className="text-xs text-muted leading-relaxed">
-              You are signed in as <span className="font-semibold text-fg">{user.email}</span>, which does not have administrator privileges. Only administrators can create recipes, configure API keys, and manage system settings.
+              You are signed in as <span className="font-semibold text-fg">{user.name || user.email}</span>, which does not have administrator privileges. Only administrators can create recipes, configure API keys, and manage system settings.
             </p>
           </div>
           <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">

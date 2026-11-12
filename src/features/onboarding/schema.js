@@ -71,6 +71,11 @@ export const step4Schema = z.object({
 
 // Complete profile schema (matches DATABASE.md specification)
 export const profileSchema = z.object({
+  displayName: z
+    .string()
+    .trim()
+    .max(100, 'Name cannot exceed 100 characters')
+    .default(''),
   age: step1Schema.shape.age,
   gender: step1Schema.shape.gender,
   weightKg: step1Schema.shape.weightKg,

@@ -66,8 +66,8 @@ export default function MealCard({
             {meal.name}
           </h3>
           <span className="shrink-0 text-right">
-            <span className="block text-base font-bold text-primary">{costFormatted}</span>
-            <span className="block text-[10px] font-normal text-muted">Estimated ingredient cost</span>
+            <span className="block text-base font-extrabold text-primary">{costFormatted}</span>
+            <span className="block text-[11px] font-semibold text-muted">Estimated ingredient cost</span>
           </span>
         </div>
 
@@ -78,11 +78,11 @@ export default function MealCard({
 
         {/* Health Recommendation Tip (Thesis Claim B4) */}
         {meal.cautionNotes && (
-          <div className="mt-2.5 flex items-start gap-1.5 rounded-lg border border-line bg-surface-muted px-2.5 py-1.5 text-[11px] text-muted">
+          <div className="mt-2.5 flex items-start gap-1.5 rounded-lg border border-line bg-surface-muted px-2.5 py-2 text-xs text-fg shadow-2xs">
             <span className="shrink-0 text-xs" aria-hidden="true">💡</span>
             <span className="line-clamp-2">
-              <span className="font-semibold text-fg">Health Tip: </span>
-              {meal.cautionNotes}
+              <span className="font-bold text-fg">Health Tip: </span>
+              <span className="text-muted">{meal.cautionNotes}</span>
             </span>
           </div>
         )}
@@ -98,7 +98,7 @@ export default function MealCard({
             </Badge>
           )}
 
-          <span className="inline-flex items-center rounded-md border border-line bg-surface-muted px-2 py-0.5 text-[11px] text-muted">
+          <span className="inline-flex items-center rounded-md border border-line bg-surface-muted px-2 py-0.5 text-[11px] font-semibold text-fg shadow-2xs">
             {costSourceLabels[meal.costSource] || 'Estimated'}
           </span>
         </div>
@@ -114,8 +114,8 @@ export default function MealCard({
 
         {/* Suitable for condition tags */}
         {meal.suitableFor?.length > 0 && (
-          <div className="flex flex-wrap items-center gap-1 pt-1">
-            <span className="text-[10px] text-muted">Good for:</span>
+          <div className="flex flex-wrap items-center gap-1.5 pt-1">
+            <span className="text-[11px] font-bold text-muted">Good for:</span>
             {meal.suitableFor.map((cond, idx) => (
               <SuitableForChip key={idx} condition={cond} />
             ))}

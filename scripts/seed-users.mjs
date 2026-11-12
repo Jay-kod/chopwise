@@ -8,10 +8,12 @@ const passwordHash = hashPassword(TEST_PASSWORD);
 const TEST_USER = {
   id: 'test-user-001',
   email: 'chop1@test.com',
+  name: 'Chinedu Okafor',
   password_hash: passwordHash,
   consent_at: new Date('2026-11-08T12:00:00Z'),
   profile_complete: 1,
   profile: {
+    displayName: 'Chinedu Okafor',
     age: 28,
     gender: 'female',
     weightKg: 65,
@@ -26,10 +28,12 @@ const TEST_USER = {
 const TEST_ADMIN = {
   id: 'test-admin-001',
   email: 'adminchop@test.com',
+  name: 'System Administrator',
   password_hash: passwordHash,
   consent_at: new Date('2026-11-08T12:00:00Z'),
   profile_complete: 1,
   profile: {
+    displayName: 'System Administrator',
     age: 35,
     gender: 'male',
     weightKg: 75,
@@ -131,9 +135,10 @@ async function seed() {
 
   // 1. Seed regular user
   await query(
-    `INSERT INTO users (id, email, password_hash, created_at, consent_at, profile_complete, profile, updated_at)
-     VALUES (?, ?, ?, NOW(), ?, ?, ?, NOW())
+    `INSERT INTO users (id, email, name, password_hash, created_at, consent_at, profile_complete, profile, updated_at)
+     VALUES (?, ?, ?, ?, NOW(), ?, ?, ?, NOW())
      ON DUPLICATE KEY UPDATE
+       name = VALUES(name),
        password_hash = VALUES(password_hash),
        profile_complete = VALUES(profile_complete),
        profile = VALUES(profile),
@@ -142,6 +147,7 @@ async function seed() {
     [
       TEST_USER.id,
       TEST_USER.email,
+      TEST_USER.name,
       TEST_USER.password_hash,
       TEST_USER.consent_at,
       TEST_USER.profile_complete,
@@ -152,9 +158,10 @@ async function seed() {
 
   // 2. Seed admin user
   await query(
-    `INSERT INTO users (id, email, password_hash, created_at, consent_at, profile_complete, profile, updated_at)
-     VALUES (?, ?, ?, NOW(), ?, ?, ?, NOW())
+    `INSERT INTO users (id, email, name, password_hash, created_at, consent_at, profile_complete, profile, updated_at)
+     VALUES (?, ?, ?, ?, NOW(), ?, ?, ?, NOW())
      ON DUPLICATE KEY UPDATE
+       name = VALUES(name),
        password_hash = VALUES(password_hash),
        profile_complete = VALUES(profile_complete),
        profile = VALUES(profile),
@@ -163,6 +170,7 @@ async function seed() {
     [
       TEST_ADMIN.id,
       TEST_ADMIN.email,
+      TEST_ADMIN.name,
       TEST_ADMIN.password_hash,
       TEST_ADMIN.consent_at,
       TEST_ADMIN.profile_complete,

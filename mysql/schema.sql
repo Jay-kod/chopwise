@@ -10,12 +10,14 @@ USE `chopwise`;
 CREATE TABLE IF NOT EXISTS `users` (
   `id` VARCHAR(36) NOT NULL,
   `email` VARCHAR(255) NOT NULL,
+  `name` VARCHAR(255) NULL,
   `password_hash` VARCHAR(255) NOT NULL,
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `consent_at` DATETIME NULL,
   `profile_complete` TINYINT(1) NOT NULL DEFAULT 0,
   `is_active` TINYINT(1) NOT NULL DEFAULT 1,
   `profile` LONGTEXT NULL,
+  `avatar` LONGTEXT NULL,
   `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_users_email` (`email`)

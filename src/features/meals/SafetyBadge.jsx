@@ -28,10 +28,10 @@ export function MealTypeChip({ type, className = '' }) {
 
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-full border border-line bg-surface-muted px-2.5 py-0.5 text-xs font-medium text-fg capitalize ${className}`}
+      className={`inline-flex items-center gap-1.5 rounded-full border border-line bg-surface-muted px-2.5 py-0.5 text-xs font-bold text-fg capitalize shadow-2xs ${className}`}
     >
       <span aria-hidden="true">{icons[type] || '🍲'}</span>
-      {type}
+      <span>{type}</span>
     </span>
   );
 }
@@ -43,7 +43,7 @@ export function MealTypeChip({ type, className = '' }) {
 export function SuitableForChip({ condition, className = '' }) {
   return (
     <span
-      className={`inline-flex items-center rounded-md border border-line bg-surface-muted px-2 py-0.5 text-[11px] font-medium text-fg capitalize ${className}`}
+      className={`inline-flex items-center rounded-md border border-line bg-surface-muted px-2 py-0.5 text-[11px] font-bold text-fg capitalize shadow-2xs ${className}`}
     >
       {condition}
     </span>

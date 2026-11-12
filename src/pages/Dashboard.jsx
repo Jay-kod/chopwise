@@ -8,7 +8,6 @@ import MealCard from '../features/meals/MealCard';
 import FilterBar from '../features/meals/FilterBar';
 import DashboardError from '../features/meals/DashboardError';
 import MealCardSkeleton from '../features/meals/MealCardSkeleton';
-import { DashboardSkeleton } from '@/components/dashboard-skeleton';
 import DashboardHero from '../features/dashboard/DashboardHero';
 import DashboardMetrics from '../features/dashboard/DashboardMetrics';
 import HealthAdvisoryBanner from '../features/dashboard/HealthAdvisoryBanner';
@@ -96,19 +95,11 @@ export default function Dashboard() {
   const weeklyBudget = user?.profile?.weeklyBudgetNGN || 21000;
   const conditions = user?.profile?.conditions || [];
 
-  if (loading && meals.length === 0 && !error) {
-    return (
-      <AppShell pathname={ROUTES.customer.dashboard}>
-        <DashboardSkeleton />
-      </AppShell>
-    );
-  }
-
   return (
     <AppShell pathname={ROUTES.customer.dashboard}>
       <div className="space-y-6">
         <DashboardHero
-          userName={user?.email}
+          userName={user?.name || user?.profile?.displayName || (user?.email ? user.email.split('@')[0] : 'there')}
           userAvatar={user?.avatar || user?.profile?.avatar}
           weeklyBudget={weeklyBudget}
           perMealCapNGN={perMealCapNGN}
@@ -198,9 +189,31 @@ export default function Dashboard() {
                 <Button
                   variant="secondary"
                   onClick={() => setFilters({ mealType: 'all', condition: 'all', budget: 'all', prepTime: 'all' })}
-                  className="text-xs min-h-9 px-3"
+                  className="text-xs min-h-9 px-3 font-semibold text-fg"
                 >
                   Clear all filters
+                </Button>
+              </div>
+            </Card>
+          )}
+
+          {!loading && meals.length === 0 && !error && (
+            <Card className="p-8 sm:p-10 text-center space-y-4 max-w-lg mx-auto">
+              <span className="text-4xl" aria-hidden="true">🍲</span>
+              <div className="space-y-1.5">
+                <h3 className="text-lg font-bold text-fg">No meal plan generated yet</h3>
+                <p className="text-xs sm:text-sm text-muted max-w-md mx-auto leading-relaxed">
+                  Generate your first personalized Nigerian meal plan tailored to your weekly budget cap and dietary health profile.
+                </p>
+              </div>
+              <div className="flex justify-center pt-1">
+                <Button
+                  variant="primary"
+                  onClick={handleConfirmRegenerate}
+                  disabled={regenerating}
+                  className="text-xs min-h-10 px-5 font-semibold"
+                >
+                  {regenerating ? 'Crafting meals…' : '⚡ Generate My Meal Plan'}
                 </Button>
               </div>
             </Card>

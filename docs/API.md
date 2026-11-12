@@ -20,8 +20,8 @@ Five Vercel functions. All: JSON in/out, header `Authorization: Bearer <Firebase
 | INTERNAL | 500 | Anything else; never leak stack traces or secrets |
 
 ## POST /api/auth
-Actions: `register` (`email`, `password`, `consent`), `login` (`email`, `password`), `me`, `update-profile`, `get-saved-meals`, `save-meal`, `delete-saved-meal`, and `get-meal`.
-Registration/login use MySQL accounts. Passwords are scrypt hashes. Disabled accounts are rejected at login and on every authenticated API request. `/me` returns account data and the server-computed admin flag, never password hashes.
+Actions: `register` (`name`, `email`, `password`, `consent`), `login` (`email`, `password`), `me`, `update-profile`, `get-saved-meals`, `save-meal`, `delete-saved-meal`, and `get-meal`.
+Registration/login use MySQL accounts. Passwords are scrypt hashes. Disabled accounts are rejected at login and on every authenticated API request. Registration accepts a full `name` and `email`. `/me` returns account data, including the user's name and profile display name, and the server-computed admin flag, never password hashes. Customer email is not changed by `update-profile`.
 
 ## POST /api/recommend
 Request: `{ "regenerate": false }`. The profile is read from MySQL by authenticated user ID; it is never accepted from the body.

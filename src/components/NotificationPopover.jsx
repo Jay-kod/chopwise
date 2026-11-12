@@ -178,7 +178,7 @@ export default function NotificationPopover({
                     e.stopPropagation();
                     onRemove(notif.id);
                   }}
-                  className="opacity-0 group-hover:opacity-100 p-1 text-muted hover:text-danger rounded transition-opacity"
+                  className="opacity-0 group-hover:opacity-100 p-1 text-muted hover:text-danger-fg rounded transition-opacity"
                   title="Dismiss notification"
                   aria-label="Dismiss notification"
                 >
@@ -199,7 +199,7 @@ export default function NotificationPopover({
           <button
             type="button"
             onClick={onClearAll}
-            className="text-[11px] text-muted hover:text-danger underline transition-colors focus:outline-none"
+            className="text-[11px] text-muted hover:text-danger-fg underline transition-colors focus:outline-none"
           >
             Clear all
           </button>

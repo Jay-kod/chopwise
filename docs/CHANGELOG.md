@@ -1,8 +1,64 @@
 # CHANGELOG.md
 Add one line per task: date, task id, what changed, doc updates.
 
+## Mobile Responsiveness & Header Viewport Polish (2026-11-12)
+- Fixed mobile header overflow in `src/components/app-header.jsx` and `src/components/LiveClock.jsx`:
+  - Hid header `LiveClock` on mobile/tablet viewports (`hidden lg:flex`) to eliminate squished 3-line clock wrapping and prevent pushing `NavUser` (avatar menu) off-screen.
+  - Added `whitespace-nowrap shrink-0` and `cn()` utility to `LiveClock.jsx` so clock timestamps never wrap internally.
+  - Enhanced `ThemeToggle.jsx` with responsive label hiding (`hidden sm:inline`) and compact mobile padding, turning it into a neat icon button on mobile screens.
+- Polished customer dashboard mobile layout:
+  - In `src/features/dashboard/DashboardHero.jsx`: top-aligned avatar with multi-line greetings (`items-start`), tuned font sizes and line heights for long names, compacted status pills (`text-[10px] sm:text-[11px]`), and reorganized action buttons into a full-width primary CTA with a 3-column secondary link grid (`🍲 Meals`, `📊 Analysis`, `⚙️ Profile`).
+  - In `src/features/dashboard/DashboardMetrics.jsx`: updated grid to single column on mobile screens (`grid-cols-1 md:grid-cols-2 xl:grid-cols-4`) to prevent 2-column squeezing of weekly pacing bars and curated dish chips.
+  - In `src/features/dashboard/HealthAdvisoryBanner.jsx`: adjusted clinical advisory cards to single-column on mobile (`grid-cols-1 md:grid-cols-2`).
+  - In `src/features/dashboard/DashboardMealTabs.jsx`: tuned tab padding and gaps (`px-2.5 sm:px-3.5 py-1.5`) for seamless fit on small mobile screens.
+- Full verification passed (`npm run verify`: 20 test files, 104 tests, 0 color check errors, clean production build).
+
+## Display User Name Instead of Email & Add Full Name to Registration (2026-11-12)
+- Added Full Name input field to customer registration (`src/pages/Register.jsx`) with `UserIcon` and distinct `MailIcon` for email.
+- Updated registration flow and MySQL persistence (`users.name`, `users.profile.displayName`) via additive schema migration `addNameColumnMigration`.
+- Updated all UI user touchpoints (`DashboardHero`, `Dashboard`, `nav-user`, `Layout`, `MobileDrawer`, `AdminCustomers`, `AdminRoute`) to display the user's name across the application instead of raw email address.
+- Updated seed data (`scripts/seed-users.mjs`) to seed `Chinedu Okafor` for test user `chop1@test.com` and `System Administrator` for `adminchop@test.com`.
+- Preserved `displayName` during onboarding profile completion (`src/pages/Onboarding.jsx`).
+- Full verification passed (`npm run verify`: 20 test files, 104 tests, 0 color check errors, clean production build).
+
+## Clarify Local Authentication Connection Errors (2026-11-12)
+- Replaced the stale Supabase-specific fetch failure message with guidance for the current Vite API middleware and MySQL runtime.
+
+## Add Customer Display Name Editing (2026-11-12)
+- Added an editable customer display name and read-only email field to `/customer/profile`; the name is validated and persisted in the authenticated profile JSON, and auth responses expose it for display.
+
+## Isolate Gemini Client Validation Test (2026-11-12)
+- Prevented the Gemini model-list validation test from reading persisted Admin configuration or making a real upstream request; runtime configuration behavior is unchanged.
+
+## Removal of Preloader Overlays and Skeleton Screen Blocking (2026-11-12)
+- Removed active preloader overlays and full-screen blocking states across route guards and customer dashboard:
+  - `src/routes/ProtectedRoute.jsx`: Removed `Preloader` overlay during authentication session checks; returns `null` so route transitions are seamless without intrusive simmering logo/bouncing dots.
+  - `src/routes/ProfileGate.jsx`: Removed `Preloader` overlay during health profile loading; returns `null` for smooth client-side routing.
+  - `src/pages/Login.jsx`: Removed `redirecting && <Preloader fullScreen />` overlay on successful authentication submission.
+  - `src/pages/Dashboard.jsx`: Removed premature full-page `<DashboardSkeleton />` blocking return; the dashboard shell, hero, metrics, and meal tabs mount immediately while meals display inline `MealCardSkeleton` cards during recommendation fetching.
+- Full verification passed (`npm run verify`: 20 test files, 103 tests, 0 color check errors, clean production build).
+
+## Customer Dashboard Light Mode Text & Contrast Polish (2026-11-11)
+- Resolved Light Mode text visibility, contrast, and empty states on `http://localhost:5174/customer/dashboard`:
+  - **Avatar & Greeting Contrast**: Enhanced `AvatarDisplay` in `src/features/auth/preworkedAvatars.jsx` to render fallback letter initials in bold, high-contrast `text-on-primary-soft text-base` centered in the container, eliminating unstyled/faint letter fallbacks in `DashboardHero`.
+  - **Tactile Metrics & Visual Gauges**:
+    - Extracted `DashboardMetricsWidgets.jsx` to decouple `CapDonutMeter`, `WeeklyPacingBars`, and `MealTypeDistribution` from `DashboardMetrics.jsx`, keeping both files <= 214 lines.
+    - Fixed `CapDonutMeter` perimeter track: replaced washed-out `stroke-surface-muted` with crisp `stroke-line` (`#C6DDD0`) for defined tactile circular track boundary on white cards in Light Mode.
+    - Elevated `WeeklyPacingBars`: added defined `border border-line` to the daily bar tracks, and upgraded weekday letter labels (`M`, `T`, `W`, etc.) to crisp `text-fg` (`#0A2117`) instead of muted.
+    - Upgraded `MealTypeDistribution`: wrapped breakfast, lunch, and dinner count chips in dedicated category border and background pills (`bg-cat-meals-bg border-cat-meals-line`, `bg-cat-planning-bg border-cat-planning-line`, `bg-cat-engine-bg border-cat-engine-line`) for prominent visual definition on light mode cards.
+    - Standardized telemetry chips and footers across all 4 metric cards (`Target per Meal`, `Weekly Budget`, `Curated Dishes`, `Health Guardrails`) with `shadow-2xs` and crisp semantic font weights.
+  - **Meal Tabs & Filter Pills Contrast**:
+    - In `DashboardMealTabs.jsx`, enhanced inactive tab counts to display with defined `border border-line bg-surface-muted text-fg font-bold`, replacing faint text; upgraded the filter toggle button to bold `text-fg`.
+    - In `FilterBar.jsx`, updated `<select>` options to explicitly set `bg-surface text-fg font-medium`, preventing OS/browser dropdown text rendering glitches in Light Mode; strengthened filter summaries and reset buttons.
+  - **Meal Cards & Health Advisories**:
+    - In `MealCard.jsx`, elevated cost subtitle (`text-[11px] font-semibold text-muted`), cost source tags (`border border-line bg-surface-muted px-2 py-0.5 text-[11px] font-semibold text-fg shadow-2xs`), and health tips.
+    - In `SafetyBadge.jsx`, upgraded `MealTypeChip` and `SuitableForChip` to `font-bold text-fg shadow-2xs`.
+    - In `HealthAdvisoryBanner.jsx`, elevated condition protocol badges with `border border-line bg-primary-soft text-on-primary-soft shadow-2xs`.
+  - **Zero-Meals Empty State**: Added friendly empty state card in `src/pages/Dashboard.jsx` when meals list is empty and not loading, offering a direct action button to generate the first Nigerian meal plan instead of a blank layout.
+  - Full verification suite passed (`npm run verify`: 20 test files, 103 tests, 0 color violations, clean production build).
+
 ## Add Temporary Docker Share Setup (2026-11-11)
-- Added Docker Compose for the app, a local MySQL database, and a temporary Cloudflare Quick Tunnel; added a PowerShell helper that generates ignored local test credentials. Documented startup, shutdown, and public-link safety, and corrected local API runtime instructions to reflect Vite middleware.
+- Added Docker Compose for the app, a local MySQL database, and a temporary Cloudflare Quick Tunnel; published app port `5190` (container port `5173`) for a distinct Docker Desktop local link and documented that remote testers need the tunnel URL. Added a PowerShell helper that generates ignored local test credentials and corrected local API runtime instructions to reflect Vite middleware.
 
 ## Admin Dashboard Light Mode Polish & Tactile Meter Elevation (2026-11-11)
 - Elevated Light Mode tactile contours, card boundaries, and contrast across `/admin/dashboard` and admin page headers:

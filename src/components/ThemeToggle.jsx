@@ -1,4 +1,5 @@
 import { useTheme } from '../lib/useTheme';
+import { cn } from '@/lib/utils';
 
 export const LABELS = { system: 'System', light: 'Light', dark: 'Dark' };
 
@@ -49,15 +50,18 @@ export default function ThemeToggle({ className = '', showLabel = true }) {
     <button
       type="button"
       onClick={cycle}
-      className={`inline-flex min-h-9 items-center justify-center gap-1.5 rounded-full border border-line bg-surface px-3 text-xs font-semibold text-fg shadow-sm transition-all hover:border-field-line hover:bg-surface-muted active:scale-95 ${className}`}
+      className={cn(
+        "inline-flex min-h-9 items-center justify-center gap-1.5 rounded-full border border-line bg-surface px-2.5 sm:px-3 text-xs font-semibold text-fg shadow-sm transition-all hover:border-field-line hover:bg-surface-muted active:scale-95 shrink-0",
+        className
+      )}
       aria-label={`Theme: ${LABELS[theme]}. Press to change.`}
       title={`Theme: ${LABELS[theme]} (Click to cycle)`}
     >
-      <span className="text-primary flex items-center">
+      <span className="text-primary flex items-center shrink-0">
         <ThemeIcon theme={theme} />
       </span>
       {showLabel && (
-        <span className="text-[11px] font-medium text-fg capitalize">
+        <span className="hidden sm:inline text-[11px] font-medium text-fg capitalize">
           {LABELS[theme]}
         </span>
       )}

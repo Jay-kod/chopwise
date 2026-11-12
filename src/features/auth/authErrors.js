@@ -66,7 +66,7 @@ export function getAuthErrorMessage(error) {
   }
 
   if (lowerMsg.includes('failed to fetch')) {
-    return 'Unable to connect to the database. Please verify your Supabase environment variables in Vercel and click Redeploy.';
+    return 'Unable to connect to ChopWise. Make sure the local server is running and MySQL is available, then try again.';
   }
 
   if (code === 'auth/user-disabled') {

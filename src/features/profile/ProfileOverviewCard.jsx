@@ -12,7 +12,8 @@ export default function ProfileOverviewCard({ user, formData, savedCount = 0 }) 
   const perMealCap = budget > 0 ? Math.round(budget / 21) : 0;
   const conditions = formData?.conditions || [];
   const preferences = formData?.preferences || [];
-  const initial = (user?.email || 'U').charAt(0).toUpperCase();
+  const displayName = user?.name || user?.profile?.displayName || user?.email || 'ChopWise User';
+  const initial = displayName.charAt(0).toUpperCase();
   const avatarId = user?.avatar || user?.profile?.avatar;
 
   return (
@@ -26,7 +27,7 @@ export default function ProfileOverviewCard({ user, formData, savedCount = 0 }) 
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
                 <h2 className="text-base sm:text-lg font-bold text-fg truncate">
-                  {user?.email || 'ChopWise User'}
+                  {displayName}
                 </h2>
                 <Badge variant="ok">Active Profile</Badge>
               </div>

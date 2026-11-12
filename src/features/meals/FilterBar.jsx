@@ -56,7 +56,7 @@ export default function FilterBar({
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line pb-2.5">
         <div className="flex items-center gap-2">
           <span className="text-xs font-bold text-fg">Filter Meals</span>
-          <span className="text-xs text-muted">
+          <span className="text-xs font-semibold text-fg">
             Showing {filteredCount} of {totalCount}
           </span>
         </div>
@@ -65,7 +65,7 @@ export default function FilterBar({
           <button
             type="button"
             onClick={handleReset}
-            className="text-xs font-medium text-primary underline hover:text-primary-hover focus:outline-none"
+            className="text-xs font-bold text-primary underline hover:text-primary-hover focus:outline-none"
           >
             Clear all filters
           </button>
@@ -85,7 +85,7 @@ export default function FilterBar({
                   type="button"
                   key={type.id}
                   onClick={() => onChange({ ...filters, mealType: type.id })}
-                  className={`rounded-full px-2.5 py-1 text-xs font-medium transition-colors border ${
+                  className={`rounded-full px-2.5 py-1 text-xs font-semibold transition-colors border ${
                     active
                       ? 'border-field-line bg-primary text-on-primary'
                       : 'border-line bg-surface text-fg hover:bg-surface-muted'
@@ -108,7 +108,7 @@ export default function FilterBar({
             aria-label="Filter by health condition"
           >
             {CONDITIONS.map((c) => (
-              <option key={c.id} value={c.id}>
+              <option key={c.id} value={c.id} className="bg-surface text-fg font-medium">
                 {c.label}
               </option>
             ))}
@@ -126,11 +126,11 @@ export default function FilterBar({
             className="w-full rounded-lg border border-field-line bg-surface px-2.5 py-1.5 text-xs text-fg focus:outline-none focus:ring-2 focus:ring-ring"
             aria-label="Filter by budget range"
           >
-            <option value="all">All meal costs</option>
-            <option value="under-cap">
+            <option value="all" className="bg-surface text-fg font-medium">All meal costs</option>
+            <option value="under-cap" className="bg-surface text-fg font-medium">
               Within budget (≤ {formatNaira(perMealCapNGN)})
             </option>
-            <option value="over-cap">Over target only</option>
+            <option value="over-cap" className="bg-surface text-fg font-medium">Over target only</option>
           </select>
         </div>
 
@@ -144,7 +144,7 @@ export default function FilterBar({
             aria-label="Filter by preparation time"
           >
             {PREP_TIMES.map((p) => (
-              <option key={p.id} value={p.id}>
+              <option key={p.id} value={p.id} className="bg-surface text-fg font-medium">
                 {p.label}
               </option>
             ))}

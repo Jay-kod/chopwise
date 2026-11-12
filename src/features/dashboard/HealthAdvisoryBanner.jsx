@@ -44,7 +44,7 @@ export default function HealthAdvisoryBanner({ conditions = [] }) {
         </Link>
       </div>
 
-      <div className="grid gap-2 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
         {conditions.map((cond) => {
           const info = CONDITION_GUIDANCE[cond];
           if (!info) return null;
@@ -57,7 +57,7 @@ export default function HealthAdvisoryBanner({ conditions = [] }) {
               <div className="space-y-0.5 min-w-0">
                 <div className="flex items-center justify-between gap-1">
                   <span className="font-bold text-fg text-xs">{info.title}</span>
-                  <span className="rounded bg-primary-soft text-[10px] font-semibold text-on-primary-soft px-1.5 py-0.2 shrink-0">
+                  <span className="rounded-md border border-line bg-primary-soft text-[10px] font-bold text-on-primary-soft px-2 py-0.5 shrink-0 shadow-2xs">
                     {info.badge}
                   </span>
                 </div>

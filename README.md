@@ -63,6 +63,8 @@ Open the `trycloudflare.com` URL printed in the tunnel logs and share it with te
 
 Anyone with the URL can reach the app. Use disposable test data only; do not seed the public test-admin account or enter real health information. The local Docker config is ignored by Git and contains generated local-only secrets. Gemini features remain unconfigured unless a key is added to that private config file.
 
+The app publishes host port `5190` (container port `5173`), so Docker Desktop shows a clickable local address (`http://localhost:5190`). This port is reserved for ChopWise in this setup; check it is still free if you run another container later. The local address is only for this computer; share the Cloudflare `trycloudflare.com` URL with remote testers.
+
 ### Testing & Verification
 
 - Run tests: `npm test`
